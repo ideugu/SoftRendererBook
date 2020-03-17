@@ -38,9 +38,12 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	// 점의 위치와 색상 지정하기
-	_CurrentPosition = Vector2(10.f, 10.f);
-	_CurrentColor = LinearColor::Blue;
+	// 엔진 모듈에서 입력 관리자 가져오기
+	InputManager input = _GameEngine.GetInputManager();
+	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * _MoveSpeed * InDeltaSeconds;
+	_CurrentPosition += deltaPosition;
+
+	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
 
 // 렌더링 로직
@@ -49,7 +52,11 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 지정된 위치에 지정한 색상으로 점 찍기
+	// 지정한 점을 기준으로 상하좌우로 점 찍기
 	_RSI->DrawPoint(_CurrentPosition, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitX, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitX, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitY, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitY, _CurrentColor);
 }
 
