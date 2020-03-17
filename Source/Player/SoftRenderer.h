@@ -52,8 +52,9 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
-	Vector2 _CurrentPosition = Vector2::Zero;
+	Vector2 _CurrentPosition = Vector2(100.f, 0.f);
 	LinearColor _CurrentColor = LinearColor::Blue;
+	float _RotateSpeed = 180.f;
 
 private:
 	// 초기화 점검 변수

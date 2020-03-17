@@ -38,9 +38,18 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	// 점의 위치와 색상 지정하기
-	_CurrentPosition = Vector2(10.f, 10.f);
-	_CurrentColor = LinearColor::Blue;
+	// 시간에 따른 회전량
+	float deltaRadian = Math::Deg2Rad(_RotateSpeed * InDeltaSeconds);
+
+	// 행렬 설계
+	float sin = sinf(deltaRadian);
+	float cos = cosf(deltaRadian);
+	Vector2 xAxis(cos, sin);
+	Vector2 yAxis(-sin, cos);
+	Matrix2x2 rotateMat(xAxis, yAxis);
+
+	// 점 회전하기
+	_CurrentPosition = rotateMat * _CurrentPosition;
 }
 
 // 렌더링 로직
@@ -51,5 +60,9 @@ void SoftRenderer::Render2D()
 
 	// 지정된 위치에 지정한 색상으로 점 찍기
 	_RSI->DrawPoint(_CurrentPosition, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitX, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitX, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitY, _CurrentColor);
+	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitY, _CurrentColor);
 }
 
