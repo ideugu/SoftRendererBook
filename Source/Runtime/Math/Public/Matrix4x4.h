@@ -7,15 +7,13 @@
 struct Matrix4x4
 {
 public:
+	// 생성자 
 	FORCEINLINE Matrix4x4();
 	FORCEINLINE explicit Matrix4x4(const Vector4& InCol0, const Vector4& InCol1, const Vector4& InCol2, const Vector4& InCol3);
 
-	FORCEINLINE void SetIdentity();
-	FORCEINLINE Matrix4x4 Tranpose() const;
-
+	// 연산자 
 	FORCEINLINE const Vector4& operator[](int InIndex) const;
 	FORCEINLINE Vector4& operator[](int InIndex);
-
 	FORCEINLINE Matrix4x4 operator*(float InScalar) const;
 	FORCEINLINE Matrix4x4 operator*(const Matrix4x4& InMatrix) const;
 	FORCEINLINE Vector4 operator*(const Vector4& InVector) const;
@@ -31,9 +29,14 @@ public:
 		return InVector;
 	}
 
+	// 멤버함수 
+	FORCEINLINE void SetIdentity();
+	FORCEINLINE Matrix4x4 Tranpose() const;
+
+	// 정적멤버변수 
 	static const Matrix4x4 Identity;
 
-private:
+	// 멤버변수 
 	Vector4 _Cols[4];
 };
 
@@ -70,11 +73,13 @@ FORCEINLINE Matrix4x4 Matrix4x4::Tranpose() const
 
 FORCEINLINE const Vector4& Matrix4x4::operator[](int InIndex) const
 {
+	assert(InIndex >= 0 && InIndex <= 3);
 	return _Cols[InIndex];
 }
 
 FORCEINLINE Vector4& Matrix4x4::operator[](int InIndex)
 {
+	assert(InIndex >= 0 && InIndex <= 3);
 	return _Cols[InIndex];
 }
 

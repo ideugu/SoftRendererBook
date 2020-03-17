@@ -5,13 +5,12 @@
 struct Matrix3x3
 {
 public:
+	// 생성자 
 	FORCEINLINE Matrix3x3();
-	FORCEINLINE Matrix3x3(const Vector3& InCol0, const Vector3& InCol1, const Vector3& InCol2);
-	FORCEINLINE Matrix3x3(float In00, float In01, float In02, float In10, float In11, float In12, float In20, float In21, float In22);
+	FORCEINLINE explicit Matrix3x3(const Vector3& InCol0, const Vector3& InCol1, const Vector3& InCol2);
+	FORCEINLINE explicit Matrix3x3(float In00, float In01, float In02, float In10, float In11, float In12, float In20, float In21, float In22);
 
-	FORCEINLINE void SetIdentity();
-	FORCEINLINE Matrix3x3 Tranpose() const;
-
+	// 연산자 
 	FORCEINLINE const Vector3& operator[](int InIndex) const;
 	FORCEINLINE Vector3& operator[](int InIndex);
 
@@ -30,9 +29,14 @@ public:
 		return InVector;
 	}
 
+	// 멤버함수 
+	FORCEINLINE void SetIdentity();
+	FORCEINLINE Matrix3x3 Tranpose() const;
+
+	// 정적멤버변수 
 	static const Matrix3x3 Identity;
 
-private:
+	// 멤버변수 
 	Vector3 _Cols[3];
 };
 
@@ -81,11 +85,13 @@ FORCEINLINE Matrix3x3 Matrix3x3::Tranpose() const
 
 FORCEINLINE const Vector3& Matrix3x3::operator[](int InIndex) const
 {
+	assert(InIndex >= 0 && InIndex <= 2);
 	return _Cols[InIndex];
 }
 
 FORCEINLINE Vector3& Matrix3x3::operator[](int InIndex)
 {
+	assert(InIndex >= 0 && InIndex <= 2);
 	return _Cols[InIndex];
 }
 

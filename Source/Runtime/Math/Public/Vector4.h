@@ -5,22 +5,16 @@
 struct Vector4
 {
 public:
+	// 생성자 
 	FORCEINLINE Vector4() = default;
 	FORCEINLINE explicit Vector4(const Vector2& InV, bool IsPoint = true) : _X(InV._X), _Y(InV._Y), _Z(0.f) { _W = IsPoint ? 1.f : 0.f; }
 	FORCEINLINE explicit Vector4(const Vector3& InV, bool IsPoint = true) : _X(InV._X), _Y(InV._Y), _Z(InV._Z) { _W = IsPoint ? 1.f : 0.f; }
 	FORCEINLINE explicit Vector4(float InX, float InY, float InZ, float InW) : _X(InX), _Y(InY), _Z(InZ), _W(InW) { }
 	FORCEINLINE explicit Vector4(float InX, float InY, float InZ, bool IsPoint = true) : _X(InX), _Y(InY), _Z(InZ) { _W = IsPoint ? 1.f : 0.f; }
 
-	FORCEINLINE Vector2 ToVector2() const;
-	FORCEINLINE Vector3 ToVector3() const;
-
-	FORCEINLINE float Size() const;
-	FORCEINLINE float SizeSquared() const;
-	FORCEINLINE Vector4 Normalize() const;
-
+	// 연산자 
 	FORCEINLINE float operator[](int InIndex) const;
 	FORCEINLINE float& operator[](int InIndex);
-
 	FORCEINLINE Vector4 operator-() const;
 	FORCEINLINE Vector4 operator*(float InScale) const;
 	FORCEINLINE Vector4 operator/(float InScale) const;
@@ -31,11 +25,17 @@ public:
 	FORCEINLINE Vector4& operator+=(const Vector4& InVector);
 	FORCEINLINE Vector4& operator-=(const Vector4& InVector);
 
-	FORCEINLINE bool EqualsInRange(const Vector4& InVector, float InTolerance = KINDA_SMALL_NUMBER) const;
-
+	// 멤버함수 
+	FORCEINLINE Vector2 ToVector2() const;
+	FORCEINLINE Vector3 ToVector3() const;
+	FORCEINLINE float Size() const;
+	FORCEINLINE float SizeSquared() const;
+	FORCEINLINE Vector4 Normalize() const;
+	FORCEINLINE bool EqualsInTolerance(const Vector4& InVector, float InTolerance = KINDA_SMALL_NUMBER) const;
 	FORCEINLINE float Max() const;
 	FORCEINLINE float Dot(const Vector4& InVector) const;
 
+	// 정적멤버변수 
 	static const Vector4 UnitX;
 	static const Vector4 UnitY;
 	static const Vector4 UnitZ;
@@ -45,7 +45,7 @@ public:
 	static const Vector4 Infinity;
 	static const Vector4 InfinityNeg;
 
-public:
+	// 멤버변수 
 	float _X = 0.f;
 	float _Y = 0.f;
 	float _Z = 0.f;
@@ -90,11 +90,13 @@ FORCEINLINE Vector4 Vector4::Normalize() const
 
 FORCEINLINE float Vector4::operator[](int InIndex) const
 {
+	assert(InIndex >= 0 && InIndex <= 3);
 	return ((float *)this)[InIndex];
 }
 
 FORCEINLINE float& Vector4::operator[](int InIndex)
 {
+	assert(InIndex >= 0 && InIndex <= 3);
 	return ((float *)this)[InIndex];
 }
 
@@ -159,7 +161,7 @@ FORCEINLINE Vector4& Vector4::operator-=(const Vector4& InV)
 	return *this;
 }
 
-FORCEINLINE bool Vector4::EqualsInRange(const Vector4& InVector, float InTolerance) const
+FORCEINLINE bool Vector4::EqualsInTolerance(const Vector4& InVector, float InTolerance) const
 {
 	return (Math::Abs(this->_X - InVector._X) <= InTolerance) &&
 		(Math::Abs(this->_Y - InVector._Y) < InTolerance) &&

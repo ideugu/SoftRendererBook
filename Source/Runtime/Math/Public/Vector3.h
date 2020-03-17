@@ -5,19 +5,14 @@
 struct Vector3
 {
 public:
+	// 생성자 
 	FORCEINLINE Vector3() = default;
 	FORCEINLINE explicit Vector3(const Vector2& InV, bool IsPoint = true) : _X(InV._X), _Y(InV._Y) { _Z = IsPoint ? 1.f : 0.f; }
 	FORCEINLINE explicit Vector3(float InX, float InY, float InZ) : _X(InX), _Y(InY), _Z(InZ) { }
 
-	FORCEINLINE Vector2 ToVector2() const;
-
-	FORCEINLINE float Size() const;
-	FORCEINLINE float SizeSquared() const;
-	FORCEINLINE Vector3 Normalize() const;
-
+	// 연산자 
 	FORCEINLINE float operator[](int InIndex) const;
 	FORCEINLINE float& operator[](int InIndex);
-
 	FORCEINLINE Vector3 operator-() const;
 	FORCEINLINE Vector3 operator*(float InScale) const;
 	FORCEINLINE Vector3 operator/(float InScale) const;
@@ -28,12 +23,17 @@ public:
 	FORCEINLINE Vector3& operator+=(const Vector3& InVector);
 	FORCEINLINE Vector3& operator-=(const Vector3& InVector);
 
-	FORCEINLINE bool EqualsInRange(const Vector3& InVector, float InTolerance = KINDA_SMALL_NUMBER) const;
-
+	// 멤버함수 
+	FORCEINLINE Vector2 ToVector2() const;
+	FORCEINLINE float Size() const;
+	FORCEINLINE float SizeSquared() const;
+	FORCEINLINE Vector3 Normalize() const;
+	FORCEINLINE bool EqualsInTolerance(const Vector3& InVector, float InTolerance = KINDA_SMALL_NUMBER) const;
 	FORCEINLINE float Max() const;
 	FORCEINLINE float Dot(const Vector3& InVector) const;
 	FORCEINLINE Vector3 Cross(const Vector3& InVector) const;
 
+	// 정적멤버변수 
 	static const Vector3 UnitX;
 	static const Vector3 UnitY;
 	static const Vector3 UnitZ;
@@ -42,7 +42,7 @@ public:
 	static const Vector3 Infinity;
 	static const Vector3 InfinityNeg;
 
-public:
+	// 멤버변수 
 	float _X = 0.f;
 	float _Y = 0.f;
 	float _Z = 0.f;
@@ -81,11 +81,13 @@ FORCEINLINE Vector3 Vector3::Normalize() const
 
 FORCEINLINE float Vector3::operator[](int InIndex) const
 {
+	assert(InIndex >= 0 && InIndex <= 2);
 	return ((float *)this)[InIndex];
 }
 
 FORCEINLINE float &Vector3::operator[](int InIndex)
 {
+	assert(InIndex >= 0 && InIndex <= 2);
 	return ((float *)this)[InIndex];
 }
 
@@ -146,7 +148,7 @@ FORCEINLINE Vector3& Vector3::operator-=(const Vector3& InVector)
 	return *this;
 }
 
-FORCEINLINE bool Vector3::EqualsInRange(const Vector3& InVector, float InTolerance) const
+FORCEINLINE bool Vector3::EqualsInTolerance(const Vector3& InVector, float InTolerance) const
 {
 	return (Math::Abs(this->_X - InVector._X) <= InTolerance) &&
 		(Math::Abs(this->_Y - InVector._Y) < InTolerance) &&

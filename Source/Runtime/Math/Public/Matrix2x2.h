@@ -5,16 +5,14 @@
 struct Matrix2x2
 {
 public:
+	// 생성자 
 	FORCEINLINE Matrix2x2();
 	FORCEINLINE explicit Matrix2x2(const Vector2& InCol0, const Vector2& InCol1);
 	FORCEINLINE explicit Matrix2x2(float In00, float In01, float In10, float In11);
 
-	FORCEINLINE void SetIdentity();
-	FORCEINLINE Matrix2x2 Tranpose() const;
-
+	// 연산자 
 	FORCEINLINE const Vector2& operator[](int InIndex) const;
 	FORCEINLINE Vector2& operator[](int InIndex);
-
 	FORCEINLINE Matrix2x2 operator*(float InScalar) const;
 	FORCEINLINE Matrix2x2 operator*(const Matrix2x2& InMatrix) const;
 	FORCEINLINE Vector2 operator*(const Vector2& InVector) const;
@@ -24,9 +22,14 @@ public:
 		return InVector;
 	}
 
+	// 멤버함수 
+	FORCEINLINE void SetIdentity();
+	FORCEINLINE Matrix2x2 Tranpose() const;
+
+	// 정적멤버변수 
 	static const Matrix2x2 Identity;
 
-private:
+	// 멤버변수 
 	Vector2 _Cols[2];
 };
 
@@ -66,11 +69,13 @@ FORCEINLINE Matrix2x2 Matrix2x2::Tranpose() const
 
 FORCEINLINE const Vector2& Matrix2x2::operator[](int InIndex) const
 {
+	assert(InIndex >= 0 && InIndex <= 1);
 	return _Cols[InIndex];
 }
 
 FORCEINLINE Vector2& Matrix2x2::operator[](int InIndex)
 {
+	assert(InIndex >= 0 && InIndex <= 1);
 	return _Cols[InIndex];
 }
 
