@@ -38,9 +38,12 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
+	// 게임 로직에만 사용하는 변수
+	static float moveSpeed = 100.f;
+
 	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
-	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * _MoveSpeed * InDeltaSeconds;
+	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
 	_CurrentPosition += deltaPosition;
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
