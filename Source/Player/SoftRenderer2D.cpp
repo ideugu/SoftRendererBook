@@ -39,7 +39,8 @@ void SoftRenderer::DrawGrid2D()
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	// 시간에 따른 회전량
-	float deltaRadian = Math::Deg2Rad(_RotateSpeed * InDeltaSeconds);
+	static float rotateSpeed = 180.f;
+	float deltaRadian = Math::Deg2Rad(rotateSpeed * InDeltaSeconds);
 
 	// 행렬 설계
 	float sin = sinf(deltaRadian);
