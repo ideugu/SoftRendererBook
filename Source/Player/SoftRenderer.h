@@ -52,7 +52,8 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
-	Vector2 _CurrentPosition = Vector2::Zero;
+	Vector2 _StartPosition = Vector2::Zero;
+	Vector2 _EndPosition = Vector2(500.f, 0.f);
 	LinearColor _CurrentColor = LinearColor::Blue;
 
 private:

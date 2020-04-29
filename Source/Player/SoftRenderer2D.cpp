@@ -38,19 +38,20 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	static float moveSpeed = 100.f;
+	// 시간에 따른 회전량
+	static float rotateSpeed = 180.f;
+	float deltaRadian = Math::Deg2Rad(rotateSpeed * InDeltaSeconds);
 
-	// 엔진 모듈에서 입력 관리자 가져오기
-	InputManager input = _GameEngine.GetInputManager();
+	// 행렬 설계
+	float sin = sinf(deltaRadian);
+	float cos = cosf(deltaRadian);
+	Vector2 xAxis(cos, sin);
+	Vector2 yAxis(-sin, cos);
+	Matrix2x2 rotateMat(xAxis, yAxis);
 
-	// 이동 행렬을 생성하고 현재 위치에 적용
-	Vector3 deltaPosition = Vector3(input.GetXAxis(), input.GetYAxis(), 1.f) * moveSpeed * InDeltaSeconds;
-	Matrix3x3 translateMatrix(Vector3::UnitX, Vector3::UnitY, deltaPosition);
-	Vector3 newPosition = translateMatrix * Vector3(_CurrentPosition._X, _CurrentPosition._Y, 1.f);
-
-	// 최종 결과에서 Z 값을 제외해 적용
-	_CurrentPosition = newPosition.ToVector2();
-	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
+	// 끝점의 위치와 색상 지정하기
+	_EndPosition = rotateMat * _EndPosition;
+	_CurrentColor = LinearColor::Blue;
 }
 
 // 렌더링 로직
@@ -59,11 +60,7 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 지정한 점을 기준으로 상하좌우로 점 찍기
-	_RSI->DrawPoint(_CurrentPosition, _CurrentColor);
-	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitX, _CurrentColor);
-	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitX, _CurrentColor);
-	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitY, _CurrentColor);
-	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitY, _CurrentColor);
+	// 브레젠험 알고리즘으로 선 그리기
+	_RSI->DrawLine(_StartPosition, _EndPosition, _CurrentColor);
 }
 
