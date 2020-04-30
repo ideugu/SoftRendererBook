@@ -26,7 +26,8 @@ public:
 	virtual void DrawFullVerticalLine(int InX, const LinearColor& InColor) override;
 	virtual void DrawFullHorizontalLine(int InY, const LinearColor& InColor) override;
 
-	virtual void PushStatisticText(std::string InText) override;
+	virtual void PushStatisticText(std::string && InText) override;
+	virtual void PushStatisticTexts(std::vector<std::string> && InTexts) override;
 
 private:
 	FORCEINLINE void SetPixel(const ScreenPoint& InPos, const LinearColor& InColor);

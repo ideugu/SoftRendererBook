@@ -6,13 +6,13 @@ struct LinearColor
 {
 public:
 	FORCEINLINE LinearColor() = default;
-	FORCEINLINE explicit LinearColor(float InR, float InG, float InB, float InA = 1.f) : _R(InR), _G(InG), _B(InB), _A(InA) {}
+	FORCEINLINE explicit LinearColor(float InR, float InG, float InB, float InA = 1.f) : R(InR), G(InG), B(InB), A(InA) {}
 	FORCEINLINE explicit LinearColor(const Color32& InColor32)
 	{
-		_R = float(InColor32._R) * OneOver255;
-		_G = float(InColor32._G) * OneOver255;
-		_B = float(InColor32._B) * OneOver255;
-		_A = float(InColor32._A) * OneOver255;
+		R = float(InColor32.R) * OneOver255;
+		G = float(InColor32.G) * OneOver255;
+		B = float(InColor32.B) * OneOver255;
+		A = float(InColor32.A) * OneOver255;
 	}
 
 	FORCEINLINE Color32 ToColor32(const bool bSRGB = false) const;
@@ -39,18 +39,18 @@ public:
 	static const LinearColor Magenta;
 
 public:
-	float _R = 0.f;
-	float _G = 0.f;
-	float _B = 0.f;
-	float _A = 1.f;
+	float R = 0.f;
+	float G = 0.f;
+	float B = 0.f;
+	float A = 1.f;
 };
 
 FORCEINLINE Color32 LinearColor::ToColor32(const bool bSRGB) const
 {
-	float FloatR = Math::Clamp(_R, 0.f, 1.f);
-	float FloatG = Math::Clamp(_G, 0.f, 1.f);
-	float FloatB = Math::Clamp(_B, 0.f, 1.f);
-	float FloatA = Math::Clamp(_A, 0.f, 1.f);
+	float FloatR = Math::Clamp(R, 0.f, 1.f);
+	float FloatG = Math::Clamp(G, 0.f, 1.f);
+	float FloatB = Math::Clamp(B, 0.f, 1.f);
+	float FloatA = Math::Clamp(A, 0.f, 1.f);
 
 	return Color32(
 		(int)(FloatR * 255.999f),
@@ -63,58 +63,58 @@ FORCEINLINE Color32 LinearColor::ToColor32(const bool bSRGB) const
 FORCEINLINE LinearColor LinearColor::operator+(const LinearColor& InColor) const
 {
 	return LinearColor(
-		_R + InColor._R,
-		_G + InColor._G,
-		_B + InColor._B,
-		_A + InColor._A
+		R + InColor.R,
+		G + InColor.G,
+		B + InColor.B,
+		A + InColor.A
 	);
 }
 
 FORCEINLINE LinearColor LinearColor::operator-(const LinearColor& InColor) const
 {
 	return LinearColor(
-		_R - InColor._R,
-		_G - InColor._G,
-		_B - InColor._B,
-		_A - InColor._A
+		R - InColor.R,
+		G - InColor.G,
+		B - InColor.B,
+		A - InColor.A
 	);
 }
 
 FORCEINLINE LinearColor LinearColor::operator*(const LinearColor& InColor) const
 {
 	return LinearColor(
-		_R * InColor._R,
-		_G * InColor._G,
-		_B * InColor._B,
-		_A * InColor._A
+		R * InColor.R,
+		G * InColor.G,
+		B * InColor.B,
+		A * InColor.A
 	);
 }
 
 FORCEINLINE LinearColor LinearColor::operator*(float InScalar) const
 {
 	return LinearColor(
-		_R * InScalar,
-		_G * InScalar,
-		_B * InScalar,
-		_A * InScalar
+		R * InScalar,
+		G * InScalar,
+		B * InScalar,
+		A * InScalar
 	);
 }
 
 FORCEINLINE bool LinearColor::operator==(const LinearColor& InColor) const
 {
-	return this->_R == InColor._R && this->_G == InColor._G && this->_B == InColor._B && this->_A == InColor._A;
+	return this->R == InColor.R && this->G == InColor.G && this->B == InColor.B && this->A == InColor.A;
 }
 
 FORCEINLINE bool LinearColor::operator!=(const LinearColor& InColor) const
 {
-	return this->_R != InColor._R || this->_G != InColor._G || this->_B != InColor._B || this->_A != InColor._A;
+	return this->R != InColor.R || this->G != InColor.G || this->B != InColor.B || this->A != InColor.A;
 }
 
 FORCEINLINE bool LinearColor::EqualsInRange(const LinearColor& InColor, float InTolerance) const
 {
-	return (Math::Abs(this->_R - InColor._R) < InTolerance) &&
-		(Math::Abs(this->_G - InColor._G) < InTolerance) &&
-		(Math::Abs(this->_B - InColor._B) < InTolerance) &&
-		(Math::Abs(this->_A - InColor._A) < InTolerance);
+	return (Math::Abs(this->R - InColor.R) < InTolerance) &&
+		(Math::Abs(this->G - InColor.G) < InTolerance) &&
+		(Math::Abs(this->B - InColor.B) < InTolerance) &&
+		(Math::Abs(this->A - InColor.A) < InTolerance);
 }
 
