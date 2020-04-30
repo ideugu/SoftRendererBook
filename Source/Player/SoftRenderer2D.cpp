@@ -51,6 +51,8 @@ void SoftRenderer::Render2D()
 
 	// 지정된 위치에 지정한 색상으로 점 찍기
 	_RSI->DrawPoint(_CurrentPosition, _CurrentColor);
+
+	// 현재 위치를 화면에 출력
 	_RSI->PushStatisticText(_CurrentPosition.ToString());
 }
 
