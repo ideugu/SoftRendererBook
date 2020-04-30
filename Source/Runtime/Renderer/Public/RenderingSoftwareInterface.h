@@ -20,5 +20,6 @@ public:
 	virtual void DrawFullVerticalLine(int InX, const LinearColor& InColor) = 0;
 	virtual void DrawFullHorizontalLine(int InY, const LinearColor& InColor) = 0;
 
-	virtual void PushStatisticText(std::string InText) = 0;
+	virtual void PushStatisticText(std::string && InText) = 0;
+	virtual void PushStatisticTexts(std::vector<std::string> && InTexts) = 0;
 };

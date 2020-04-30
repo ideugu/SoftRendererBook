@@ -78,12 +78,12 @@ FORCEINLINE void WindowsGDI::SetPixelAlphaBlending(const ScreenPoint & InPos, co
 	}
 
 	Color32* dest = _ScreenBuffer;
-	*(dest + GetScreenBufferIndex(InPos)) = (InColor * InColor._A + bufferColor * (1.f - InColor._A)).ToColor32();
+	*(dest + GetScreenBufferIndex(InPos)) = (InColor * InColor.A + bufferColor * (1.f - InColor.A)).ToColor32();
 }
 
 FORCEINLINE bool WindowsGDI::IsInScreen(const ScreenPoint& InPos) const
 {
-	if ((InPos._X < 0 || InPos._X >= _ScreenSize._X) || (InPos._Y < 0 || InPos._Y >= _ScreenSize._Y))
+	if ((InPos.X < 0 || InPos.X >= _ScreenSize.X) || (InPos.Y < 0 || InPos.Y >= _ScreenSize.Y))
 	{
 		return false;
 	}
@@ -93,7 +93,7 @@ FORCEINLINE bool WindowsGDI::IsInScreen(const ScreenPoint& InPos) const
 
 FORCEINLINE int WindowsGDI::GetScreenBufferIndex(const ScreenPoint& InPos) const
 {
-	return InPos._Y * _ScreenSize._X + InPos._X;
+	return InPos.Y * _ScreenSize.X + InPos.X;
 }
 
 FORCEINLINE LinearColor WindowsGDI::GetPixel(const ScreenPoint& InPos)

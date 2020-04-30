@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Vector4.h"
-#include "Matrix2x2.h"
-#include "Matrix3x3.h"
+#include <vector>
 
 struct Matrix4x4
 {
@@ -12,8 +11,8 @@ public:
 	FORCEINLINE explicit Matrix4x4(const Vector4& InCol0, const Vector4& InCol1, const Vector4& InCol2, const Vector4& InCol3);
 
 	// 연산자 
-	FORCEINLINE const Vector4& operator[](int InIndex) const;
-	FORCEINLINE Vector4& operator[](int InIndex);
+	FORCEINLINE const Vector4& operator[](BYTE InIndex) const;
+	FORCEINLINE Vector4& operator[](BYTE InIndex);
 	FORCEINLINE Matrix4x4 operator*(float InScalar) const;
 	FORCEINLINE Matrix4x4 operator*(const Matrix4x4& InMatrix) const;
 	FORCEINLINE Vector4 operator*(const Vector4& InVector) const;
@@ -33,11 +32,14 @@ public:
 	FORCEINLINE void SetIdentity();
 	FORCEINLINE Matrix4x4 Tranpose() const;
 
+	std::vector<std::string> ToStrings() const;
+
 	// 정적멤버변수 
 	static const Matrix4x4 Identity;
+	enum { Rank = 4 };
 
 	// 멤버변수 
-	Vector4 _Cols[4];
+	Vector4 Cols[4];
 };
 
 FORCEINLINE Matrix4x4::Matrix4x4()
@@ -47,49 +49,49 @@ FORCEINLINE Matrix4x4::Matrix4x4()
 
 FORCEINLINE Matrix4x4::Matrix4x4(const Vector4& InCol0, const Vector4& InCol1, const Vector4& InCol2, const Vector4& InCol3)
 {
-	_Cols[0] = InCol0;
-	_Cols[1] = InCol1;
-	_Cols[2] = InCol2;
-	_Cols[3] = InCol3;
+	Cols[0] = InCol0;
+	Cols[1] = InCol1;
+	Cols[2] = InCol2;
+	Cols[3] = InCol3;
 }
 
 FORCEINLINE void Matrix4x4::SetIdentity()
 {
-	_Cols[0] = Vector4::UnitX;
-	_Cols[1] = Vector4::UnitY;
-	_Cols[2] = Vector4::UnitZ;
-	_Cols[3] = Vector4::UnitW;
+	Cols[0] = Vector4::UnitX;
+	Cols[1] = Vector4::UnitY;
+	Cols[2] = Vector4::UnitZ;
+	Cols[3] = Vector4::UnitW;
 }
 
 FORCEINLINE Matrix4x4 Matrix4x4::Tranpose() const
 {
 	return Matrix4x4(
-		Vector4(_Cols[0]._X, _Cols[1]._X, _Cols[2]._X, _Cols[3]._X),
-		Vector4(_Cols[0]._Y, _Cols[1]._Y, _Cols[2]._Y, _Cols[3]._Y),
-		Vector4(_Cols[0]._Z, _Cols[1]._Z, _Cols[2]._Z, _Cols[3]._Z),
-		Vector4(_Cols[0]._W, _Cols[1]._W, _Cols[2]._W, _Cols[3]._W)
+		Vector4(Cols[0].X, Cols[1].X, Cols[2].X, Cols[3].X),
+		Vector4(Cols[0].Y, Cols[1].Y, Cols[2].Y, Cols[3].Y),
+		Vector4(Cols[0].Z, Cols[1].Z, Cols[2].Z, Cols[3].Z),
+		Vector4(Cols[0].W, Cols[1].W, Cols[2].W, Cols[3].W)
 	);
 }
 
-FORCEINLINE const Vector4& Matrix4x4::operator[](int InIndex) const
+FORCEINLINE const Vector4& Matrix4x4::operator[](BYTE InIndex) const
 {
 	assert(InIndex >= 0 && InIndex <= 3);
-	return _Cols[InIndex];
+	return Cols[InIndex];
 }
 
-FORCEINLINE Vector4& Matrix4x4::operator[](int InIndex)
+FORCEINLINE Vector4& Matrix4x4::operator[](BYTE InIndex)
 {
 	assert(InIndex >= 0 && InIndex <= 3);
-	return _Cols[InIndex];
+	return Cols[InIndex];
 }
 
 FORCEINLINE Matrix4x4 Matrix4x4::operator*(float InScalar) const
 {
 	return Matrix4x4(
-		_Cols[0] * InScalar,
-		_Cols[1] * InScalar,
-		_Cols[2] * InScalar,
-		_Cols[3] * InScalar
+		Cols[0] * InScalar,
+		Cols[1] * InScalar,
+		Cols[2] * InScalar,
+		Cols[3] * InScalar
 	);
 }
 

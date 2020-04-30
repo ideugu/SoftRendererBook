@@ -6,37 +6,37 @@ struct ScreenPoint
 {
 public:
 	FORCEINLINE ScreenPoint() = default;
-	FORCEINLINE explicit ScreenPoint(int InX, int InY) : _X(InX), _Y(InY) { }
-	FORCEINLINE explicit ScreenPoint(float InX, float InY) : _X(Math::FloorToInt(InX)), _Y(Math::FloorToInt(InY)) { }
-	FORCEINLINE explicit ScreenPoint(const Vector2& InPos) : ScreenPoint(InPos._X, InPos._Y) {}
+	FORCEINLINE explicit ScreenPoint(int InX, int InY) : X(InX), Y(InY) { }
+	FORCEINLINE explicit ScreenPoint(float InX, float InY) : X(Math::FloorToInt(InX)), Y(Math::FloorToInt(InY)) { }
+	FORCEINLINE explicit ScreenPoint(const Vector2& InPos) : ScreenPoint(InPos.X, InPos.Y) {}
 
-	ScreenPoint GetHalf() { return ScreenPoint(Math::FloorToInt(0.5f * _X), Math::FloorToInt(0.5f * _Y)); }
-	FORCEINLINE bool HasZero() const { return ( _X == 0 || _Y == 0 ); }
+	ScreenPoint GetHalf() { return ScreenPoint(Math::FloorToInt(0.5f * X), Math::FloorToInt(0.5f * Y)); }
+	FORCEINLINE bool HasZero() const { return ( X == 0 || Y == 0 ); }
 
 	FORCEINLINE static ScreenPoint ToScreenCoordinate(const ScreenPoint& InScreenSize, const Vector2& InPos)
 	{
-		return ScreenPoint(InPos._X + InScreenSize._X * 0.5f, -InPos._Y + InScreenSize._Y * 0.5f);
+		return ScreenPoint(InPos.X + InScreenSize.X * 0.5f, -InPos.Y + InScreenSize.Y * 0.5f);
 	}
 
 	FORCEINLINE Vector2 ToVectorCoordinate(const ScreenPoint& InScreenSize)
 	{
-		return Vector2(_X - InScreenSize._X * 0.5f + 0.5f, -_Y + InScreenSize._Y * 0.5f + 0.5f);
+		return Vector2(X - InScreenSize.X * 0.5f + 0.5f, -Y + InScreenSize.Y * 0.5f + 0.5f);
 	}
 
 	FORCEINLINE ScreenPoint operator-(const ScreenPoint& InPoint) const;
 	FORCEINLINE ScreenPoint operator+(const ScreenPoint& InPoint) const;
 
-	int _X = 0;
-	int _Y = 0;
+	int X = 0;
+	int Y = 0;
 };
 
 FORCEINLINE ScreenPoint ScreenPoint::operator-(const ScreenPoint& InPoint) const
 {
-	return ScreenPoint(_X - InPoint._X, _Y - InPoint._Y);
+	return ScreenPoint(X - InPoint.X, Y - InPoint.Y);
 }
 
 FORCEINLINE ScreenPoint ScreenPoint::operator+(const ScreenPoint& InPoint) const
 {
-	return ScreenPoint(_X + InPoint._X, _Y + InPoint._Y);
+	return ScreenPoint(X + InPoint.X, Y + InPoint.Y);
 }
 
