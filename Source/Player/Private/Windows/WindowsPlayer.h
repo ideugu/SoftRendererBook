@@ -82,8 +82,8 @@ namespace WindowsPlayer
 		RECT rect;
 		rect.left = 0;
 		rect.top = 0;
-		rect.right = InDefaultScreenSize._X - 1;
-		rect.bottom = InDefaultScreenSize._Y - 1;
+		rect.right = InDefaultScreenSize.X - 1;
+		rect.bottom = InDefaultScreenSize.Y - 1;
 		::AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false);
 		int WindowWidth = rect.right - rect.left + 1;
 		int WindowHeight = rect.bottom - rect.top + 1;

@@ -34,12 +34,12 @@ void WindowsRSI::EndFrame()
 
 void WindowsRSI::DrawFullVerticalLine(int InX, const LinearColor & InColor)
 {
-	if (InX < 0 || InX >= _ScreenSize._X)
+	if (InX < 0 || InX >= _ScreenSize.X)
 	{
 		return;
 	}
 
-	for (int y = 0; y < _ScreenSize._Y; ++y)
+	for (int y = 0; y < _ScreenSize.Y; ++y)
 	{
 		SetPixel(ScreenPoint(InX, y), InColor);
 	}
@@ -47,12 +47,12 @@ void WindowsRSI::DrawFullVerticalLine(int InX, const LinearColor & InColor)
 
 void WindowsRSI::DrawFullHorizontalLine(int InY, const LinearColor & InColor)
 {
-	if (InY < 0 || InY >= _ScreenSize._Y)
+	if (InY < 0 || InY >= _ScreenSize.Y)
 	{
 		return;
 	}
 
-	for (int x = 0; x < _ScreenSize._X; ++x)
+	for (int x = 0; x < _ScreenSize.X; ++x)
 	{
 		SetPixel(ScreenPoint(x, InY), InColor);
 	}
@@ -68,8 +68,8 @@ void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, co
 	ScreenPoint startPosition = ScreenPoint::ToScreenCoordinate(_ScreenSize, InStartPos);
 	ScreenPoint endPosition = ScreenPoint::ToScreenCoordinate(_ScreenSize, InEndPos);
 
-	int width = endPosition._X - startPosition._X;
-	int height = endPosition._Y - startPosition._Y;
+	int width = endPosition.X - startPosition.X;
+	int height = endPosition.Y - startPosition.Y;
 
 	bool isGradualSlope = (Math::Abs(width) >= Math::Abs(height));
 	int dx = (width >= 0) ? 1 : -1;
@@ -80,12 +80,12 @@ void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, co
 	int f = isGradualSlope ? fh * 2 - fw : 2 * fw - fh;
 	int f1 = isGradualSlope ? 2 * fh : 2 * fw;
 	int f2 = isGradualSlope ? 2 * (fh - fw) : 2 * (fw - fh);
-	int x = startPosition._X;
-	int y = startPosition._Y;
+	int x = startPosition.X;
+	int y = startPosition.Y;
 
 	if (isGradualSlope)
 	{
-		while (x != endPosition._X)
+		while (x != endPosition.X)
 		{
 			SetPixel(ScreenPoint(x, y), InColor);
 
@@ -104,7 +104,7 @@ void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, co
 	}
 	else
 	{
-		while (y != endPosition._Y)
+		while (y != endPosition.Y)
 		{
 			SetPixel(ScreenPoint(x, y), InColor);
 
@@ -123,7 +123,12 @@ void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, co
 	}
 }
 
-void WindowsRSI::PushStatisticText(std::string InText)
+void WindowsRSI::PushStatisticText(std::string && InText)
 {
 	_StatisticTexts.emplace_back(InText);
+}
+
+void WindowsRSI::PushStatisticTexts(std::vector<std::string> && InTexts)
+{
+	std::move(InTexts.begin(), InTexts.end(), std::back_inserter(_StatisticTexts));
 }

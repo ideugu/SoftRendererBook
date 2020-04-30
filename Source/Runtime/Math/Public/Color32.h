@@ -5,8 +5,8 @@
 struct Color32
 {
 public:
-	FORCEINLINE Color32() : _R(0), _G(0), _B(0), _A(0) { }
-	FORCEINLINE explicit Color32(BYTE InR, BYTE InG, BYTE InB, BYTE InA = 255) : _B(InB), _G(InG), _R(InR), _A(InA) { }
+	FORCEINLINE Color32() : R(0), G(0), B(0), A(0) { }
+	FORCEINLINE explicit Color32(BYTE InR, BYTE InG, BYTE InB, BYTE InA = 255) : B(InB), G(InG), R(InR), A(InA) { }
 	FORCEINLINE explicit Color32(UINT32 InColor) { GetColorRef() = InColor; }
 
 	FORCEINLINE const UINT32& GetColorRef() const { return *((UINT32*)this); }
@@ -23,10 +23,10 @@ public:
 	{ 
 		struct 
 		{ 
-			BYTE _B, _G, _R, _A; 
+			BYTE B, G, R, A; 
 		};
 
-		BYTE _Dummy; 
+		BYTE Dummy; 
 	};
 };
 
@@ -42,9 +42,9 @@ FORCEINLINE bool Color32::operator!=(const Color32& InC) const
 
 FORCEINLINE void Color32::operator+=(const Color32& InC)
 {
-	_R = (BYTE)Math::Clamp((BYTE)_R + (BYTE)InC._R, 0, 255);
-	_G = (BYTE)Math::Clamp((BYTE)_G + (BYTE)InC._G, 0, 255);
-	_B = (BYTE)Math::Clamp((BYTE)_B + (BYTE)InC._B, 0, 255);
-	_A = (BYTE)Math::Clamp((BYTE)_A + (BYTE)InC._A, 0, 255);
+	R = (BYTE)Math::Clamp((BYTE)R + (BYTE)InC.R, 0, 255);
+	G = (BYTE)Math::Clamp((BYTE)G + (BYTE)InC.G, 0, 255);
+	B = (BYTE)Math::Clamp((BYTE)B + (BYTE)InC.B, 0, 255);
+	A = (BYTE)Math::Clamp((BYTE)A + (BYTE)InC.A, 0, 255);
 }
 

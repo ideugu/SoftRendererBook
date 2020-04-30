@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector3.h"
+#include <vector>
 
 struct Matrix3x3
 {
@@ -11,8 +12,8 @@ public:
 	FORCEINLINE explicit Matrix3x3(float In00, float In01, float In02, float In10, float In11, float In12, float In20, float In21, float In22);
 
 	// 연산자 
-	FORCEINLINE const Vector3& operator[](int InIndex) const;
-	FORCEINLINE Vector3& operator[](int InIndex);
+	FORCEINLINE const Vector3& operator[](BYTE InIndex) const;
+	FORCEINLINE Vector3& operator[](BYTE InIndex);
 
 	FORCEINLINE Matrix3x3 operator*(float InScalar) const;
 	FORCEINLINE Matrix3x3 operator*(const Matrix3x3& InMatrix) const;
@@ -33,11 +34,14 @@ public:
 	FORCEINLINE void SetIdentity();
 	FORCEINLINE Matrix3x3 Tranpose() const;
 
+	std::vector<std::string> ToStrings() const;
+
 	// 정적멤버변수 
 	static const Matrix3x3 Identity;
+	enum { Rank = 3 };
 
 	// 멤버변수 
-	Vector3 _Cols[3];
+	Vector3 Cols[3];
 };
 
 FORCEINLINE Matrix3x3::Matrix3x3()
@@ -47,60 +51,60 @@ FORCEINLINE Matrix3x3::Matrix3x3()
 
 FORCEINLINE Matrix3x3::Matrix3x3(const Vector3& InCol0, const Vector3& InCol1, const Vector3& InCol2)
 {
-	_Cols[0] = InCol0;
-	_Cols[1] = InCol1;
-	_Cols[2] = InCol2;
+	Cols[0] = InCol0;
+	Cols[1] = InCol1;
+	Cols[2] = InCol2;
 }
 
 FORCEINLINE Matrix3x3::Matrix3x3(float In00, float In01, float In02, float In10, float In11, float In12, float In20, float In21, float In22)
 {
-	_Cols[0][0] = In00;
-	_Cols[0][1] = In01;
-	_Cols[0][2] = In02;
+	Cols[0][0] = In00;
+	Cols[0][1] = In01;
+	Cols[0][2] = In02;
 
-	_Cols[1][0] = In10;
-	_Cols[1][1] = In11;
-	_Cols[1][2] = In12;
+	Cols[1][0] = In10;
+	Cols[1][1] = In11;
+	Cols[1][2] = In12;
 
-	_Cols[2][0] = In20;
-	_Cols[2][1] = In21;
-	_Cols[2][2] = In22;
+	Cols[2][0] = In20;
+	Cols[2][1] = In21;
+	Cols[2][2] = In22;
 }
 
 FORCEINLINE void Matrix3x3::SetIdentity()
 {
-	_Cols[0] = Vector3::UnitX;
-	_Cols[1] = Vector3::UnitY;
-	_Cols[2] = Vector3::UnitZ;
+	Cols[0] = Vector3::UnitX;
+	Cols[1] = Vector3::UnitY;
+	Cols[2] = Vector3::UnitZ;
 }
 
 FORCEINLINE Matrix3x3 Matrix3x3::Tranpose() const
 {
 	return Matrix3x3(
-		Vector3(_Cols[0]._X, _Cols[1]._X, _Cols[2]._X),
-		Vector3(_Cols[0]._Y, _Cols[1]._Y, _Cols[2]._Y),
-		Vector3(_Cols[0]._Z, _Cols[1]._Z, _Cols[2]._Z)
+		Vector3(Cols[0].X, Cols[1].X, Cols[2].X),
+		Vector3(Cols[0].Y, Cols[1].Y, Cols[2].Y),
+		Vector3(Cols[0].Z, Cols[1].Z, Cols[2].Z)
 	);
 }
 
-FORCEINLINE const Vector3& Matrix3x3::operator[](int InIndex) const
+FORCEINLINE const Vector3& Matrix3x3::operator[](BYTE InIndex) const
 {
 	assert(InIndex >= 0 && InIndex <= 2);
-	return _Cols[InIndex];
+	return Cols[InIndex];
 }
 
-FORCEINLINE Vector3& Matrix3x3::operator[](int InIndex)
+FORCEINLINE Vector3& Matrix3x3::operator[](BYTE InIndex)
 {
 	assert(InIndex >= 0 && InIndex <= 2);
-	return _Cols[InIndex];
+	return Cols[InIndex];
 }
 
 FORCEINLINE Matrix3x3 Matrix3x3::operator*(float InScalar) const
 {
 	return Matrix3x3(
-		_Cols[0] * InScalar,
-		_Cols[1] * InScalar,
-		_Cols[2] * InScalar
+		Cols[0] * InScalar,
+		Cols[1] * InScalar,
+		Cols[2] * InScalar
 	);
 }
 
