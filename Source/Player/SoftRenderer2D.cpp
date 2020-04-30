@@ -66,6 +66,7 @@ void SoftRenderer::Render2D()
 	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitY, _CurrentColor);
 	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitY, _CurrentColor);
 
+	// 현재 위치를 화면에 출력
 	_RSI->PushStatisticText(_CurrentPosition.ToString());
 }
 
