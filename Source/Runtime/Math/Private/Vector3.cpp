@@ -9,3 +9,10 @@ const Vector3 Vector3::Zero(0.f, 0.f, 0.f);
 const Vector3 Vector3::One(1.f, 1.f, 1.f);
 const Vector3 Vector3::Infinity(INFINITY, INFINITY, INFINITY);
 const Vector3 Vector3::InfinityNeg(-INFINITY, -INFINITY, -INFINITY);
+
+std::string Vector3::ToString() const
+{
+	char result[64];
+	std::snprintf(result, sizeof(result), "(%.3f, %.3f, %.3f)", X, Y, Z);
+	return result;
+}

@@ -42,8 +42,8 @@ bool WindowsGDI::InitializeGDI(const ScreenPoint& InScreenSize)
 	BITMAPINFO bmi;
 	memset(&bmi, 0, sizeof(BITMAPINFO));
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = _ScreenSize._X;
-	bmi.bmiHeader.biHeight = -_ScreenSize._Y;
+	bmi.bmiHeader.biWidth = _ScreenSize.X;
+	bmi.bmiHeader.biHeight = -_ScreenSize.Y;
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
@@ -95,7 +95,7 @@ void WindowsGDI::FillBuffer(Color32 InColor)
 	}
 
 	Color32* dest = _ScreenBuffer;
-	UINT32 totalCount = _ScreenSize._X * _ScreenSize._Y;
+	UINT32 totalCount = _ScreenSize.X * _ScreenSize.Y;
 	CopyBuffer<Color32>(_ScreenBuffer, &InColor, totalCount);
 	return;
 }
@@ -165,14 +165,14 @@ void WindowsGDI::SwapBuffer()
 	}
 
 	DrawStatisticTexts();
-	BitBlt(_ScreenDC, 0, 0, _ScreenSize._X, _ScreenSize._Y, _MemoryDC, 0, 0, SRCCOPY);
+	BitBlt(_ScreenDC, 0, 0, _ScreenSize.X, _ScreenSize.Y, _MemoryDC, 0, 0, SRCCOPY);
 
 	_StatisticTexts.clear();
 }
 
 void WindowsGDI::CreateDepthBuffer()
 {
-	_DepthBuffer = new float[_ScreenSize._X * _ScreenSize._Y];
+	_DepthBuffer = new float[_ScreenSize.X * _ScreenSize.Y];
 }
 
 void WindowsGDI::ClearDepthBuffer()
@@ -181,7 +181,7 @@ void WindowsGDI::ClearDepthBuffer()
 	{
 		float* dest = _DepthBuffer;
 		float defValue = INFINITY;
-		UINT32 totalCount = _ScreenSize._X * _ScreenSize._Y;
+		UINT32 totalCount = _ScreenSize.X * _ScreenSize.Y;
 		CopyBuffer<float>(_DepthBuffer, &defValue, totalCount);
 	}
 }
