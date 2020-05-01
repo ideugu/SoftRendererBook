@@ -39,7 +39,7 @@ void SoftRenderer::DrawGrid2D()
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	// 시간에 따른 회전량
-	static float rotateSpeed = 180.f;
+	static float rotateSpeed = 30.f;
 	float deltaRadian = Math::Deg2Rad(rotateSpeed * InDeltaSeconds);
 
 	// 행렬 설계
@@ -60,11 +60,12 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 브레젠험 알고리즘으로 선 그리기
-	_RSI->DrawLine(_StartPosition, _EndPosition, _CurrentColor);
-
 	// 선의 시작과 끝 지점을 화면에 출력
 	_RSI->PushStatisticText(_StartPosition.ToString());
 	_RSI->PushStatisticText(_EndPosition.ToString());
+
+	// 브레젠험 알고리즘으로 선 그리기
+	_RSI->DrawLine(_StartPosition, _EndPosition, _CurrentColor);
+
 }
 
