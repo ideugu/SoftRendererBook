@@ -38,20 +38,11 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	// 시간에 따른 회전량
-	static float rotateSpeed = 30.f;
-	float deltaRadian = Math::Deg2Rad(rotateSpeed * InDeltaSeconds);
+	InputManager input = _GameEngine.GetInputManager();
+	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * _MoveSpeed * InDeltaSeconds;
+	_PivotPosition += deltaPosition;
 
-	// 행렬 설계
-	float sin = sinf(deltaRadian);
-	float cos = cosf(deltaRadian);
-	Vector2 xAxis(cos, sin);
-	Vector2 yAxis(-sin, cos);
-	Matrix2x2 rotateMat(xAxis, yAxis);
-
-	// 끝점의 위치와 색상 지정하기
-	_EndPosition = rotateMat * _EndPosition;
-	_CurrentColor = LinearColor::Blue;
+	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
 
 // 렌더링 로직
@@ -60,12 +51,46 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 선의 시작과 끝 지점을 화면에 출력
-	_RSI->PushStatisticText(_StartPosition.ToString());
-	_RSI->PushStatisticText(_EndPosition.ToString());
+	// 피벗 위치
+	_RSI->PushStatisticText(_PivotPosition.ToString());
 
-	// 브레젠험 알고리즘으로 선 그리기
-	_RSI->DrawLine(_StartPosition, _EndPosition, _CurrentColor);
+	// 행렬의 설계
+	static float squareScale = 100.f;
+	Matrix3x3 scaleMat = Matrix3x3(Vector3::UnitX * squareScale, Vector3::UnitY * squareScale, Vector3::UnitZ);
+	Matrix3x3 translateMat = Matrix3x3(Vector3::UnitX, Vector3::UnitY, Vector3(_PivotPosition.X, _PivotPosition.Y, 1.f));
+	Matrix3x3 finalMat = translateMat * scaleMat;
+
+	static float squareHalfSize = 0.5f;
+	static const int vertexCount = 4;
+	static const int triangleCount = 2;
+
+	// 삼각형 두 개로 사각형 그리기
+	Vector2 vertices[vertexCount] = {
+		Vector2(-squareHalfSize, -squareHalfSize),
+		Vector2(-squareHalfSize, squareHalfSize),
+		Vector2(squareHalfSize, squareHalfSize),
+		Vector2(squareHalfSize, -squareHalfSize)
+	};
+
+	int indices[triangleCount * 3] = {
+		0, 1, 2,
+		0, 2, 3
+	};
+
+	// 각 정점에 행렬을 적용
+	for (int vi = 0; vi < vertexCount; ++vi)
+	{
+		vertices[vi] = finalMat * vertices[vi];
+	}
+
+	// 선 그리기
+	for (int ti = 0; ti < triangleCount; ++ti)
+	{
+		int bi = ti * 3;
+		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 1]], _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 2]], _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi + 1]], vertices[indices[bi + 2]], _CurrentColor);
+	}
 
 }
 
