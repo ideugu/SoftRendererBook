@@ -69,27 +69,27 @@ void SoftRenderer::Render2D()
 	size_t indexCount = _GameEngine.GetMeshPtr()->_Indices.size();
 	size_t triangleCount = indexCount / 3;
 
-	Vector2* newVertices = new Vector2[vertexCount];
-	std::memcpy(newVertices, &_GameEngine.GetMeshPtr()->_Vertices[0], sizeof(Vector2) * vertexCount);
-	int* newIndice = new int[indexCount];
-	std::memcpy(newIndice, &_GameEngine.GetMeshPtr()->_Indices[0], sizeof(int) * indexCount);
+	Vector2* vertices = new Vector2[vertexCount];
+	std::memcpy(vertices, &_GameEngine.GetMeshPtr()->_Vertices[0], sizeof(Vector2) * vertexCount);
+	int* indices = new int[indexCount];
+	std::memcpy(indices, &_GameEngine.GetMeshPtr()->_Indices[0], sizeof(int) * indexCount);
 
 	// 각 정점에 행렬을 적용
 	for (int vi = 0; vi < vertexCount; ++vi)
 	{
-		newVertices[vi] = finalMat * newVertices[vi];
+		vertices[vi] = finalMat * vertices[vi];
 	}
 
 	// 변환된 정점을 잇는 선 그리기
 	for (int ti = 0; ti < triangleCount; ++ti)
 	{
 		int bi = ti * 3;
-		_RSI->DrawLine(newVertices[newIndice[bi]], newVertices[newIndice[bi + 1]], _CurrentColor);
-		_RSI->DrawLine(newVertices[newIndice[bi]], newVertices[newIndice[bi + 2]], _CurrentColor);
-		_RSI->DrawLine(newVertices[newIndice[bi + 1]], newVertices[newIndice[bi + 2]], _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 1]], _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 2]], _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi + 1]], vertices[indices[bi + 2]], _CurrentColor);
 	}
 
-	delete[] newVertices;
-	delete[] newIndice;
+	delete[] vertices;
+	delete[] indices;
 }
 
