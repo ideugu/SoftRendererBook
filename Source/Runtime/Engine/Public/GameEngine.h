@@ -12,10 +12,10 @@ public:
 	bool Init();
 	bool LoadResources();
 	InputManager& GetInputManager() { return _InputManager; }
-	const Mesh* GetMeshPtr() { return _MeshPtr.get(); }
+	const Mesh& GetMesh() { return _QuadMesh; }
 
 private:
 	InputManager _InputManager;
-	std::unique_ptr<Mesh> _MeshPtr;
+	Mesh _QuadMesh;
 };
 

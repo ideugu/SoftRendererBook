@@ -65,14 +65,14 @@ void SoftRenderer::Render2D()
 	Matrix3x3 finalMat = _Transform.GetModelingMatrix();
 
 	// 원본 메시 데이터를 변경하지 않고 새로운 메시 데이터를 복제해 생성.
-	size_t vertexCount = _GameEngine.GetMeshPtr()->_Vertices.size();
-	size_t indexCount = _GameEngine.GetMeshPtr()->_Indices.size();
+	size_t vertexCount = _GameEngine.GetMesh()._Vertices.size();
+	size_t indexCount = _GameEngine.GetMesh()._Indices.size();
 	size_t triangleCount = indexCount / 3;
 
 	Vector2* vertices = new Vector2[vertexCount];
-	std::memcpy(vertices, &_GameEngine.GetMeshPtr()->_Vertices[0], sizeof(Vector2) * vertexCount);
+	std::memcpy(vertices, &_GameEngine.GetMesh()._Vertices[0], sizeof(Vector2) * vertexCount);
 	int* indices = new int[indexCount];
-	std::memcpy(indices, &_GameEngine.GetMeshPtr()->_Indices[0], sizeof(int) * indexCount);
+	std::memcpy(indices, &_GameEngine.GetMesh()._Indices[0], sizeof(int) * indexCount);
 
 	// 각 정점에 행렬을 적용
 	for (int vi = 0; vi < vertexCount; ++vi)

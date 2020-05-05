@@ -19,21 +19,19 @@ bool GameEngine::Init()
 
 bool GameEngine::LoadResources()
 {
-	_MeshPtr = std::make_unique<Mesh>();
+	constexpr float squareHalfSize = 0.5f;
+	constexpr int vertexCount = 4;
+	constexpr int triangleCount = 2;
+	constexpr int indexCount = triangleCount * 3;
 
-	static const float squareHalfSize = 0.5f;
-	static const int vertexCount = 4;
-	static const int triangleCount = 2;
-	static const int indexCount = triangleCount * 3;
-
-	_MeshPtr->_Vertices = {
+	_QuadMesh._Vertices = {
 		Vector2(-squareHalfSize, -squareHalfSize),
 		Vector2(-squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, -squareHalfSize)
 	};
 
-	_MeshPtr->_Indices = {
+	_QuadMesh._Indices = {
 		0, 2, 1, 0, 3, 2
 	};
 
