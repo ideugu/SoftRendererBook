@@ -26,17 +26,16 @@ bool GameEngine::LoadResources()
 	static const int triangleCount = 2;
 	static const int indexCount = triangleCount * 3;
 
-	Vector2 vertices[vertexCount] = {
+	_MeshPtr->_Vertices = {
 		Vector2(-squareHalfSize, -squareHalfSize),
 		Vector2(-squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, -squareHalfSize)
 	};
 
-	int indice[indexCount] = {
+	_MeshPtr->_Indices = {
 		0, 2, 1, 0, 3, 2
 	};
 
-	_MeshPtr->SetMesh(vertices, vertexCount, indice, indexCount);
 	return true;
 }

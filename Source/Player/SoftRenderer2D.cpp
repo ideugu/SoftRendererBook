@@ -65,14 +65,14 @@ void SoftRenderer::Render2D()
 	Matrix3x3 finalMat = _Transform.GetModelingMatrix();
 
 	// 원본 메시 데이터를 변경하지 않고 새로운 메시 데이터를 복제해 생성.
-	int vertexCount = _GameEngine.GetMeshPtr()->GetVertexCount();
-	int indexCount = _GameEngine.GetMeshPtr()->GetIndexCount();
-	int triangleCount = indexCount / 3;
+	size_t vertexCount = _GameEngine.GetMeshPtr()->_Vertices.size();
+	size_t indexCount = _GameEngine.GetMeshPtr()->_Indices.size();
+	size_t triangleCount = indexCount / 3;
 
 	Vector2* newVertices = new Vector2[vertexCount];
-	std::memcpy(newVertices, _GameEngine.GetMeshPtr()->GetVerticesPtr(), sizeof(Vector2) * vertexCount);
+	std::memcpy(newVertices, &_GameEngine.GetMeshPtr()->_Vertices[0], sizeof(Vector2) * vertexCount);
 	int* newIndice = new int[indexCount];
-	std::memcpy(newIndice, _GameEngine.GetMeshPtr()->GetIndicesPtr(), sizeof(int) * indexCount);
+	std::memcpy(newIndice, &_GameEngine.GetMeshPtr()->_Indices[0], sizeof(int) * indexCount);
 
 	// 각 정점에 행렬을 적용
 	for (int vi = 0; vi < vertexCount; ++vi)
@@ -88,5 +88,8 @@ void SoftRenderer::Render2D()
 		_RSI->DrawLine(newVertices[newIndice[bi]], newVertices[newIndice[bi + 2]], _CurrentColor);
 		_RSI->DrawLine(newVertices[newIndice[bi + 1]], newVertices[newIndice[bi + 2]], _CurrentColor);
 	}
+
+	delete[] newVertices;
+	delete[] newIndice;
 }
 
