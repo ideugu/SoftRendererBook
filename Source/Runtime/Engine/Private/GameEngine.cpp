@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "Transform2D.h"
 #include "GameObject2D.h"
+#include "Camera2D.h"
 #include "GameEngine.h"
 
 bool GameEngine::Init()
@@ -51,6 +52,11 @@ bool GameEngine::LoadResources()
 
 bool GameEngine::LoadScene()
 {
+	static float squareScale = 100.f;
+
 	_Player = std::make_unique<GameObject2D>(_QuadMesh.get());
+	_Player->GetTransform().SetScale(Vector2::One * squareScale);
+
+	_Camera = std::make_unique<Camera2D>();
 	return true;
 }

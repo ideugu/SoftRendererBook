@@ -8,30 +8,33 @@ void SoftRenderer::DrawGrid2D()
 	// 그리드 색상
 	LinearColor gridColor(LinearColor(0.8f, 0.8f, 0.8f, 0.3f));
 
-	// 가로 세로 라인 그리기
-	ScreenPoint screenHalfSize = _ScreenSize.GetHalf();
+	// 뷰의 영역 계산
+	Vector2 viewPos = _GameEngine.GetCamera()->GetTransform().GetPosition();
+	Vector2 extent = Vector2(_ScreenSize.X * 0.5f, _ScreenSize.Y * 0.5f);
 
-	for (int x = screenHalfSize.X; x <= _ScreenSize.X; x += _Grid2DUnit)
+	// 좌측 하단에서부터 격자 그리기
+	int xGridCount = _ScreenSize.X / _Grid2DUnit;
+	int yGridCount = _ScreenSize.Y / _Grid2DUnit;
+
+	// 그리드가 시작되는 좌하단 좌표 값 계산
+	Vector2 minPos = viewPos - extent;
+	Vector2 minGridPos = Vector2(ceilf(minPos.X / (float)_Grid2DUnit), ceilf(minPos.Y / (float)_Grid2DUnit)) * (float)_Grid2DUnit;
+	ScreenPoint gridBottomLeft = ScreenPoint::ToScreenCoordinate(_ScreenSize, minGridPos - viewPos);
+
+	for (int ix = 0; ix < xGridCount; ++ix)
 	{
-		_RSI->DrawFullVerticalLine(x, gridColor);
-		if (x > screenHalfSize.X)
-		{
-			_RSI->DrawFullVerticalLine(2 * screenHalfSize.X - x, gridColor);
-		}
+		_RSI->DrawFullVerticalLine(gridBottomLeft.X + ix * _Grid2DUnit, gridColor);
 	}
 
-	for (int y = screenHalfSize.Y; y <= _ScreenSize.Y; y += _Grid2DUnit)
+	for (int iy = 0; iy < yGridCount; ++iy)
 	{
-		_RSI->DrawFullHorizontalLine(y, gridColor);
-		if (y > screenHalfSize.Y)
-		{
-			_RSI->DrawFullHorizontalLine(2 * screenHalfSize.Y - y, gridColor);
-		}
+		_RSI->DrawFullHorizontalLine(gridBottomLeft.Y - iy * _Grid2DUnit, gridColor);
 	}
 
-	// 월드 축 그리기
-	_RSI->DrawFullHorizontalLine(screenHalfSize.Y, LinearColor::Red);
-	_RSI->DrawFullVerticalLine(screenHalfSize.X, LinearColor::Green);
+	// 월드의 원점
+	ScreenPoint worldOrigin = ScreenPoint::ToScreenCoordinate(_ScreenSize, -viewPos);
+	_RSI->DrawFullHorizontalLine(worldOrigin.Y, LinearColor::Red);
+	_RSI->DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
 }
 
 
@@ -40,15 +43,12 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	static float moveSpeed = 100.f;
 	static float rotateSpeed = 180.f;
-	static float squareScale = 100.f;
 
 	InputManager input = _GameEngine.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
-	transform.AddRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
-	transform.AddPosition(transform.GetLocalY() * input.GetYAxis() * moveSpeed * InDeltaSeconds);
-	transform.SetScale(Vector2::One * squareScale);
+	Transform2D& transform = _GameEngine.GetCamera()->GetTransform();
+	transform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
@@ -59,9 +59,12 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
+	// 카메라의 뷰 행렬
+	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
+
 	// 플레이어 게임 오브젝트의 트랜스폼
 	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
-	Matrix3x3 finalMat = transform.GetModelingMatrix();
+	Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
 	// 게임 오브젝트 트랜스폼 정보의 출력
 	_RSI->PushStatisticTexts(finalMat.ToStrings());

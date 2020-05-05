@@ -11,7 +11,7 @@ public:
 	const Mesh* GetMesh() { return _MeshPtr; }
 	bool HasMesh() { return (_MeshPtr != nullptr); }
 
-private:
+protected:
 	Transform2D _Transform;
 	const Mesh* _MeshPtr = nullptr;
 };
