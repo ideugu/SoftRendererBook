@@ -44,9 +44,11 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	InputManager input = _GameEngine.GetInputManager();
 
-	_Transform.AddRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
-	_Transform.AddPosition(_Transform.GetLocalY() * input.GetYAxis() * moveSpeed * InDeltaSeconds);
-	_Transform.SetScale(Vector2::One * squareScale);
+	// 플레이어 게임 오브젝트의 트랜스폼
+	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
+	transform.AddRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
+	transform.AddPosition(transform.GetLocalY() * input.GetYAxis() * moveSpeed * InDeltaSeconds);
+	transform.SetScale(Vector2::One * squareScale);
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
@@ -57,22 +59,25 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 트랜스폼 정보의 출력
-	_RSI->PushStatisticText(_Transform.GetPosition().ToString());
-	_RSI->PushStatisticText(std::to_string(_Transform.GetRotation()));
-	_RSI->PushStatisticText(_Transform.GetScale().ToString());
+	// 플레이어 게임 오브젝트의 트랜스폼
+	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
+	Matrix3x3 finalMat = transform.GetModelingMatrix();
 
-	Matrix3x3 finalMat = _Transform.GetModelingMatrix();
+	// 게임 오브젝트 트랜스폼 정보의 출력
+	_RSI->PushStatisticTexts(finalMat.ToStrings());
 
-	// 원본 메시 데이터를 변경하지 않고 새로운 메시 데이터를 복제해 생성.
-	size_t vertexCount = _GameEngine.GetMesh()._Vertices.size();
-	size_t indexCount = _GameEngine.GetMesh()._Indices.size();
+	// 플레이어 게임 오브젝트의 메시
+	const Mesh* mesh = _GameEngine.GetPlayer()->GetMesh();
+
+	size_t vertexCount = mesh->_Vertices.size();
+	size_t indexCount = mesh->_Indices.size();
 	size_t triangleCount = indexCount / 3;
 
+	// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼 생성
 	Vector2* vertices = new Vector2[vertexCount];
-	std::memcpy(vertices, &_GameEngine.GetMesh()._Vertices[0], sizeof(Vector2) * vertexCount);
+	std::memcpy(vertices, &mesh->_Vertices[0], sizeof(Vector2) * vertexCount);
 	int* indices = new int[indexCount];
-	std::memcpy(indices, &_GameEngine.GetMesh()._Indices[0], sizeof(int) * indexCount);
+	std::memcpy(indices, &mesh->_Indices[0], sizeof(int) * indexCount);
 
 	// 각 정점에 행렬을 적용
 	for (int vi = 0; vi < vertexCount; ++vi)

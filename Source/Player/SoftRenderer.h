@@ -53,7 +53,6 @@ private:
 
 	int _Grid2DUnit = 10;
 	LinearColor _CurrentColor = LinearColor::Blue;
-	Transform2D _Transform;
 
 private:
 	// 초기화 점검 변수
