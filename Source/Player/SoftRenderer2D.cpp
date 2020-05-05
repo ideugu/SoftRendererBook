@@ -51,8 +51,7 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 모델링 공간 
-	// 메시 정보
+	////////////////////// 모델링 공간 //////////////////////
 	static float squareHalfSize = 0.5f;
 	static const int vertexCount = 4;
 	static const int triangleCount = 2;
@@ -70,7 +69,7 @@ void SoftRenderer::Render2D()
 		0, 2, 3
 	};
 
-	// 월드 공간 
+	////////////////////// 월드 공간 //////////////////////
 	// 게임 로직에서 변경한 피벗 위치의 출력
 	_RSI->PushStatisticText(_PivotPosition.ToString());
 
