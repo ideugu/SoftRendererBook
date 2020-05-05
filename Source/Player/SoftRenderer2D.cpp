@@ -51,20 +51,13 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 피벗 위치
-	_RSI->PushStatisticText(_PivotPosition.ToString());
-
-	// 행렬의 설계
-	static float squareScale = 100.f;
-	Matrix3x3 scaleMat = Matrix3x3(Vector3::UnitX * squareScale, Vector3::UnitY * squareScale, Vector3::UnitZ);
-	Matrix3x3 translateMat = Matrix3x3(Vector3::UnitX, Vector3::UnitY, Vector3(_PivotPosition.X, _PivotPosition.Y, 1.f));
-	Matrix3x3 finalMat = translateMat * scaleMat;
-
+	// 모델링 공간 
+	// 메시 정보
 	static float squareHalfSize = 0.5f;
 	static const int vertexCount = 4;
 	static const int triangleCount = 2;
 
-	// 삼각형 두 개로 사각형 그리기
+	// 정점 배열과 인덱스 배열 생성
 	Vector2 vertices[vertexCount] = {
 		Vector2(-squareHalfSize, -squareHalfSize),
 		Vector2(-squareHalfSize, squareHalfSize),
@@ -77,13 +70,23 @@ void SoftRenderer::Render2D()
 		0, 2, 3
 	};
 
-	// 각 정점에 행렬을 적용
+	// 월드 공간 
+	// 게임 로직에서 변경한 피벗 위치의 출력
+	_RSI->PushStatisticText(_PivotPosition.ToString());
+
+	// 변환 행렬의 설계
+	static float squareScale = 100.f;
+	Matrix3x3 scaleMat = Matrix3x3(Vector3::UnitX * squareScale, Vector3::UnitY * squareScale, Vector3::UnitZ);
+	Matrix3x3 translateMat = Matrix3x3(Vector3::UnitX, Vector3::UnitY, Vector3(_PivotPosition.X, _PivotPosition.Y, 1.f));
+	Matrix3x3 finalMat = translateMat * scaleMat;
+
+	// 정점에 행렬을 적용
 	for (int vi = 0; vi < vertexCount; ++vi)
 	{
 		vertices[vi] = finalMat * vertices[vi];
 	}
 
-	// 선 그리기
+	// 변환된 정점을 잇는 선 그리기
 	for (int ti = 0; ti < triangleCount; ++ti)
 	{
 		int bi = ti * 3;
