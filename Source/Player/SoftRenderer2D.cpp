@@ -38,9 +38,15 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
+	static float moveSpeed = 100.f;
+	static float rotateSpeed = 180.f;
+	static float squareScale = 100.f;
+
 	InputManager input = _GameEngine.GetInputManager();
-	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * _MoveSpeed * InDeltaSeconds;
-	_PivotPosition += deltaPosition;
+
+	_Transform.AddRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
+	_Transform.AddPosition(_Transform.GetLocalY() * input.GetYAxis() * moveSpeed * InDeltaSeconds);
+	_Transform.SetScale(Vector2::One * squareScale);
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
@@ -51,49 +57,36 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 모델링 공간 
-	// 메시 정보
-	static float squareHalfSize = 0.5f;
-	static const int vertexCount = 4;
-	static const int triangleCount = 2;
+	// 트랜스폼 정보의 출력
+	_RSI->PushStatisticText(_Transform.GetPosition().ToString());
+	_RSI->PushStatisticText(std::to_string(_Transform.GetRotation()));
+	_RSI->PushStatisticText(_Transform.GetScale().ToString());
 
-	// 정점 배열과 인덱스 배열 생성
-	Vector2 vertices[vertexCount] = {
-		Vector2(-squareHalfSize, -squareHalfSize),
-		Vector2(-squareHalfSize, squareHalfSize),
-		Vector2(squareHalfSize, squareHalfSize),
-		Vector2(squareHalfSize, -squareHalfSize)
-	};
+	Matrix3x3 finalMat = _Transform.GetModelingMatrix();
 
-	int indices[triangleCount * 3] = {
-		0, 1, 2,
-		0, 2, 3
-	};
+	// 원본 메시 데이터를 변경하지 않고 새로운 메시 데이터를 복제해 생성.
+	int vertexCount = _GameEngine.GetMeshPtr()->GetVertexCount();
+	int indexCount = _GameEngine.GetMeshPtr()->GetIndexCount();
+	int triangleCount = indexCount / 3;
 
-	// 월드 공간 
-	// 게임 로직에서 변경한 피벗 위치의 출력
-	_RSI->PushStatisticText(_PivotPosition.ToString());
+	Vector2* newVertices = new Vector2[vertexCount];
+	std::memcpy(newVertices, _GameEngine.GetMeshPtr()->GetVerticesPtr(), sizeof(Vector2) * vertexCount);
+	int* newIndice = new int[indexCount];
+	std::memcpy(newIndice, _GameEngine.GetMeshPtr()->GetIndicesPtr(), sizeof(int) * indexCount);
 
-	// 변환 행렬의 설계
-	static float squareScale = 100.f;
-	Matrix3x3 scaleMat = Matrix3x3(Vector3::UnitX * squareScale, Vector3::UnitY * squareScale, Vector3::UnitZ);
-	Matrix3x3 translateMat = Matrix3x3(Vector3::UnitX, Vector3::UnitY, Vector3(_PivotPosition.X, _PivotPosition.Y, 1.f));
-	Matrix3x3 finalMat = translateMat * scaleMat;
-
-	// 정점에 행렬을 적용
+	// 각 정점에 행렬을 적용
 	for (int vi = 0; vi < vertexCount; ++vi)
 	{
-		vertices[vi] = finalMat * vertices[vi];
+		newVertices[vi] = finalMat * newVertices[vi];
 	}
 
 	// 변환된 정점을 잇는 선 그리기
 	for (int ti = 0; ti < triangleCount; ++ti)
 	{
 		int bi = ti * 3;
-		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 1]], _CurrentColor);
-		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 2]], _CurrentColor);
-		_RSI->DrawLine(vertices[indices[bi + 1]], vertices[indices[bi + 2]], _CurrentColor);
+		_RSI->DrawLine(newVertices[newIndice[bi]], newVertices[newIndice[bi + 1]], _CurrentColor);
+		_RSI->DrawLine(newVertices[newIndice[bi]], newVertices[newIndice[bi + 2]], _CurrentColor);
+		_RSI->DrawLine(newVertices[newIndice[bi + 1]], newVertices[newIndice[bi + 2]], _CurrentColor);
 	}
-
 }
 
