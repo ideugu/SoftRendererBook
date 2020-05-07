@@ -42,15 +42,32 @@ void SoftRenderer::DrawGrid2D()
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	static float moveSpeed = 100.f;
-	static float rotateSpeed = 180.f;
 
 	InputManager input = _GameEngine.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& transform = _GameEngine.GetCamera()->GetTransform();
-	transform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
+	Transform2D& playerTransform = _GameEngine.GetPlayer()->GetTransform();
+	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
+
+	// 플레이어를 따라다니는 카메라의 트랜스폼
+	static float thresholdDistance = 1.f;
+	Transform2D& cameraTransform = _GameEngine.GetCamera()->GetTransform();
+	Vector2 playerPosition = playerTransform.GetPosition();
+	Vector2 prevCameraPosition = cameraTransform.GetPosition();
+	if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
+	{
+		cameraTransform.SetPosition(playerPosition);
+	}
+	else
+	{
+		static float lerpSpeed = 2.f;
+		float ratio = lerpSpeed * InDeltaSeconds;
+		ratio = Math::Clamp(ratio, 0.f, 1.f);
+		Vector2 newCameraPosition = prevCameraPosition + (playerPosition - prevCameraPosition) * ratio;
+		cameraTransform.SetPosition(newCameraPosition);
+	}
 }
 
 // 렌더링 로직
