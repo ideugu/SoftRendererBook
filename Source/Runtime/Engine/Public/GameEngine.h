@@ -6,9 +6,9 @@ public:
 	GameEngine() = default;
 
 public:
-	bool Init();
+	bool Init(const ScreenPoint& InScreenSize);
 	bool LoadResources();
-	bool LoadScene();
+	bool LoadScene(const ScreenPoint& InScreenSize);
 	InputManager& GetInputManager() { return _InputManager; }
 	std::vector<std::unique_ptr<GameObject2D>>& GetGameObjects() { return _GameObjects; }
 	const Mesh2D* GetMesh(const std::string& InMeshKey) { return _Meshes[InMeshKey].get(); }

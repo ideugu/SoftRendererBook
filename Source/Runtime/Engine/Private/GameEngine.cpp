@@ -5,7 +5,7 @@
 const std::string GameEngine::QuadMeshKey("SM_Quad");
 const std::string GameEngine::PlayerKey("Player");
 
-bool GameEngine::Init()
+bool GameEngine::Init(const ScreenPoint& InScreenSize)
 {
 	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.SpacePressed)
 	{
@@ -17,7 +17,7 @@ bool GameEngine::Init()
 		return false;
 	}
 
-	if (!LoadScene())
+	if (!LoadScene(InScreenSize))
 	{
 		return false;
 	}
@@ -50,23 +50,29 @@ bool GameEngine::LoadResources()
 	return true;
 }
 
-bool GameEngine::LoadScene()
+bool GameEngine::LoadScene(const ScreenPoint& InScreenSize)
 {
 	static float squareScale = 10.f;
 
+	// 플레이어 설정
 	auto player = std::make_unique<GameObject2D>(GameEngine::PlayerKey);
 	player->SetMesh(GameEngine::QuadMeshKey);
 	player->GetTransform().SetScale(Vector2::One * squareScale);
 	player->SetColor(LinearColor::Blue);
-
 	_GameObjects.push_back(std::move(player));
-	_Camera = std::make_unique<Camera2D>();
 
+	// 카메라 설정
+	_Camera = std::make_unique<Camera2D>();
+	// 카메라 가시 영역을 의도적으로 작게 적용
+	_Camera->SetCameraViewSize(InScreenSize);
+	_Camera->SetCameraCircleBound(250.f);
+
+	// 랜덤한 배경 설정
 	std::mt19937 generator(0);
-	std::uniform_real_distribution<float> dist(-500.f, 500.f);
+	std::uniform_real_distribution<float> dist(-1500.f, 1500.f);
 
 	// 100개의 배경 게임 오브젝트 생성
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 300; ++i)
 	{
 		char name[64];
 		std::snprintf(name, sizeof(name), "GameObject%d", i);

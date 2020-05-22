@@ -52,20 +52,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
 	Transform2D& cameraTransform = _GameEngine.GetCamera()->GetTransform();
-	Vector2 playerPosition = playerTransform.GetPosition();
-	Vector2 prevCameraPosition = cameraTransform.GetPosition();
-	if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
-	{
-		cameraTransform.SetPosition(playerPosition);
-	}
-	else
-	{
-		static float lerpSpeed = 2.f;
-		float ratio = lerpSpeed * InDeltaSeconds;
-		ratio = Math::Clamp(ratio, 0.f, 1.f);
-		Vector2 newCameraPosition = prevCameraPosition + (playerPosition - prevCameraPosition) * ratio;
-		cameraTransform.SetPosition(newCameraPosition);
-	}
+	cameraTransform.SetPosition(playerTransform.GetPosition());
 }
 
 // 렌더링 로직
@@ -74,11 +61,18 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
+	// 통계 수치
+	size_t totalObjectCount = _GameEngine.GetGameObjects().size();
+	size_t culledObjectCount = 0;
+	size_t renderingObjectCount = 0;
+
 	// 카메라의 뷰 행렬
 	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
 
-	_RSI->PushStatisticText(_GameEngine.GetPlayer()->GetTransform().GetPosition().ToString());
-	_RSI->PushStatisticText(_GameEngine.GetCamera()->GetTransform().GetPosition().ToString());
+	// 카메라의 가시 영역
+	const Circle& cameraBounds = _GameEngine.GetCamera()->GetCircleBounds();
+
+	_RSI->PushStatisticText("Total Count : " + std::to_string(totalObjectCount));
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
 	for (auto it = _GameEngine.GoBegin(); it != _GameEngine.GoEnd(); ++it)
@@ -88,15 +82,31 @@ void SoftRenderer::Render2D()
 		Transform2D& transform = gameObject->GetTransform();
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
+		// 게임 오브젝트의 충돌 영역
+		Circle gameObjectBounds(mesh->GetCircleBounds());
+
+		// 충돌 영역을 뷰 좌표계로 변환
+		gameObjectBounds.Center = finalMat * gameObjectBounds.Center;
+		gameObjectBounds.Radius = gameObjectBounds.Radius * transform.GetScale().Max();
+
+		// 카메라 바운딩 영역과 충돌 체크
+		if (!cameraBounds.Intersect(gameObjectBounds))
+		{
+			culledObjectCount++;
+			continue;
+		}
+
+		renderingObjectCount++;
+
 		size_t vertexCount = mesh->_Vertices.size();
 		size_t indexCount = mesh->_Indices.size();
 		size_t triangleCount = indexCount / 3;
 
 		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼 생성
 		Vector2* vertices = new Vector2[vertexCount];
-		std::memcpy(vertices, &mesh->_Vertices[0], sizeof(Vector2) * vertexCount);
+		std::memcpy(vertices, mesh->_Vertices.data(), sizeof(Vector2) * vertexCount);
 		int* indices = new int[indexCount];
-		std::memcpy(indices, &mesh->_Indices[0], sizeof(int) * indexCount);
+		std::memcpy(indices, mesh->_Indices.data(), sizeof(int) * indexCount);
 
 		// 각 정점에 행렬을 적용
 		for (int vi = 0; vi < vertexCount; ++vi)
@@ -117,5 +127,7 @@ void SoftRenderer::Render2D()
 		delete[] indices;
 	}
 
+	_RSI->PushStatisticText("Culled Count : " + std::to_string(culledObjectCount));
+	_RSI->PushStatisticText("Rendered Count : " + std::to_string(renderingObjectCount));
 }
 

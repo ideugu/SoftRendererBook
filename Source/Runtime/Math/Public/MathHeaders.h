@@ -16,3 +16,4 @@
 #include "Color32.h"
 #include "LinearColor.h"
 
+#include "Circle.h"

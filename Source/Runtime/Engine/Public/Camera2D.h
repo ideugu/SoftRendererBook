@@ -9,8 +9,13 @@ public:
 public:
 	Transform2D& GetTransform() { return _Transform; }
 	Matrix3x3 GetViewMatrix() const;
+	void SetCameraViewSize(const ScreenPoint& InScreenSize);
+	void SetCameraCircleBound(float InRadius) { CircleBounds.Radius = InRadius; }
+	const Circle& GetCircleBounds() const { return CircleBounds; }
 
 protected:
 	Transform2D _Transform;
+
+	Circle CircleBounds;
 };
 
