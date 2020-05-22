@@ -68,20 +68,20 @@ int WindowsRSI::TestRegion(const Vector2& InVectorPos, const Vector2& InMinPos, 
 	int result = 0;
 	if (InVectorPos.X < InMinPos.X)
 	{
-		result = 1;
+		result = result | 0b0001;
 	}
 	else if (InVectorPos.X > InMaxPos.X)
 	{
-		result = (1 << 1);
+		result = result | 0b0010;
 	}
 
 	if (InVectorPos.Y < InMinPos.Y)
 	{
-		result = (1 << 2);
+		result = result | 0b0100;
 	}
 	else if (InVectorPos.Y > InMaxPos.Y)
 	{
-		result = (1 << 3);
+		result = result | 0b1000;
 	}
 
 	return result;
@@ -108,17 +108,10 @@ bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutE
 		else
 		{
 			Vector2 clippedPosition;
-			int currentTest;
-			if (startTest != 0)
-			{
-				currentTest = startTest;
-			}
-			else
-			{
-				currentTest = endTest;
-			}
+			bool isStartTest = (startTest != 0);
+			int currentTest = isStartTest ? startTest : endTest;
 
-			if (currentTest < (1 << 2))
+			if (currentTest < 0b0100)
 			{
 				if (currentTest & 1)
 				{
@@ -129,7 +122,7 @@ bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutE
 					clippedPosition.X = InMaxPos.X;
 				}
 
-				if (height == 0)
+				if (Math::EqualsInTolerance(height, 0.0f))
 				{
 					clippedPosition.Y = InOutStartPos.Y;
 
@@ -141,7 +134,7 @@ bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutE
 			}
 			else
 			{
-				if (currentTest & (1 << 2))
+				if (currentTest & 0b0100)
 				{
 					clippedPosition.Y = InMinPos.Y;
 				}
@@ -150,10 +143,9 @@ bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutE
 					clippedPosition.Y = InMaxPos.Y;
 				}
 
-				if (width == 0)
+				if (Math::EqualsInTolerance(width, 0.0f))
 				{
 					clippedPosition.X = InOutStartPos.X;
-
 				}
 				else
 				{
@@ -161,7 +153,7 @@ bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutE
 				}
 			}
 
-			if (currentTest == startTest)
+			if (isStartTest)
 			{
 				InOutStartPos = clippedPosition;
 				startTest = TestRegion(InOutStartPos, InMinPos, InMaxPos);
