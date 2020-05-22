@@ -1,6 +1,6 @@
 #pragma once
 
-class Mesh
+class Mesh2D
 {
 public:
 	std::vector<Vector2> _Vertices;

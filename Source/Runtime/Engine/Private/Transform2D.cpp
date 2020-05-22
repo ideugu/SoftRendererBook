@@ -1,6 +1,5 @@
 
 #include "Precompiled.h"
-#include "Transform2D.h"
 
 Matrix3x3 Transform2D::GetModelingMatrix() const
 {
