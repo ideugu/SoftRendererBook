@@ -15,7 +15,7 @@ public:
 
 private:
 	InputManager _InputManager;
-	std::unique_ptr<Mesh> _QuadMesh;
+	std::unique_ptr<Mesh2D> _QuadMesh;
 	std::unique_ptr<GameObject2D> _Player;
 	std::unique_ptr<Camera2D> _Camera;
 };
