@@ -67,7 +67,7 @@ void SoftRenderer::Render2D()
 	_RSI->PushStatisticTexts(finalMat.ToStrings());
 
 	// 플레이어 게임 오브젝트의 메시
-	const Mesh* mesh = _GameEngine.GetPlayer()->GetMesh();
+	const Mesh2D* mesh = _GameEngine.GetPlayer()->GetMesh();
 
 	size_t vertexCount = mesh->_Vertices.size();
 	size_t indexCount = mesh->_Indices.size();

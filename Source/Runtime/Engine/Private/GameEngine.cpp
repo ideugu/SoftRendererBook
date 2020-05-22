@@ -1,10 +1,5 @@
 
 #include "Precompiled.h"
-#include "InputManager.h"
-#include "Mesh.h"
-#include "Transform2D.h"
-#include "GameObject2D.h"
-#include "GameEngine.h"
 
 bool GameEngine::Init()
 {
@@ -28,7 +23,7 @@ bool GameEngine::Init()
 
 bool GameEngine::LoadResources()
 {
-	_QuadMesh = std::make_unique<Mesh>();
+	_QuadMesh = std::make_unique<Mesh2D>();
 
 	constexpr float squareHalfSize = 0.5f;
 	constexpr int vertexCount = 4;
