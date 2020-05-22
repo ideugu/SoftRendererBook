@@ -63,8 +63,8 @@ bool GameEngine::LoadScene(const ScreenPoint& InScreenSize)
 
 	// 카메라 설정
 	_Camera = std::make_unique<Camera2D>();
-	// 카메라 가시 영역을 의도적으로 작게 적용
 	_Camera->SetCameraViewSize(InScreenSize);
+	// 추가로 카메라 가시 영역을 의도적으로 작게 적용
 	_Camera->SetCameraCircleBound(250.f);
 
 	// 랜덤한 배경 설정

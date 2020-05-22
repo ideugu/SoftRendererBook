@@ -70,7 +70,7 @@ void SoftRenderer::Render2D()
 	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
 
 	// 카메라의 가시 영역
-	const Circle& cameraBounds = _GameEngine.GetCamera()->GetCircleBound();
+	const Circle& cameraBound = _GameEngine.GetCamera()->GetCircleBound();
 
 	_RSI->PushStatisticText("Total Count : " + std::to_string(totalObjectCount));
 
@@ -83,14 +83,14 @@ void SoftRenderer::Render2D()
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
 		// 게임 오브젝트의 충돌 영역
-		Circle gameObjectBounds(mesh->GetCircleBound());
+		Circle gameObjectBound(mesh->GetCircleBound());
 
 		// 충돌 영역을 뷰 좌표계로 변환
-		gameObjectBounds.Center = finalMat * gameObjectBounds.Center;
-		gameObjectBounds.Radius = gameObjectBounds.Radius * transform.GetScale().Max();
+		gameObjectBound.Center = finalMat * gameObjectBound.Center;
+		gameObjectBound.Radius = gameObjectBound.Radius * transform.GetScale().Max();
 
 		// 카메라 바운딩 영역과 충돌 체크
-		if (!cameraBounds.Intersect(gameObjectBounds))
+		if (!cameraBound.Intersect(gameObjectBound))
 		{
 			culledObjectCount++;
 			continue;
