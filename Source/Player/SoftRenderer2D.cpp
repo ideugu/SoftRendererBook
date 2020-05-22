@@ -49,8 +49,6 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	Transform2D& playerTransform = _GameEngine.GetPlayer()->GetTransform();
 	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 
-	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
-
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
 	Transform2D& cameraTransform = _GameEngine.GetCamera()->GetTransform();
@@ -79,42 +77,45 @@ void SoftRenderer::Render2D()
 	// 카메라의 뷰 행렬
 	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
 
-	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
-	Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
+	_RSI->PushStatisticText(_GameEngine.GetPlayer()->GetTransform().GetPosition().ToString());
+	_RSI->PushStatisticText(_GameEngine.GetCamera()->GetTransform().GetPosition().ToString());
 
-	// 게임 오브젝트 트랜스폼 정보의 출력
-	_RSI->PushStatisticTexts(finalMat.ToStrings());
-
-	// 플레이어 게임 오브젝트의 메시
-	const Mesh2D* mesh = _GameEngine.GetPlayer()->GetMesh();
-
-	size_t vertexCount = mesh->_Vertices.size();
-	size_t indexCount = mesh->_Indices.size();
-	size_t triangleCount = indexCount / 3;
-
-	// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼 생성
-	Vector2* vertices = new Vector2[vertexCount];
-	std::memcpy(vertices, &mesh->_Vertices[0], sizeof(Vector2) * vertexCount);
-	int* indices = new int[indexCount];
-	std::memcpy(indices, &mesh->_Indices[0], sizeof(int) * indexCount);
-
-	// 각 정점에 행렬을 적용
-	for (int vi = 0; vi < vertexCount; ++vi)
+	// 랜덤하게 생성된 모든 게임 오브젝트들
+	for (auto it = _GameEngine.GoBegin(); it != _GameEngine.GoEnd(); ++it)
 	{
-		vertices[vi] = finalMat * vertices[vi];
+		GameObject2D* gameObject = it->get();
+		const Mesh2D* mesh = _GameEngine.GetMesh(gameObject->GetMeshKey());
+		Transform2D& transform = gameObject->GetTransform();
+		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
+
+		size_t vertexCount = mesh->_Vertices.size();
+		size_t indexCount = mesh->_Indices.size();
+		size_t triangleCount = indexCount / 3;
+
+		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼 생성
+		Vector2* vertices = new Vector2[vertexCount];
+		std::memcpy(vertices, &mesh->_Vertices[0], sizeof(Vector2) * vertexCount);
+		int* indices = new int[indexCount];
+		std::memcpy(indices, &mesh->_Indices[0], sizeof(int) * indexCount);
+
+		// 각 정점에 행렬을 적용
+		for (int vi = 0; vi < vertexCount; ++vi)
+		{
+			vertices[vi] = finalMat * vertices[vi];
+		}
+
+		// 변환된 정점을 잇는 선 그리기
+		for (int ti = 0; ti < triangleCount; ++ti)
+		{
+			int bi = ti * 3;
+			_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 1]], gameObject->GetColor());
+			_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 2]], gameObject->GetColor());
+			_RSI->DrawLine(vertices[indices[bi + 1]], vertices[indices[bi + 2]], gameObject->GetColor());
+		}
+
+		delete[] vertices;
+		delete[] indices;
 	}
 
-	// 변환된 정점을 잇는 선 그리기
-	for (int ti = 0; ti < triangleCount; ++ti)
-	{
-		int bi = ti * 3;
-		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 1]], _CurrentColor);
-		_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 2]], _CurrentColor);
-		_RSI->DrawLine(vertices[indices[bi + 1]], vertices[indices[bi + 2]], _CurrentColor);
-	}
-
-	delete[] vertices;
-	delete[] indices;
 }
 

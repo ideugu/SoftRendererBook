@@ -1,5 +1,9 @@
 
 #include "Precompiled.h"
+#include <random>
+
+const std::string GameEngine::QuadMeshKey("SM_Quad");
+const std::string GameEngine::PlayerKey("Player");
 
 bool GameEngine::Init()
 {
@@ -23,34 +27,55 @@ bool GameEngine::Init()
 
 bool GameEngine::LoadResources()
 {
-	_QuadMesh = std::make_unique<Mesh2D>();
+	auto quadMesh = std::make_unique<Mesh2D>();
 
-	constexpr float squareHalfSize = 0.5f;
-	constexpr int vertexCount = 4;
-	constexpr int triangleCount = 2;
-	constexpr int indexCount = triangleCount * 3;
+	float squareHalfSize = 0.5f;
+	int vertexCount = 4;
+	int triangleCount = 2;
+	int indexCount = triangleCount * 3;
 
-	_QuadMesh->_Vertices = {
+	quadMesh->_Vertices = {
 		Vector2(-squareHalfSize, -squareHalfSize),
 		Vector2(-squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, -squareHalfSize)
 	};
 
-	_QuadMesh->_Indices = {
+	quadMesh->_Indices = {
 		0, 2, 1, 0, 3, 2
 	};
+
+	_Meshes.insert({ GameEngine::QuadMeshKey , std::move(quadMesh) });
 
 	return true;
 }
 
 bool GameEngine::LoadScene()
 {
-	static float squareScale = 100.f;
+	static float squareScale = 10.f;
 
-	_Player = std::make_unique<GameObject2D>(_QuadMesh.get());
-	_Player->GetTransform().SetScale(Vector2::One * squareScale);
+	auto player = std::make_unique<GameObject2D>(GameEngine::PlayerKey);
+	player->SetMesh(GameEngine::QuadMeshKey);
+	player->GetTransform().SetScale(Vector2::One * squareScale);
+	player->SetColor(LinearColor::Blue);
 
+	_GameObjects.push_back(std::move(player));
 	_Camera = std::make_unique<Camera2D>();
+
+	std::mt19937 generator(0);
+	std::uniform_real_distribution<float> dist(-1500.f, 1500.f);
+
+	// 100개의 배경 게임 오브젝트 생성
+	for (int i = 0; i < 100; ++i)
+	{
+		char name[64];
+		std::snprintf(name, sizeof(name), "GameObject%d", i);
+		auto newGo = std::make_unique<GameObject2D>(name);
+		newGo->GetTransform().SetPosition(Vector2(dist(generator), dist(generator)));
+		newGo->GetTransform().SetScale(Vector2::One * squareScale);
+		newGo->SetMesh(GameEngine::QuadMeshKey);
+		_GameObjects.push_back(std::move(newGo));
+	}
+
 	return true;
 }
