@@ -63,7 +63,7 @@ bool GameEngine::LoadScene()
 	_Camera = std::make_unique<Camera2D>();
 
 	std::mt19937 generator(0);
-	std::uniform_real_distribution<float> dist(-1500.f, 1500.f);
+	std::uniform_real_distribution<float> dist(-500.f, 500.f);
 
 	// 100개의 배경 게임 오브젝트 생성
 	for (int i = 0; i < 100; ++i)

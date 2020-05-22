@@ -25,6 +25,6 @@ protected:
 	std::string _Name;
 	std::string _MeshKey;
 	Transform2D _Transform;
-	LinearColor _Color = LinearColor::Green;
+	LinearColor _Color = LinearColor::Error;
 };
 
