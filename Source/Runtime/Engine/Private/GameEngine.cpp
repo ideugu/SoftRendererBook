@@ -45,6 +45,8 @@ bool GameEngine::LoadResources()
 		0, 2, 1, 0, 3, 2
 	};
 
+	quadMesh->CalculateBounds();
+
 	_Meshes.insert({ GameEngine::QuadMeshKey , std::move(quadMesh) });
 
 	return true;
