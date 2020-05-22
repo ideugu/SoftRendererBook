@@ -63,14 +63,16 @@ void SoftRenderer::Render2D()
 
 	// 통계 수치
 	size_t totalObjectCount = _GameEngine.GetGameObjects().size();
-	size_t culledObjectCount = 0;
+	size_t culledObjectByCircleCount = 0;
+	size_t culledObjectByRectangleCount = 0;
 	size_t renderingObjectCount = 0;
 
 	// 카메라의 뷰 행렬
 	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
 
 	// 카메라의 가시 영역
-	const Circle& cameraBounds = _GameEngine.GetCamera()->GetCircleBound();
+	const Circle& cameraCircleBound = _GameEngine.GetCamera()->GetCircleBound();
+	const Rectangle& cameraRectangleBound = _GameEngine.GetCamera()->GetRectangleBounds();
 
 	_RSI->PushStatisticText("Total Count : " + std::to_string(totalObjectCount));
 
@@ -83,16 +85,26 @@ void SoftRenderer::Render2D()
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
 		// 게임 오브젝트의 충돌 영역
-		Circle gameObjectBounds(mesh->GetCircleBound());
+		Circle gameObjectCircleBound(mesh->GetCircleBound());
+		Rectangle gameObjectRectangleBound(mesh->GetRectangleBound());
 
 		// 충돌 영역을 뷰 좌표계로 변환
-		gameObjectBounds.Center = finalMat * gameObjectBounds.Center;
-		gameObjectBounds.Radius = gameObjectBounds.Radius * transform.GetScale().Max();
+		gameObjectCircleBound.Center = finalMat * gameObjectCircleBound.Center;
+		gameObjectCircleBound.Radius = gameObjectCircleBound.Radius * transform.GetScale().Max();
+
+		gameObjectRectangleBound.Min = finalMat * gameObjectRectangleBound.Min;
+		gameObjectRectangleBound.Max = finalMat * gameObjectRectangleBound.Max;
 
 		// 카메라 바운딩 영역과 충돌 체크
-		if (!cameraBounds.Intersect(gameObjectBounds))
+		if (!cameraCircleBound.Intersect(gameObjectCircleBound))
 		{
-			culledObjectCount++;
+			culledObjectByCircleCount++;
+			continue;
+		}
+
+		if (!cameraRectangleBound.Intersect(gameObjectRectangleBound))
+		{
+			culledObjectByRectangleCount++;
 			continue;
 		}
 
@@ -127,7 +139,8 @@ void SoftRenderer::Render2D()
 		delete[] indices;
 	}
 
-	_RSI->PushStatisticText("Culled Count : " + std::to_string(culledObjectCount));
+	_RSI->PushStatisticText("Culled by Circle Count : " + std::to_string(culledObjectByCircleCount));
+	_RSI->PushStatisticText("Culled by Rectangle Count : " + std::to_string(culledObjectByRectangleCount));
 	_RSI->PushStatisticText("Rendered Count : " + std::to_string(renderingObjectCount));
 }
 

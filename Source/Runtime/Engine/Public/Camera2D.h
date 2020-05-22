@@ -12,10 +12,12 @@ public:
 	void SetCameraViewSize(const ScreenPoint& InScreenSize);
 	void SetCameraCircleBound(float InRadius) { CircleBound.Radius = InRadius; }
 	const Circle& GetCircleBound() const { return CircleBound; }
+	const Rectangle& GetRectangleBounds() const { return RectangleBound; }
 
 protected:
 	Transform2D _Transform;
 
 	Circle CircleBound;
+	Rectangle RectangleBound;
 };
 

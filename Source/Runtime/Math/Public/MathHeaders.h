@@ -17,3 +17,4 @@
 #include "LinearColor.h"
 
 #include "Circle.h"
+#include "Rectangle.h"

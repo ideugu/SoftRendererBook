@@ -11,8 +11,10 @@ public:
 	std::vector<int> _Indices;
 	void CalculateBounds();
 	const Circle& GetCircleBound() const { return CircleBound; }
+	const Rectangle& GetRectangleBound() const { return RectangleBound; }
 
 private:
 	Circle CircleBound;
+	Rectangle RectangleBound;
 };
 
