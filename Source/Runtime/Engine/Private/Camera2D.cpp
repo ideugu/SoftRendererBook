@@ -10,6 +10,6 @@ void Camera2D::SetCameraViewSize(const ScreenPoint& InScreenSize)
 {
 	Vector2 halfSize = Vector2(InScreenSize.X, InScreenSize.Y) * 0.5f;
 
-	CircleBounds.Center = Vector2::Zero;
-	CircleBounds.Radius = halfSize.Size();
+	CircleBound.Center = Vector2::Zero;
+	CircleBound.Radius = halfSize.Size();
 }

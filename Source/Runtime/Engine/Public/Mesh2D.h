@@ -10,9 +10,9 @@ public:
 	std::vector<Vector2> _Vertices;
 	std::vector<int> _Indices;
 	void CalculateBounds();
-	const Circle& GetCircleBounds() const { return CircleBounds; }
+	const Circle& GetCircleBound() const { return CircleBound; }
 
 private:
-	Circle CircleBounds;
+	Circle CircleBound;
 };
 

@@ -3,5 +3,5 @@
 
 void Mesh2D::CalculateBounds()
 {
-	CircleBounds = Circle(_Vertices.data(), _Vertices.size());
+	CircleBound = Circle(_Vertices.data(), _Vertices.size());
 }
