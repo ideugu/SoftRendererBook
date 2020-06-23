@@ -59,7 +59,7 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 지정된 위치에 지정한 색상으로 점 찍기
+	// 지정한 점을 기준으로 상하좌우로 점 찍기
 	_RSI->DrawPoint(_CurrentPosition, _CurrentColor);
 	_RSI->DrawPoint(_CurrentPosition + Vector2::UnitX, _CurrentColor);
 	_RSI->DrawPoint(_CurrentPosition - Vector2::UnitX, _CurrentColor);

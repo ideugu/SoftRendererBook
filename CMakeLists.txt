@@ -22,7 +22,7 @@ if(NOT MSVC)
 	message(FATAL_ERROR "This project only supports MSVC project currently.")
 endif()
 
-set(PLATFORM PLATFORM_GENERIC)
+set(PLATFORM_DEFINITION PLATFORM_GENERIC)
 set(PLATFORM_FOLDER Generic)
 
 option(TARGET_WINDOWS "Windows Option" ON)
@@ -44,10 +44,10 @@ add_subdirectory(Source/Player)
 ################################################################################
 # Definitions
 ################################################################################
-target_compile_definitions(SoftRendererPlayer PUBLIC -D${PLATFORM_DEFINITION})
-target_compile_definitions(EngineModule PUBLIC -D${PLATFORM_DEFINITION})
-target_compile_definitions(RendererModule PUBLIC -D${PLATFORM_DEFINITION})
-target_compile_definitions(MathModule PUBLIC -D${PLATFORM_DEFINITION})
+target_compile_definitions(SoftRendererPlayer PUBLIC ${PLATFORM_DEFINITION} ${PLATFORM_FOLDER})
+target_compile_definitions(EngineModule PUBLIC ${PLATFORM_DEFINITION} ${PLATFORM_FOLDER})
+target_compile_definitions(RendererModule PUBLIC ${PLATFORM_DEFINITION} ${PLATFORM_FOLDER})
+target_compile_definitions(MathModule PUBLIC ${PLATFORM_DEFINITION} ${PLATFORM_FOLDER})
 
 ################################################################################
 # Solution Setting
