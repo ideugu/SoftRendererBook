@@ -1,15 +1,13 @@
 #pragma once
 
-
-#if (!defined(PLATFORM_WINDOWS) && !defined(WIN32))
+#if defined(PLATFORM_WINDOWS)
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <tchar.h>
-#include "WindowsUtil.h"
+#include "Res/resource.h"
 
 #endif
-
 
 #include "MathHeaders.h"
 #include "EngineHeaders.h"

@@ -84,13 +84,13 @@ FORCEINLINE Vector3 Vector3::Normalize() const
 
 FORCEINLINE float Vector3::operator[](BYTE InIndex) const
 {
-	assert(InIndex >= 0 && InIndex <= 2);
+	if (InIndex < 0 || InIndex > 2) InIndex = 0;
 	return ((float *)this)[InIndex];
 }
 
 FORCEINLINE float &Vector3::operator[](BYTE InIndex)
 {
-	assert(InIndex >= 0 && InIndex <= 2);
+	if (InIndex < 0 || InIndex > 2) InIndex = 0;
 	return ((float *)this)[InIndex];
 }
 

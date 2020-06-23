@@ -34,12 +34,11 @@ public:
 	enum { Rank = 2 };
 
 	// ¸â¹öº¯¼ö 
-	Vector2 Cols[2];
+	Vector2 Cols[2] = { Vector2::UnitX, Vector2::UnitY };
 };
 
 FORCEINLINE Matrix2x2::Matrix2x2()
 {
-	*this = Matrix2x2::Identity;
 }
 
 FORCEINLINE Matrix2x2::Matrix2x2(const Vector2& InCol0, const Vector2& InCol1)
@@ -59,8 +58,7 @@ FORCEINLINE Matrix2x2::Matrix2x2(float In00, float In01, float In10, float In11)
 
 FORCEINLINE void Matrix2x2::SetIdentity()
 {
-	Cols[0] = Vector2::UnitX;
-	Cols[1] = Vector2::UnitY;
+	*this = Matrix2x2::Identity;
 }
 
 FORCEINLINE Matrix2x2 Matrix2x2::Tranpose() const
@@ -73,14 +71,12 @@ FORCEINLINE Matrix2x2 Matrix2x2::Tranpose() const
 
 FORCEINLINE const Vector2& Matrix2x2::operator[](BYTE InIndex) const
 {
-	assert(InIndex >= 0 && InIndex <= 1);
-	return Cols[InIndex];
+	return (InIndex < Rank) ? Cols[InIndex] : Cols[0];
 }
 
 FORCEINLINE Vector2& Matrix2x2::operator[](BYTE InIndex)
 {
-	assert(InIndex >= 0 && InIndex <= 1);
-	return Cols[InIndex];
+	return (InIndex < Rank) ? Cols[InIndex] : Cols[0];
 }
 
 FORCEINLINE Matrix2x2 Matrix2x2::operator*(float InScalar) const

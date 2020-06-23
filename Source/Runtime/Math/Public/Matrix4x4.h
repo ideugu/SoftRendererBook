@@ -39,12 +39,11 @@ public:
 	enum { Rank = 4 };
 
 	// ¸â¹öº¯¼ö 
-	Vector4 Cols[4];
+	Vector4 Cols[4] = { Vector4::UnitX, Vector4::UnitY, Vector4::UnitZ, Vector4::UnitW };
 };
 
 FORCEINLINE Matrix4x4::Matrix4x4()
 {
-	*this = Matrix4x4::Identity;
 }
 
 FORCEINLINE Matrix4x4::Matrix4x4(const Vector4& InCol0, const Vector4& InCol1, const Vector4& InCol2, const Vector4& InCol3)
@@ -57,10 +56,7 @@ FORCEINLINE Matrix4x4::Matrix4x4(const Vector4& InCol0, const Vector4& InCol1, c
 
 FORCEINLINE void Matrix4x4::SetIdentity()
 {
-	Cols[0] = Vector4::UnitX;
-	Cols[1] = Vector4::UnitY;
-	Cols[2] = Vector4::UnitZ;
-	Cols[3] = Vector4::UnitW;
+	*this = Matrix4x4::Identity;
 }
 
 FORCEINLINE Matrix4x4 Matrix4x4::Tranpose() const
@@ -75,14 +71,12 @@ FORCEINLINE Matrix4x4 Matrix4x4::Tranpose() const
 
 FORCEINLINE const Vector4& Matrix4x4::operator[](BYTE InIndex) const
 {
-	assert(InIndex >= 0 && InIndex <= 3);
-	return Cols[InIndex];
+	return (InIndex < Rank) ? Cols[InIndex] : Cols[0];
 }
 
 FORCEINLINE Vector4& Matrix4x4::operator[](BYTE InIndex)
 {
-	assert(InIndex >= 0 && InIndex <= 3);
-	return Cols[InIndex];
+	return (InIndex < Rank) ? Cols[InIndex] : Cols[0];
 }
 
 FORCEINLINE Matrix4x4 Matrix4x4::operator*(float InScalar) const
