@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Color32.h"
+namespace CK
+{
 
 struct LinearColor
 {
@@ -118,3 +119,4 @@ FORCEINLINE bool LinearColor::EqualsInRange(const LinearColor& InColor, float In
 		(Math::Abs(this->A - InColor.A) < InTolerance);
 }
 
+}

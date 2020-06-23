@@ -1,7 +1,8 @@
 
 #include "Precompiled.h"
+using namespace CK::DD;
 
-Matrix3x3 Transform2D::GetModelingMatrix() const
+Matrix3x3 Transform::GetModelingMatrix() const
 {
 	Matrix3x3 translateMat(Vector3::UnitX, Vector3::UnitY, Vector3(Position));
 
@@ -14,7 +15,7 @@ Matrix3x3 Transform2D::GetModelingMatrix() const
 	return translateMat * rotationMat * scaleMat;
 }
 
-void Transform2D::CalculateLocalAxis()
+void Transform::CalculateLocalAxis()
 {
 	float sin, cos;
 	Math::GetSinCos(sin, cos, Rotation);

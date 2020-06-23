@@ -1,6 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
+using namespace CK::DD;
 
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
@@ -46,14 +47,14 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	InputManager input = _GameEngine.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& playerTransform = _GameEngine.GetPlayer()->GetTransform();
+	Transform& playerTransform = _GameEngine.GetPlayer()->GetTransform();
 	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
-	Transform2D& cameraTransform = _GameEngine.GetCamera()->GetTransform();
+	Transform& cameraTransform = _GameEngine.GetCamera()->GetTransform();
 	Vector2 playerPosition = playerTransform.GetPosition();
 	Vector2 prevCameraPosition = cameraTransform.GetPosition();
 	if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
@@ -80,14 +81,14 @@ void SoftRenderer::Render2D()
 	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
+	Transform& transform = _GameEngine.GetPlayer()->GetTransform();
 	Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
 	// 게임 오브젝트 트랜스폼 정보의 출력
 	_RSI->PushStatisticTexts(finalMat.ToStrings());
 
 	// 플레이어 게임 오브젝트의 메시
-	const Mesh2D* mesh = _GameEngine.GetPlayer()->GetMesh();
+	const Mesh* mesh = _GameEngine.GetPlayer()->GetMesh();
 
 	size_t vertexCount = mesh->_Vertices.size();
 	size_t indexCount = mesh->_Indices.size();

@@ -56,9 +56,11 @@ endforeach()
 ################################################################################	
 include_directories(
     ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/Private/${PLATFORM_FOLDER}
     ${RUNTIME_MODULE_DIR}/Math/Public
     ${RUNTIME_MODULE_DIR}/Engine/Public
     ${RUNTIME_MODULE_DIR}/Renderer/Public
+    ${RUNTIME_MODULE_DIR}/Renderer/Public/${PLATFORM_FOLDER}
 	)
 
 

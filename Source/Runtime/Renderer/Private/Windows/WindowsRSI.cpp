@@ -1,7 +1,5 @@
 
 #include "Precompiled.h"
-#include "Windows/WindowsRSI.h"
-#include "Windows/WindowsGDI.h"
 
 WindowsRSI::~WindowsRSI()
 {
