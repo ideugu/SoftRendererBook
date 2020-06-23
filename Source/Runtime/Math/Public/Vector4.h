@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Vector3.h"
+namespace CK
+{
 
 struct Vector4
 {
@@ -182,4 +183,6 @@ FORCEINLINE float Vector4::Max() const
 FORCEINLINE float Vector4::Dot(const Vector4& InV) const
 {
 	return X * InV.X + Y * InV.Y + Z * InV.Z + W * InV.W;
+}
+
 }

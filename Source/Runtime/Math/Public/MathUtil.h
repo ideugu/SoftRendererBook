@@ -1,8 +1,7 @@
 #pragma once
 
-#include <intrin.h>
-#include <math.h>
-#include "Platform.h"
+namespace CK
+{
 
 struct Math
 {
@@ -104,3 +103,4 @@ struct Math
 	}
 };
 
+}

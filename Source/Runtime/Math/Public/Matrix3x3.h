@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vector3.h"
-#include <vector>
+namespace CK
+{
 
 struct Matrix3x3
 {
@@ -135,4 +135,6 @@ FORCEINLINE Vector2 Matrix3x3::operator*(const Vector2& InVector) const
 	v3 *= *this;
 
 	return v3.ToVector2();
+}
+
 }

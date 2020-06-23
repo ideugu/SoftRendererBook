@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cassert>
-#include "Platform.h"
-#include <string> 
+namespace CK
+{
 
 struct Vector2
 {
@@ -153,4 +152,6 @@ FORCEINLINE float Vector2::Max() const
 FORCEINLINE float Vector2::Dot(const Vector2& InVector) const
 {
 	return X * InVector.X + Y * InVector.Y;
+}
+
 }

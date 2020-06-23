@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vector2.h"
-#include <vector>
+namespace CK
+{
 
 struct Matrix2x2
 {
@@ -107,4 +107,6 @@ FORCEINLINE Vector2 Matrix2x2::operator*(const Vector2& InVector) const
 		tpMat[0].Dot(InVector),
 		tpMat[1].Dot(InVector)
 	);
+}
+
 }

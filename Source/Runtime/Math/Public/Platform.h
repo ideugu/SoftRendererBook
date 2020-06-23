@@ -3,10 +3,10 @@
 #include "CoreDefinition.h"
 
 #if defined(PLATFORM_WINDOWS)
-	#include "Windows/WindowsPlatform.h"
+#include "Windows/WindowsPlatform.h"
 #endif
 
 #if !defined(FORCEINLINE)
-	#define FORCEINLINE
+#define FORCEINLINE inline
 #endif
 

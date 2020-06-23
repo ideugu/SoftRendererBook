@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Vector2.h"
+namespace CK
+{
 
 struct Vector3
 {
@@ -174,4 +175,6 @@ FORCEINLINE Vector3 Vector3::Cross(const Vector3& InVector) const
 		Y * InVector.Z - Z * InVector.Y,
 		Z * InVector.X - X * InVector.Z,
 		X * InVector.Y - Y * InVector.X);
+}
+
 }
