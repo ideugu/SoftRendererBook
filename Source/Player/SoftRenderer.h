@@ -1,9 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <functional>
-#include "InputManager.h"
-
 class SoftRenderer
 {
 public:

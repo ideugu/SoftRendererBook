@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Vector3.h"
+namespace CK
+{
 
 struct Vector4
 {
@@ -92,13 +93,13 @@ FORCEINLINE Vector4 Vector4::Normalize() const
 
 FORCEINLINE float Vector4::operator[](BYTE InIndex) const
 {
-	assert(InIndex >= 0 && InIndex <= 3);
+	if (InIndex < 0 || InIndex > 3) InIndex = 0;
 	return ((float *)this)[InIndex];
 }
 
 FORCEINLINE float& Vector4::operator[](BYTE InIndex)
 {
-	assert(InIndex >= 0 && InIndex <= 3);
+	if (InIndex < 0 || InIndex > 3) InIndex = 0;
 	return ((float *)this)[InIndex];
 }
 
@@ -182,4 +183,6 @@ FORCEINLINE float Vector4::Max() const
 FORCEINLINE float Vector4::Dot(const Vector4& InV) const
 {
 	return X * InV.X + Y * InV.Y + Z * InV.Z + W * InV.W;
+}
+
 }

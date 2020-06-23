@@ -12,6 +12,10 @@ file(GLOB COMMON_FILES
 file(GLOB_RECURSE MODULE_FILES
        ${PROJECT_SOURCE_DIR}/Private/*.cpp
        ${PROJECT_SOURCE_DIR}/Public/*.h
+       ${PROJECT_SOURCE_DIR}/Private/2D/*.cpp
+       ${PROJECT_SOURCE_DIR}/Public/2D/*.h
+       ${PROJECT_SOURCE_DIR}/Private/3D/*.cpp
+       ${PROJECT_SOURCE_DIR}/Public/3D/*.h
 	   )
 
 file(GLOB_RECURSE THIRDPARTY_FILES
@@ -50,6 +54,8 @@ endforeach()
 include_directories(
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/Public
+    ${PROJECT_SOURCE_DIR}/Public/2D
+    ${PROJECT_SOURCE_DIR}/Public/3D
     ${PROJECT_SOURCE_DIR}/ThirdParty
     ${RUNTIME_MODULE_DIR}/Math/Public
     ${RUNTIME_MODULE_DIR}/Renderer/Public

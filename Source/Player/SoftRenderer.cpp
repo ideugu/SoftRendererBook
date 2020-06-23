@@ -36,7 +36,7 @@ void SoftRenderer::OnTick()
 		_RendererInitialized = true;
 
 		// 게임 엔진 초기화
-		if (!_GameEngine.Init())
+		if (!_GameEngine.Init(_ScreenSize))
 		{
 			return;
 		}
@@ -71,7 +71,7 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 
 	if (_GameEngineInitialized)
 	{
-		_GameEngine.Init();
+		_GameEngine.Init(_ScreenSize);
 	}
 	
 }
