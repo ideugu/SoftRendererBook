@@ -1,9 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <functional>
-#include "InputManager.h"
-
 class SoftRenderer
 {
 public:
@@ -52,6 +48,8 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
+
+	// 로직 구현을 위한 멤버 변수
 	Vector2 _CurrentPosition = Vector2::Zero;
 	LinearColor _CurrentColor = LinearColor::Blue;
 

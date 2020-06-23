@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Vector2.h"
+namespace CK
+{
 
 struct ScreenPoint
 {
@@ -40,3 +41,4 @@ FORCEINLINE ScreenPoint ScreenPoint::operator+(const ScreenPoint& InPoint) const
 	return ScreenPoint(X + InPoint.X, Y + InPoint.Y);
 }
 
+}
