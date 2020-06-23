@@ -1,6 +1,5 @@
 
 #include "Precompiled.h"
-#include "Windows/WindowsGDI.h"
 
 WindowsGDI::~WindowsGDI()
 {

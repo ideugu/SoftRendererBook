@@ -1,9 +1,14 @@
 #pragma once
 
-class Transform2D
+namespace CK
+{
+namespace DD
+{ 
+
+class Transform
 {
 public:
-	Transform2D() = default;
+	Transform() = default;
 
 public:
 	void SetPosition(const Vector2& InPosition) { Position = InPosition; }
@@ -32,3 +37,5 @@ private:
 	friend class GameObject2D;
 };
 
+}
+}

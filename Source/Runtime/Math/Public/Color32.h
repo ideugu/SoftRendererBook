@@ -1,6 +1,7 @@
 #pragma once
 
-#include "MathUtil.h"
+namespace CK
+{
 
 struct Color32
 {
@@ -46,5 +47,7 @@ FORCEINLINE void Color32::operator+=(const Color32& InC)
 	G = (BYTE)Math::Clamp((BYTE)G + (BYTE)InC.G, 0, 255);
 	B = (BYTE)Math::Clamp((BYTE)B + (BYTE)InC.B, 0, 255);
 	A = (BYTE)Math::Clamp((BYTE)A + (BYTE)InC.A, 0, 255);
+}
+
 }
 
