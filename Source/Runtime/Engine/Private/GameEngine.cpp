@@ -1,7 +1,7 @@
 
 #include "Precompiled.h"
 
-bool GameEngine::Init()
+bool GameEngine::Init(const ScreenPoint& InViewportSize)
 {
 	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.SpacePressed)
 	{
@@ -18,12 +18,13 @@ bool GameEngine::Init()
 		return false;
 	}
 
+	_ViewportSize = InViewportSize;
 	return true;
 }
 
 bool GameEngine::LoadResources()
 {
-	_QuadMesh = std::make_unique<Mesh2D>();
+	_QuadMesh = std::make_unique<DD::Mesh>();
 
 	constexpr float squareHalfSize = 0.5f;
 	constexpr int vertexCount = 4;
@@ -46,6 +47,6 @@ bool GameEngine::LoadResources()
 
 bool GameEngine::LoadScene()
 {
-	_Player = std::make_unique<GameObject2D>(_QuadMesh.get());
+	_Player = std::make_unique<DD::GameObject>(_QuadMesh.get());
 	return true;
 }

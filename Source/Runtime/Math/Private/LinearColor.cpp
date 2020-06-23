@@ -1,7 +1,5 @@
 
 #include "Precompiled.h"
-#include "Math.h"
-#include "LinearColor.h"
 
 const float LinearColor::OneOver255 = 1.f / 255.f;
 const LinearColor LinearColor::Error(1.f, 0.f, 1.f, 1.f);

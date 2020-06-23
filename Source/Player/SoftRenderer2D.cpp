@@ -1,6 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
+using namespace CK::DD;
 
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
@@ -45,7 +46,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	InputManager input = _GameEngine.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
+	Transform& transform = _GameEngine.GetPlayer()->GetTransform();
 	transform.AddRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
 	transform.AddPosition(transform.GetLocalY() * input.GetYAxis() * moveSpeed * InDeltaSeconds);
 	transform.SetScale(Vector2::One * squareScale);
@@ -60,14 +61,14 @@ void SoftRenderer::Render2D()
 	DrawGrid2D();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& transform = _GameEngine.GetPlayer()->GetTransform();
+	Transform& transform = _GameEngine.GetPlayer()->GetTransform();
 	Matrix3x3 finalMat = transform.GetModelingMatrix();
 
 	// 게임 오브젝트 트랜스폼 정보의 출력
 	_RSI->PushStatisticTexts(finalMat.ToStrings());
 
 	// 플레이어 게임 오브젝트의 메시
-	const Mesh2D* mesh = _GameEngine.GetPlayer()->GetMesh();
+	const Mesh* mesh = _GameEngine.GetPlayer()->GetMesh();
 
 	size_t vertexCount = mesh->_Vertices.size();
 	size_t indexCount = mesh->_Indices.size();

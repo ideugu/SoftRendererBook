@@ -1,20 +1,25 @@
 #pragma once
 
+namespace CK
+{
+
 class GameEngine
 {
 public:
 	GameEngine() = default;
 
 public:
-	bool Init();
+	bool Init(const ScreenPoint& InViewportSize);
 	bool LoadResources();
 	bool LoadScene();
 	InputManager& GetInputManager() { return _InputManager; }
-	GameObject2D* GetPlayer() { return _Player.get(); }
+	DD::GameObject* GetPlayer() { return _Player.get(); }
 
 private:
+	ScreenPoint _ViewportSize;
 	InputManager _InputManager;
-	std::unique_ptr<Mesh2D> _QuadMesh;
-	std::unique_ptr<GameObject2D> _Player;
+	std::unique_ptr<DD::Mesh> _QuadMesh;
+	std::unique_ptr<DD::GameObject> _Player;
 };
 
+}
