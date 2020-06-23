@@ -1,7 +1,7 @@
 
 #include "Precompiled.h"
 
-bool GameEngine::Init()
+bool GameEngine::Init(const ScreenPoint& InViewportSize)
 {
 	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.SpacePressed)
 	{
@@ -13,6 +13,7 @@ bool GameEngine::Init()
 		return false;
 	}
 
+	_ViewportSize = InViewportSize;
 	return true;
 }
 

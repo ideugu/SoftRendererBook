@@ -1,10 +1,5 @@
 #pragma once
 
-#include <windows.h>
-#include <tchar.h>
-#include <functional>
-#include "Res/resource.h"
-
 namespace WindowsPlayer
 {
 	static HINSTANCE gInstance;

@@ -1,10 +1,6 @@
 
 #pragma once
 
-#include <memory>
-#include "WindowsGDI.h"
-#include "RenderingSoftwareInterface.h"
-
 class WindowsGDI;
 class WindowsRSI : public WindowsGDI, public RenderingSoftwareInterface
 {
