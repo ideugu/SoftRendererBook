@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Vector2.h"
+namespace CK
+{
 
 struct Vector3
 {
@@ -83,13 +84,13 @@ FORCEINLINE Vector3 Vector3::Normalize() const
 
 FORCEINLINE float Vector3::operator[](BYTE InIndex) const
 {
-	assert(InIndex >= 0 && InIndex <= 2);
+	if (InIndex < 0 || InIndex > 2) InIndex = 0;
 	return ((float *)this)[InIndex];
 }
 
 FORCEINLINE float &Vector3::operator[](BYTE InIndex)
 {
-	assert(InIndex >= 0 && InIndex <= 2);
+	if (InIndex < 0 || InIndex > 2) InIndex = 0;
 	return ((float *)this)[InIndex];
 }
 
@@ -174,4 +175,6 @@ FORCEINLINE Vector3 Vector3::Cross(const Vector3& InVector) const
 		Y * InVector.Z - Z * InVector.Y,
 		Z * InVector.X - X * InVector.Z,
 		X * InVector.Y - Y * InVector.X);
+}
+
 }

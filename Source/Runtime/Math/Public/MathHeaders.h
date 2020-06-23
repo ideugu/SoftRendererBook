@@ -1,6 +1,14 @@
 #pragma once
 
+#include <cassert>
+
+#include <math.h>
+
+#include <intrin.h>
 #include "Platform.h"
+
+#include <string>
+#include <vector>
 
 #include "MathUtil.h"
 #include "Vector2.h"
@@ -16,3 +24,4 @@
 #include "Color32.h"
 #include "LinearColor.h"
 
+using namespace CK;

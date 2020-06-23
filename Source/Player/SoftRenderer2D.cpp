@@ -34,7 +34,6 @@ void SoftRenderer::DrawGrid2D()
 	_RSI->DrawFullVerticalLine(screenHalfSize.X, LinearColor::Green);
 }
 
-
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
@@ -68,4 +67,3 @@ void SoftRenderer::Render2D()
 	_RSI->DrawLine(_StartPosition, _EndPosition, _CurrentColor);
 
 }
-
