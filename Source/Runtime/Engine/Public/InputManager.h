@@ -1,6 +1,7 @@
 #pragma once
 
-#include <functional>
+namespace CK
+{
 
 struct InputManager
 {
@@ -8,3 +9,5 @@ struct InputManager
 	std::function<float()> GetYAxis;
 	std::function<bool()> SpacePressed;
 };
+
+}

@@ -1,12 +1,13 @@
 
 #include "Precompiled.h"
+using namespace CK::DD;
 
-Matrix3x3 Camera2D::GetViewMatrix() const
+Matrix3x3 Camera::GetViewMatrix() const
 {
 	return Matrix3x3(Vector3::UnitX, Vector3::UnitY, Vector3(-_Transform.GetPosition()));
 }
 
-void Camera2D::SetCameraViewSize(const ScreenPoint& InScreenSize)
+void Camera::SetCameraViewSize(const ScreenPoint& InScreenSize)
 {
 	Vector2 halfSize = Vector2(InScreenSize.X, InScreenSize.Y) * 0.5f;
 

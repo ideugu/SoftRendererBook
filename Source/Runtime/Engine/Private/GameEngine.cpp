@@ -5,7 +5,7 @@
 const std::string GameEngine::QuadMeshKey("SM_Quad");
 const std::string GameEngine::PlayerKey("Player");
 
-bool GameEngine::Init(const ScreenPoint& InScreenSize)
+bool GameEngine::Init(const ScreenPoint& InViewportSize)
 {
 	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.SpacePressed)
 	{
@@ -17,17 +17,18 @@ bool GameEngine::Init(const ScreenPoint& InScreenSize)
 		return false;
 	}
 
-	if (!LoadScene(InScreenSize))
+	if (!LoadScene(InViewportSize))
 	{
 		return false;
 	}
 
+	_ViewportSize = InViewportSize;
 	return true;
 }
 
 bool GameEngine::LoadResources()
 {
-	auto quadMesh = std::make_unique<Mesh2D>();
+	auto quadMesh = std::make_unique<DD::Mesh>();
 
 	float squareHalfSize = 0.5f;
 	int vertexCount = 4;
@@ -57,14 +58,14 @@ bool GameEngine::LoadScene(const ScreenPoint& InScreenSize)
 	static float squareScale = 10.f;
 
 	// 플레이어 설정
-	auto player = std::make_unique<GameObject2D>(GameEngine::PlayerKey);
+	auto player = std::make_unique<DD::GameObject>(GameEngine::PlayerKey);
 	player->SetMesh(GameEngine::QuadMeshKey);
 	player->GetTransform().SetScale(Vector2::One * squareScale);
 	player->SetColor(LinearColor::Blue);
 	_GameObjects.push_back(std::move(player));
 
 	// 카메라 설정
-	_Camera = std::make_unique<Camera2D>();
+	_Camera = std::make_unique<DD::Camera>();
 	_Camera->SetCameraViewSize(InScreenSize);
 
 	// 랜덤한 배경 설정
@@ -76,7 +77,7 @@ bool GameEngine::LoadScene(const ScreenPoint& InScreenSize)
 	{
 		char name[64];
 		std::snprintf(name, sizeof(name), "GameObject%d", i);
-		auto newGo = std::make_unique<GameObject2D>(name);
+		auto newGo = std::make_unique<DD::GameObject>(name);
 		newGo->GetTransform().SetPosition(Vector2(dist(generator), dist(generator)));
 		newGo->GetTransform().SetScale(Vector2::One * squareScale);
 		newGo->SetMesh(GameEngine::QuadMeshKey);

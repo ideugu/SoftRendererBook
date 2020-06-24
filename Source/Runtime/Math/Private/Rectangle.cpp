@@ -1,6 +1,5 @@
 
 #include "Precompiled.h"
-#include "Rectangle.h"
 
 Rectangle::Rectangle(const Vector2* InVertices, size_t InCount)
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Platform.h"
-#include "Vector2.h"
+namespace CK
+{
 
 struct Rectangle
 {
@@ -88,3 +88,4 @@ FORCEINLINE void Rectangle::GetCenterAndExtent(Vector2 & OutCenter, Vector2 & Ou
 	OutCenter = Min + OutExtent;
 }
 
+}
