@@ -9,6 +9,23 @@ Matrix4x4 Camera::GetViewMatrix() const
 	return inverseRotation * inverseTranslate;
 }
 
+Matrix4x4 Camera::GetPerspectiveMatrix(int InScreenSizeX, int InScreenSizeY) const
+{
+	// 투영 행렬. 깊이 값의 범위는 -1~1
+	float invA = (float)InScreenSizeY / (float)InScreenSizeX;
+
+	float focalLength = 1.f / tanf(Math::Deg2Rad(FOV) * 0.5f);
+	float invNF = 1.f / (NearZ - FarZ);
+	float k = (FarZ + NearZ) * invNF;
+	float l = 2.f * FarZ * NearZ * invNF;
+	return Matrix4x4(
+		Vector4::UnitX * invA * focalLength,
+		Vector4::UnitY * focalLength,
+		Vector4(0.f, 0.f, k, -1.f),
+		Vector4(0.f, 0.f, l, 0.f));
+
+}
+
 void Camera::SetLookAtRotation(const Vector3& InTargetPosition)
 {
 	_Transform._Forward = (_Transform._Position - InTargetPosition).Normalize();

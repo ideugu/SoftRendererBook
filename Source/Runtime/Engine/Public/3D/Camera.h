@@ -8,16 +8,21 @@ namespace DDD
 class Camera
 {
 public:
-	Camera() { }
+	Camera() = default;
 	~Camera() { }
 
 public:
 	Transform& GetTransform() { return _Transform; }
 	Matrix4x4 GetViewMatrix() const;
+	Matrix4x4 GetPerspectiveMatrix(int InScreenSizeX, int InScreenSizeY) const;
 	void SetLookAtRotation(const Vector3& InTargetPosition);
 
-protected:
+private:
 	Transform _Transform;
+
+	float FOV = 60.f;
+	float NearZ = 5.5f;
+	float FarZ = 1000.f;
 };
 
 }

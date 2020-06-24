@@ -17,3 +17,4 @@ void Camera::SetCameraViewSize(const ScreenPoint& InScreenSize)
 	RectangleBound.Min = -halfSize;
 	RectangleBound.Max = halfSize;
 }
+

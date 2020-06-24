@@ -26,12 +26,14 @@ void SoftRenderer::Render3D()
 	DrawGizmo3D();
 
 	Matrix4x4 viewMat = _GameEngine3.GetCamera()->GetViewMatrix();
+	Matrix4x4 perspMat = _GameEngine3.GetCamera()->GetPerspectiveMatrix(_ScreenSize.X, _ScreenSize.Y);
+
 	for (auto it = _GameEngine3.GoBegin(); it != _GameEngine3.GoEnd(); ++it)
 	{
 		GameObject* gameObject = it->get();
 		const Mesh* mesh = _GameEngine3.GetMesh(gameObject->GetMeshKey());
 		Transform& transform = gameObject->GetTransform();
-		Matrix4x4 finalMat = viewMat * transform.GetModelingMatrix();
+		Matrix4x4 finalMat = perspMat * viewMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh->_Vertices.size();
 		size_t indexCount = mesh->_Indices.size();
@@ -57,9 +59,35 @@ void SoftRenderer::Render3D()
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
 			int bi = ti * 3;
-			_RSI->DrawLine(vertices[indices[bi]].ToVector2(), vertices[indices[bi + 1]].ToVector2(), gameObject->GetColor());
-			_RSI->DrawLine(vertices[indices[bi]].ToVector2(), vertices[indices[bi + 2]].ToVector2(), gameObject->GetColor());
-			_RSI->DrawLine(vertices[indices[bi + 1]].ToVector2(), vertices[indices[bi + 2]].ToVector2(), gameObject->GetColor());
+			std::vector<Vector4> tp = { vertices[indices[bi]] , vertices[indices[bi + 1]] , vertices[indices[bi + 2]] };
+
+			for(Vector4 & v : tp)
+			{
+				float invW = 1.f / v.W;
+				v.X *= invW;
+				v.Y *= invW;
+				v.Z *= invW;
+				v.W = invW;
+			}
+
+			Vector3 edge1 = (tp[1] - tp[0]).ToVector3();
+			Vector3 edge2 = (tp[2] - tp[0]).ToVector3();
+			Vector3 faceNormal = edge1.Cross(edge2).Normalize();
+			if (faceNormal.Dot(-Vector3::UnitZ) > 0.f)
+			{
+				continue;
+			}
+
+			for (Vector4& v : tp)
+			{
+				//v.Z = (v.Z + 1.f) * 0.5f;
+				v.X *= (_ScreenSize.X * 0.5f);
+				v.Y *= (_ScreenSize.Y * 0.5f);
+			}
+
+			_RSI->DrawLine(tp[0].ToVector2(), tp[1].ToVector2(), gameObject->GetColor());
+			_RSI->DrawLine(tp[0].ToVector2(), tp[2].ToVector2(), gameObject->GetColor());
+			_RSI->DrawLine(tp[1].ToVector2(), tp[2].ToVector2(), gameObject->GetColor());
 		}
 
 		delete[] vertices;
