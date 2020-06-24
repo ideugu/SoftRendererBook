@@ -48,7 +48,13 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
-	DD::Transform _Transform;
+
+	// 3D 구현함수
+	void DrawGizmo3D();
+	void Update3D(float InDeltaSeconds);
+	void Render3D();
+
+	float _GizmoUnitLength = 50.f;
 
 private:
 	// 초기화 점검 변수

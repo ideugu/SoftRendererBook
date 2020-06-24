@@ -27,4 +27,6 @@
 #include "Circle.h"
 #include "Rectangle.h"
 
+#include "Rotator.h"
+
 using namespace CK;
