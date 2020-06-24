@@ -1,6 +1,7 @@
 
 #include "Precompiled.h"
 #include <random>
+using namespace CK::DD;
 
 const std::string GameEngine::QuadMeshKey("SM_Quad");
 const std::string GameEngine::PlayerKey("Player");
