@@ -101,6 +101,23 @@ struct Math
 			OutCos = cosf(rad);
 		}
 	}
+
+	static FORCEINLINE float FMod(float X, float Y)
+	{
+		if (fabsf(Y) <= SMALL_NUMBER)
+		{
+			return 0.f;
+		}
+
+		const float quotient = (float)TruncToInt(X / Y);
+		float intPortion = Y * quotient;
+		if (fabsf(intPortion) > fabsf(X))
+		{
+			intPortion = X;
+		}
+
+		return (X - intPortion);
+	}
 };
 
 }
