@@ -8,6 +8,8 @@
 #include "2D\GameObject.h"
 #include "2D\Camera.h"
 
+#include "QuadTree.h"
+#include "QuadTreeManager.h"
 #include "GameEngine.h"
 
 using namespace CK;
