@@ -38,8 +38,10 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
+	static float moveSpeed = 100.0f;
+
 	InputManager input = _GameEngine.GetInputManager();
-	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * _MoveSpeed * InDeltaSeconds;
+	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
 	_PivotPosition += deltaPosition;
 
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
