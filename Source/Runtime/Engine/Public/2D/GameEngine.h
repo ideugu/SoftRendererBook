@@ -2,6 +2,8 @@
 
 namespace CK
 {
+namespace DD
+{
 
 class GameEngine
 {
@@ -20,4 +22,5 @@ private:
 	DD::Mesh2D _QuadMesh;
 };
 
+}
 }

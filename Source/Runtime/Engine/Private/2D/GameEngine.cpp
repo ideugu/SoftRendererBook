@@ -1,5 +1,6 @@
 
 #include "Precompiled.h"
+using namespace CK::DD;
 
 bool GameEngine::Init(const ScreenPoint& InViewportSize)
 {
