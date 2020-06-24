@@ -2,6 +2,8 @@
 
 namespace CK
 {
+namespace DD
+{
 
 class GameEngine
 {
@@ -22,4 +24,5 @@ private:
 	std::unique_ptr<DD::GameObject> _Player;
 };
 
+}
 }
