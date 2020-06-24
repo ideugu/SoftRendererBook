@@ -2,6 +2,8 @@
 
 namespace CK
 {
+namespace DD
+{
 
 class GameEngine
 {
@@ -32,4 +34,5 @@ private:
 	std::unique_ptr<DD::Camera> _Camera;
 };
 
+}
 }

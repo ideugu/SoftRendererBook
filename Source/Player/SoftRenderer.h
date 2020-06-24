@@ -28,7 +28,7 @@ public:
 	std::function<void(float DeltaSeconds)> UpdateFunc;
 
 	// 게임 엔진 레퍼런스
-	GameEngine& GetGameEngine() { return _GameEngine; }
+	DD::GameEngine& GetGameEngine() { return _GameEngine; }
 
 private:
 	// 기본 루프 함수
@@ -48,7 +48,6 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
-	DD::Transform _Transform;
 
 private:
 	// 초기화 점검 변수
@@ -75,5 +74,5 @@ private:
 	std::unique_ptr<RenderingSoftwareInterface> _RSI;
 
 	// 게임 엔진
-	GameEngine _GameEngine;
+	DD::GameEngine _GameEngine;
 };
