@@ -1,9 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <functional>
-#include "InputManager.h"
-
 class SoftRenderer
 {
 public:
@@ -52,6 +48,7 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
+	DD::Transform _Transform;
 
 private:
 	// 초기화 점검 변수

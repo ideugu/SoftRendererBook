@@ -1,9 +1,8 @@
 
 #include "Precompiled.h"
-#include "Windows/WindowsRSI.h"
-#include "WindowsPlayer.h"
-#include "WindowsUtil.h"
 #include "SoftRenderer.h"
+#include "WindowsUtil.h"
+#include "WindowsPlayer.h"
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
