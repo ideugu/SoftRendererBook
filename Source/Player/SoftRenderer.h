@@ -28,7 +28,7 @@ public:
 	std::function<void(float DeltaSeconds)> UpdateFunc;
 
 	// 게임 엔진 레퍼런스
-	GameEngine& GetGameEngine() { return _GameEngine; }
+	DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
 
 private:
 	// 기본 루프 함수
@@ -81,5 +81,6 @@ private:
 	std::unique_ptr<RenderingSoftwareInterface> _RSI;
 
 	// 게임 엔진
-	GameEngine _GameEngine;
+	DD::GameEngine _GameEngine2;
+	DDD::GameEngine _GameEngine3;
 };

@@ -10,7 +10,7 @@ void SoftRenderer::DrawGrid2D()
 	LinearColor gridColor(LinearColor(0.8f, 0.8f, 0.8f, 0.3f));
 
 	// 뷰의 영역 계산
-	Vector2 viewPos = _GameEngine.GetCamera()->GetTransform().GetPosition();
+	Vector2 viewPos = _GameEngine2.GetCamera()->GetTransform().GetPosition();
 	Vector2 extent = Vector2(_ScreenSize.X * 0.5f, _ScreenSize.Y * 0.5f);
 
 	// 좌측 하단에서부터 격자 그리기
@@ -44,15 +44,15 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	static float moveSpeed = 100.f;
 
-	InputManager input = _GameEngine.GetInputManager();
+	InputManager input = _GameEngine2.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform& playerTransform = _GameEngine.GetPlayer()->GetTransform();
+	Transform& playerTransform = _GameEngine2.GetPlayer()->GetTransform();
 	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
-	Transform& cameraTransform = _GameEngine.GetCamera()->GetTransform();
+	Transform& cameraTransform = _GameEngine2.GetCamera()->GetTransform();
 	cameraTransform.SetPosition(playerTransform.GetPosition());
 }
 
@@ -63,25 +63,25 @@ void SoftRenderer::Render2D()
 	DrawGrid2D();
 
 	// 통계 수치
-	size_t totalObjectCount = _GameEngine.GetGameObjects().size();
+	size_t totalObjectCount = _GameEngine2.GetGameObjects().size();
 	size_t culledObjectByCircleCount = 0;
 	size_t culledObjectByRectangleCount = 0;
 	size_t renderingObjectCount = 0;
 
 	// 카메라의 뷰 행렬
-	Matrix3x3 viewMat = _GameEngine.GetCamera()->GetViewMatrix();
+	Matrix3x3 viewMat = _GameEngine2.GetCamera()->GetViewMatrix();
 
 	// 카메라의 가시 영역
-	const Circle& cameraCircleBound = _GameEngine.GetCamera()->GetCircleBound();
-	const CK::Rectangle& cameraRectangleBound = _GameEngine.GetCamera()->GetRectangleBounds();
+	const Circle& cameraCircleBound = _GameEngine2.GetCamera()->GetCircleBound();
+	const CK::Rectangle& cameraRectangleBound = _GameEngine2.GetCamera()->GetRectangleBounds();
 
 	_RSI->PushStatisticText("Total Count : " + std::to_string(totalObjectCount));
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
-	for (auto it = _GameEngine.GoBegin(); it != _GameEngine.GoEnd(); ++it)
+	for (auto it = _GameEngine2.GoBegin(); it != _GameEngine2.GoEnd(); ++it)
 	{
 		GameObject* gameObject = it->get();
-		const Mesh* mesh = _GameEngine.GetMesh(gameObject->GetMeshKey());
+		const Mesh* mesh = _GameEngine2.GetMesh(gameObject->GetMeshKey());
 		Transform& transform = gameObject->GetTransform();
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 

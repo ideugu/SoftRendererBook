@@ -36,7 +36,7 @@ void SoftRenderer::OnTick()
 		_RendererInitialized = true;
 
 		// 게임 엔진 초기화
-		if (!_GameEngine.Init(_ScreenSize))
+		if (!_GameEngine3.Init(_ScreenSize))
 		{
 			return;
 		}
@@ -71,7 +71,7 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 
 	if (_GameEngineInitialized)
 	{
-		_GameEngine.Init(_ScreenSize);
+		_GameEngine3.Init(_ScreenSize);
 	}
 	
 }
@@ -132,8 +132,8 @@ void SoftRenderer::Update()
 void SoftRenderer::BindTickFunctions()
 {
 	using namespace std::placeholders;
-	RenderFrameFunc = std::bind(&SoftRenderer::Render2D, this);
-	UpdateFunc = std::bind(&SoftRenderer::Update2D, this, _1);
+	RenderFrameFunc = std::bind(&SoftRenderer::Render3D, this);
+	UpdateFunc = std::bind(&SoftRenderer::Update3D, this, _1);
 	_TickFunctionBound = true;
 }
 
