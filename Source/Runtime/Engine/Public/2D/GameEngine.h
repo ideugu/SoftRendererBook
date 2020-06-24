@@ -2,6 +2,8 @@
 
 namespace CK
 {
+namespace DD
+{
 
 class GameEngine
 {
@@ -17,4 +19,5 @@ private:
 	InputManager _InputManager;
 };
 
+}
 }
