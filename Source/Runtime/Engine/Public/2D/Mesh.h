@@ -1,10 +1,15 @@
 #pragma once
 
-class Mesh2D
+namespace CK
+{
+namespace DD
+{
+
+class Mesh
 {
 public:
-	Mesh2D() {};
-	~Mesh2D() {};
+	Mesh() {};
+	~Mesh() {};
 
 public:
 	std::vector<Vector2> _Vertices;
@@ -15,4 +20,7 @@ public:
 private:
 	Circle CircleBound;
 };
+
+}
+}
 

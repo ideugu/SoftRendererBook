@@ -1,6 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
+using namespace CK::DD;
 
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
@@ -46,12 +47,12 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	InputManager input = _GameEngine.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform2D& playerTransform = _GameEngine.GetPlayer()->GetTransform();
+	Transform& playerTransform = _GameEngine.GetPlayer()->GetTransform();
 	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
-	Transform2D& cameraTransform = _GameEngine.GetCamera()->GetTransform();
+	Transform& cameraTransform = _GameEngine.GetCamera()->GetTransform();
 	cameraTransform.SetPosition(playerTransform.GetPosition());
 }
 
@@ -77,9 +78,9 @@ void SoftRenderer::Render2D()
 	// 랜덤하게 생성된 모든 게임 오브젝트들
 	for (auto it = _GameEngine.GoBegin(); it != _GameEngine.GoEnd(); ++it)
 	{
-		GameObject2D* gameObject = it->get();
-		const Mesh2D* mesh = _GameEngine.GetMesh(gameObject->GetMeshKey());
-		Transform2D& transform = gameObject->GetTransform();
+		GameObject* gameObject = it->get();
+		const Mesh* mesh = _GameEngine.GetMesh(gameObject->GetMeshKey());
+		Transform& transform = gameObject->GetTransform();
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
 		// 게임 오브젝트의 충돌 영역

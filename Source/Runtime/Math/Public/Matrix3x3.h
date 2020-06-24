@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vector3.h"
-#include <vector>
+namespace CK
+{
 
 struct Matrix3x3
 {
@@ -41,12 +41,11 @@ public:
 	enum { Rank = 3 };
 
 	// ¸â¹öº¯¼ö 
-	Vector3 Cols[3];
+	Vector3 Cols[3] = { Vector3::UnitX, Vector3::UnitY, Vector3::UnitZ };
 };
 
 FORCEINLINE Matrix3x3::Matrix3x3()
 {
-	*this = Matrix3x3::Identity;
 }
 
 FORCEINLINE Matrix3x3::Matrix3x3(const Vector3& InCol0, const Vector3& InCol1, const Vector3& InCol2)
@@ -73,9 +72,7 @@ FORCEINLINE Matrix3x3::Matrix3x3(float In00, float In01, float In02, float In10,
 
 FORCEINLINE void Matrix3x3::SetIdentity()
 {
-	Cols[0] = Vector3::UnitX;
-	Cols[1] = Vector3::UnitY;
-	Cols[2] = Vector3::UnitZ;
+	*this = Matrix3x3::Identity;
 }
 
 FORCEINLINE Matrix3x3 Matrix3x3::Tranpose() const
@@ -89,14 +86,12 @@ FORCEINLINE Matrix3x3 Matrix3x3::Tranpose() const
 
 FORCEINLINE const Vector3& Matrix3x3::operator[](BYTE InIndex) const
 {
-	assert(InIndex >= 0 && InIndex <= 2);
-	return Cols[InIndex];
+	return (InIndex < Rank) ? Cols[InIndex] : Cols[0];
 }
 
 FORCEINLINE Vector3& Matrix3x3::operator[](BYTE InIndex)
 {
-	assert(InIndex >= 0 && InIndex <= 2);
-	return Cols[InIndex];
+	return (InIndex < Rank) ? Cols[InIndex] : Cols[0];
 }
 
 FORCEINLINE Matrix3x3 Matrix3x3::operator*(float InScalar) const
@@ -135,4 +130,6 @@ FORCEINLINE Vector2 Matrix3x3::operator*(const Vector2& InVector) const
 	v3 *= *this;
 
 	return v3.ToVector2();
+}
+
 }

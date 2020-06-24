@@ -1,14 +1,6 @@
 
 #pragma once
 
-#include "Platform.h"
-#include <windows.h>
-#include <string>
-#include <memory>
-#include <functional>
-#include "ScreenPoint.h"
-#include "LinearColor.h"
-
 class WindowsGDI
 {
 public:

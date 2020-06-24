@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Platform.h"
-#include "Vector2.h"
+namespace CK
+{
 
 struct Circle
 {
@@ -28,3 +28,6 @@ FORCEINLINE bool Circle::Intersect(const Circle& InCircle) const
 	float twoRadiusSum = Radius + InCircle.Radius;
 	return (Center - InCircle.Center).SizeSquared() < (twoRadiusSum * twoRadiusSum);
 }
+
+}
+

@@ -1,6 +1,5 @@
 
 #include "Precompiled.h"
-#include "Circle.h"
 
 Circle::Circle(const Vector2* InVertices, size_t InCount)
 {
