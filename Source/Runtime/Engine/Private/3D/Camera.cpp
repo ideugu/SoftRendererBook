@@ -14,10 +14,10 @@ Matrix4x4 Camera::GetPerspectiveMatrix(int InScreenSizeX, int InScreenSizeY) con
 	// 투영 행렬. 깊이 값의 범위는 -1~1
 	float invA = (float)InScreenSizeY / (float)InScreenSizeX;
 
-	float focalLength = 1.f / tanf(Math::Deg2Rad(FOV) * 0.5f);
-	float invNF = 1.f / (NearZ - FarZ);
-	float k = (FarZ + NearZ) * invNF;
-	float l = 2.f * FarZ * NearZ * invNF;
+	float focalLength = 1.f / tanf(Math::Deg2Rad(_FOV) * 0.5f);
+	float invNF = 1.f / (_NearZ - _FarZ);
+	float k = (_FarZ + _NearZ) * invNF;
+	float l = 2.f * _FarZ * _NearZ * invNF;
 	return Matrix4x4(
 		Vector4::UnitX * invA * focalLength,
 		Vector4::UnitY * focalLength,

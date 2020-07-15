@@ -20,9 +20,9 @@ public:
 private:
 	Transform _Transform;
 
-	float FOV = 60.f;
-	float NearZ = 5.5f;
-	float FarZ = 1000.f;
+	float _FOV = 60.f;
+	float _NearZ = 5.5f;
+	float _FarZ = 1000.f;
 };
 
 }
