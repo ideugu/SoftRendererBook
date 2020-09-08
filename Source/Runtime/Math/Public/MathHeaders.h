@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <iterator>
 
 #include "MathUtil.h"
 #include "Vector2.h"
