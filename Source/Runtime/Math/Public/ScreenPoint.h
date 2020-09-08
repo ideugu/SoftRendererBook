@@ -9,7 +9,7 @@ public:
 	FORCEINLINE ScreenPoint() = default;
 	FORCEINLINE explicit ScreenPoint(int InX, int InY) : X(InX), Y(InY) { }
 	FORCEINLINE explicit ScreenPoint(float InX, float InY) : X(Math::FloorToInt(InX)), Y(Math::FloorToInt(InY)) { }
-	FORCEINLINE explicit ScreenPoint(const Vector2& InPos) : ScreenPoint(InPos.X, InPos.Y) {}
+	FORCEINLINE explicit ScreenPoint(const Vector2& InPos) : ScreenPoint(InPos.X, InPos.Y) { }
 
 	ScreenPoint GetHalf() { return ScreenPoint(Math::FloorToInt(0.5f * X), Math::FloorToInt(0.5f * Y)); }
 	FORCEINLINE bool HasZero() const { return ( X == 0 || Y == 0 ); }
@@ -21,7 +21,7 @@ public:
 
 	FORCEINLINE Vector2 ToVectorCoordinate(const ScreenPoint& InScreenSize)
 	{
-		return Vector2(X - InScreenSize.X * 0.5f + 0.5f, -Y + InScreenSize.Y * 0.5f + 0.5f);
+		return Vector2((X + 0.5f) - InScreenSize.X * 0.5f, -(Y + 0.5f) + InScreenSize.Y * 0.5f);
 	}
 
 	FORCEINLINE ScreenPoint operator-(const ScreenPoint& InPoint) const;
