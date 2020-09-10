@@ -51,9 +51,8 @@ private:
 
 	// 로직 구현을 위한 멤버 변수
 	float _CurrentScale = 5.f;
-	float _CurrentDegree = 0.f;
+	float _CurrentTime = 0.f;
 	Vector2 _CurrentPosition = Vector2::Zero;
-	LinearColor _CurrentColor = LinearColor::Blue;
 
 private:
 	// 초기화 점검 변수

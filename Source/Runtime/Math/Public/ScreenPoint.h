@@ -21,7 +21,7 @@ public:
 
 	FORCEINLINE Vector2 ToVectorCoordinate(const ScreenPoint& InScreenSize)
 	{
-		return Vector2(X - InScreenSize.X * 0.5f + 0.5f, -Y + InScreenSize.Y * 0.5f + 0.5f);
+		return Vector2(X - InScreenSize.X * 0.5f + 0.5f, -(Y + 0.5f) + InScreenSize.Y * 0.5f);
 	}
 
 	FORCEINLINE ScreenPoint operator-(const ScreenPoint& InPoint) const;

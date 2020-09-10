@@ -37,6 +37,12 @@ struct Math
 		return Math::Abs(InFloat1 - InFloat2) <= InTolerance;
 	}
 
+	template< class T>
+	static FORCEINLINE T Lerp(const T& InSrc, const T& InDest, float InAlpha)
+	{
+		return (T)(InSrc + InAlpha * (InDest - InSrc));
+	}
+
 	template<class T>
 	static constexpr FORCEINLINE T Square(const T InNum)
 	{
