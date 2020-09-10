@@ -40,8 +40,8 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	// 게임 로직에만 사용하는 변수
 	static float moveSpeed = 100.f;
-	static float scaleMin = 20.f;
-	static float scaleMax = 50.f;
+	static float scaleMin = 3.f;
+	static float scaleMax = 15.f;
 	static float scaleSpeed = 20.f;
 	static float rotateSpeed = 180.f;
 
@@ -66,24 +66,16 @@ void SoftRenderer::Render2D()
 	static std::vector<Vector2> hearts;
 	if (hearts.empty())
 	{
-		static float range = 10.f;
-		static float increment = 0.01f;
-		static float n = 10.f;
-		static float tolerance = 0.5f;
-		for (float y = -range; y < range; y += increment)
+		for (float rad = 0.f; rad < Math::TwoPI; rad += 0.001f)
 		{
-			for (float x = -range; x < range; x += increment)
-			{
-				float test = x * x * y * y * y;
-				float u = (x * x + y * y - (n - tolerance));
-				float l = (x * x + y * y - (n + tolerance));
-				float utest = u * u * u;
-				float ltest = l * l * l;
-				if(utest > test && ltest < test)
-				{
-					hearts.push_back(Vector2(x, y));
-				}
-			}
+			float sin = sinf(rad);
+			float cos = cosf(rad);
+			float cos2 = cosf(2 * rad);
+			float cos3 = cosf(3 * rad);
+			float cos4 = cosf(4 * rad);
+			float x = 16.f * sin * sin * sin;
+			float y = 13 * cos - 5 * cos2 - 2 * cos3 - cos4;
+			hearts.push_back(Vector2(x, y));
 		}
 	}
 
