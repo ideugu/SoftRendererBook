@@ -47,7 +47,7 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	static float radius = 50.f;
+	static float radius = 150.f;
 	for (float x = -radius; x <= radius; ++x)
 	{
 		for (float y = -radius; y <= radius; ++y)
