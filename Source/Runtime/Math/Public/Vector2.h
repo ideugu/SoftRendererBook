@@ -31,6 +31,8 @@ public:
 	FORCEINLINE bool EqualsInTolerance(const Vector2& InVector, float InTolerance = KINDA_SMALL_NUMBER) const;
 	FORCEINLINE float Max() const;
 	FORCEINLINE float Dot(const Vector2& InVector) const;
+	FORCEINLINE float Angle() const;
+	FORCEINLINE float AngleInDegree() const;
 
 	std::string ToString() const;
 
@@ -152,6 +154,16 @@ FORCEINLINE float Vector2::Max() const
 FORCEINLINE float Vector2::Dot(const Vector2& InVector) const
 {
 	return X * InVector.X + Y * InVector.Y;
+}
+
+FORCEINLINE float Vector2::Angle() const
+{
+	return atan2f(Y,X);
+}
+
+FORCEINLINE float Vector2::AngleInDegree() const
+{
+	return Math::Rad2Deg(atan2f(Y, X));
 }
 
 }

@@ -43,13 +43,16 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float scaleMin = 20.f;
 	static float scaleMax = 50.f;
 	static float scaleSpeed = 20.f;
+	static float rotateSpeed = 180.f;
 
 	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
 	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
 	float deltaScale = input.GetZAxis() * scaleSpeed * InDeltaSeconds;
+	float deltaRotation = input.GetWAxis() * rotateSpeed * InDeltaSeconds;
 
 	_CurrentPosition += deltaPosition;
+	_CurrentDegree += deltaRotation;
 	_CurrentScale = Math::Clamp(_CurrentScale + deltaScale, scaleMin, scaleMax);
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
@@ -86,12 +89,17 @@ void SoftRenderer::Render2D()
 
 	for (auto const& v : hearts)
 	{
-		Vector2 target = (v * _CurrentScale) + _CurrentPosition;
-		_RSI->DrawPoint(target, _CurrentColor);
+		float sin, cos;
+		Math::GetSinCos(sin, cos, _CurrentDegree);
+		Vector2 target = v * _CurrentScale;
+		Vector2 rotatedTarget = Vector2(target.X * cos - target.Y * sin, target.X * sin + target.Y * cos);
+		rotatedTarget += _CurrentPosition;
+		_RSI->DrawPoint(rotatedTarget, _CurrentColor);
 	}
 
 	// 현재 위치와 스케일을 화면에 출력
 	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
 	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
+	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
 }
 

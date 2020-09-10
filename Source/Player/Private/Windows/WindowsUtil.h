@@ -88,6 +88,17 @@ namespace WindowsUtil
 		return 0.f;
 	}
 
+	float GetWAxisInput()
+	{
+		bool isDown = GetAsyncKeyState(VK_END);
+		bool isUp = GetAsyncKeyState(VK_HOME);
+		if (isDown ^ isUp)
+		{
+			return isDown ? -1.f : 1.f;
+		}
+		return 0.f;
+	}
+
 	#define ISPRESSED(KeyCode) (::GetKeyState(KeyCode) & 0x8000) != 0
 
 	bool SpacePressedInput()
@@ -100,6 +111,7 @@ namespace WindowsUtil
 		InInputManager.GetXAxis = WindowsUtil::GetXAxisInput;
 		InInputManager.GetYAxis = WindowsUtil::GetYAxisInput;
 		InInputManager.GetZAxis = WindowsUtil::GetZAxisInput;
+		InInputManager.GetWAxis = WindowsUtil::GetWAxisInput;
 		InInputManager.SpacePressed = WindowsUtil::SpacePressedInput;
 	}
 }
