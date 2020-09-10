@@ -47,8 +47,9 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
 	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
-	_CurrentPosition += deltaPosition;
 	float deltaScale = input.GetZAxis() * scaleSpeed * InDeltaSeconds;
+
+	_CurrentPosition += deltaPosition;
 	_CurrentScale = Math::Clamp(_CurrentScale + deltaScale, scaleMin, scaleMax);
 	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
@@ -89,7 +90,7 @@ void SoftRenderer::Render2D()
 		_RSI->DrawPoint(target, _CurrentColor);
 	}
 
-	// 현재 위치를 화면에 출력
+	// 현재 위치와 스케일을 화면에 출력
 	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
 	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
 }
