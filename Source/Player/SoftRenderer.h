@@ -50,6 +50,7 @@ private:
 	int _Grid2DUnit = 10;
 
 	// 로직 구현을 위한 멤버 변수
+	float _CurrentScale = 30.f;
 	Vector2 _CurrentPosition = Vector2::Zero;
 	LinearColor _CurrentColor = LinearColor::Blue;
 
