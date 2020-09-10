@@ -44,6 +44,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float scaleMax = 15.f;
 	static float scaleSpeed = 20.f;
 	static float duration = 3.f;
+	static float rotateSpeed = 180.f;
 
 	// 경과 시간에 따른 현재 각과 이를 사용한 [0,1]값의 생성
 	_CurrentTime += InDeltaSeconds;
@@ -56,9 +57,11 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
+	float deltaRotation = input.GetWAxis() * rotateSpeed * InDeltaSeconds;
 	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
 
 	_CurrentPosition += deltaPosition;
+	_CurrentDegree += deltaRotation;
 }
 
 // 렌더링 로직
@@ -90,8 +93,14 @@ void SoftRenderer::Render2D()
 	HSVColor hsv(0.f, 1.f, 0.85f); // 잘 보이도록 채도를 조금만 줄였음. 
 	for (auto const& v : hearts)
 	{
+		float sin, cos;
+		Math::GetSinCos(sin, cos, _CurrentDegree);
+		Vector2 target = v * _CurrentScale;
+		Vector2 rotatedTarget = Vector2(target.X * cos - target.Y * sin, target.X * sin + target.Y * cos);
+		rotatedTarget += _CurrentPosition;
+
 		hsv.H = rad / Math::TwoPI;
-		_RSI->DrawPoint(v * _CurrentScale + _CurrentPosition, hsv.ToLinearColor());
+		_RSI->DrawPoint(rotatedTarget, hsv.ToLinearColor());
 		rad += increment;
 	}
 
@@ -99,5 +108,6 @@ void SoftRenderer::Render2D()
 	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
 	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
 	_RSI->PushStatisticText(std::string("Time : ") + std::to_string(_CurrentTime));
+	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
 }
 
