@@ -47,13 +47,20 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	_RSI->DrawPoint(Vector2(100.f, 100.f), LinearColor::Black);
-	_RSI->DrawPoint(Vector2(99.f, 100.f), LinearColor::Black);
-	_RSI->DrawPoint(Vector2(101.f, 100.f), LinearColor::Black);
-	_RSI->DrawPoint(Vector2(100.f, 99.f), LinearColor::Black);
-	_RSI->DrawPoint(Vector2(100.f, 101.f), LinearColor::Black);
-
-	// 위치 정보를 화면에 출력
-	_RSI->PushStatisticText(Vector2(100.f, 100.f).ToString());
+	static float radius = 50.f;
+	for (float x = -radius; x <= radius; ++x)
+	{
+		for (float y = -radius; y <= radius; ++y)
+		{
+			Vector2 target(x, y);
+			float sizeSquared = target.SizeSquared();
+			float rr = radius * radius;
+			float invRR = 1 / rr;
+			if (sizeSquared < rr)
+			{
+				_RSI->DrawPoint(target, LinearColor(1.f, sizeSquared * invRR, 0.75f));
+			}
+		}
+	}
 }
 
