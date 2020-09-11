@@ -40,20 +40,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	// 게임 로직에만 사용하는 변수
 	static float moveSpeed = 100.f;
-	static float scaleMin = 3.f;
-	static float scaleMax = 15.f;
-	static float scaleSpeed = 20.f;
-	static float duration = 3.f;
 	static float rotateSpeed = 180.f;
-
-	// 경과 시간에 따른 현재 각과 이를 사용한 [0,1]값의 생성
-	_CurrentTime += InDeltaSeconds;
-	_CurrentTime = Math::FMod(_CurrentTime, duration);
-	float currentRad = (_CurrentTime / duration) * Math::TwoPI;
-	float alpha = (sinf(currentRad) + 1) * 0.5f;
-
-	// [0,1]을 활용해 주기적으로 크기를 반복하기
-	_CurrentScale = Math::Lerp(scaleMin, scaleMax, alpha);
 
 	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
@@ -95,19 +82,28 @@ void SoftRenderer::Render2D()
 	{
 		float sin, cos;
 		Math::GetSinCos(sin, cos, _CurrentDegree);
+		float halfScreenX = _ScreenSize.X * 0.5f;
+		float halfScreenY = _ScreenSize.Y * 0.5f;
 		Vector2 target = v * _CurrentScale;
-		Vector2 rotatedTarget = Vector2(target.X * cos - target.Y * sin, target.X * sin + target.Y * cos);
-		rotatedTarget += _CurrentPosition;
+		Vector2 ndc = Vector2(target.X / halfScreenX, target.Y / halfScreenY);
+		float len = Vector2(ndc.X * _ScreenSize.Y / _ScreenSize.X, ndc.Y).Size();
+		Vector2 polarNdc = ndc.ToPolarCoordinate();
+		// 원점에서 멀어질 수록 더욱 회전을 부여함.
+		polarNdc.Y += Math::Deg2Rad(_CurrentDegree) * Math::Lerp(0.f, 1.f, len);
+		float angle = ndc.Angle() + Math::Deg2Rad(_CurrentDegree) * Math::Lerp(0.f, 1.f, len);
+		float radius = ndc.Size();
+		target = polarNdc.ToCartesianCoordinate();
+		target = Vector2(target.X * halfScreenX, target.Y * halfScreenY);
+		Vector2 target2 = Vector2(radius * cosf(angle) * (_ScreenSize.X * 0.5f), radius * sinf(angle) * (_ScreenSize.Y * 0.5f));
 
 		hsv.H = rad / Math::TwoPI;
-		_RSI->DrawPoint(rotatedTarget, hsv.ToLinearColor());
+		_RSI->DrawPoint(target + _CurrentPosition, hsv.ToLinearColor());
 		rad += increment;
 	}
 
 	// 현재 위치와 스케일을 화면에 출력
 	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
 	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
-	_RSI->PushStatisticText(std::string("Time : ") + std::to_string(_CurrentTime));
 	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
 }
 
