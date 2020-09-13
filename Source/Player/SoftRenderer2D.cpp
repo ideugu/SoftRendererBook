@@ -1,6 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
+#include <random>
 
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
@@ -39,15 +40,12 @@ void SoftRenderer::DrawGrid2D()
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
 	// 게임 로직에만 사용하는 변수
-	static float moveSpeed = 100.f;
 	static float rotateSpeed = 180.f;
 
 	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
 	float deltaRotation = input.GetWAxis() * rotateSpeed * InDeltaSeconds;
-	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
 
-	_CurrentPosition += deltaPosition;
 	_CurrentDegree += deltaRotation;
 }
 
@@ -78,32 +76,45 @@ void SoftRenderer::Render2D()
 	// 각 값 초기화
 	rad = 0.f;
 	HSVColor hsv(0.f, 1.f, 0.85f); // 잘 보이도록 채도를 조금만 줄였음. 
-	for (auto const& v : hearts)
-	{
-		float sin, cos;
-		Math::GetSinCos(sin, cos, _CurrentDegree);
-		float halfScreenX = _ScreenSize.X * 0.5f;
-		float halfScreenY = _ScreenSize.Y * 0.5f;
-		Vector2 target = v * _CurrentScale;
-		Vector2 ndc = Vector2(target.X / halfScreenX, target.Y / halfScreenY);
-		float len = Vector2(ndc.X * _ScreenSize.Y / _ScreenSize.X, ndc.Y).Size();
-		Vector2 polarNdc = ndc.ToPolarCoordinate();
-		// 원점에서 멀어질 수록 더욱 회전을 부여함.
-		polarNdc.Y += Math::Deg2Rad(_CurrentDegree) * Math::Lerp(0.f, 1.f, len);
-		float angle = ndc.Angle() + Math::Deg2Rad(_CurrentDegree) * Math::Lerp(0.f, 1.f, len);
-		float radius = ndc.Size();
-		target = polarNdc.ToCartesianCoordinate();
-		target = Vector2(target.X * halfScreenX, target.Y * halfScreenY);
-		Vector2 target2 = Vector2(radius * cosf(angle) * (_ScreenSize.X * 0.5f), radius * sinf(angle) * (_ScreenSize.Y * 0.5f));
 
-		hsv.H = rad / Math::TwoPI;
-		_RSI->DrawPoint(target + _CurrentPosition, hsv.ToLinearColor());
-		rad += increment;
+	// 랜덤으로 50개의 위치 선정하기
+	const int offsetCount = 50;
+	const float range = 250.f;
+	static std::random_device rd;
+	static std::mt19937 generator(rd());
+	static std::uniform_real_distribution<float> dist(-range, range);
+	static std::vector<Vector2> offsets;
+	if (offsets.empty())
+	{
+		for (int ix = 0; ix < offsetCount; ++ix)
+		{
+			offsets.push_back(Vector2(dist(generator), dist(generator)));
+		}
 	}
 
-	// 현재 위치와 스케일을 화면에 출력
-	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
-	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
+	// 회전 변환을 적용할 행렬
+	float sin, cos;
+	Math::GetSinCos(sin, cos, _CurrentDegree);
+
+	// 선형 변환된 기저 벡터
+	Vector2 basis1(cos, sin);
+	Vector2 basis2(-sin, cos);
+
+	// 선형 변환된 기저 벡터를 사용한 회전 행렬
+	Matrix2x2 rMat(basis1, basis2);
+
+	for (int ix = 0; ix < offsetCount; ++ix)
+	{
+		for (auto const& v : hearts)
+		{
+			Vector2 target = rMat * v;
+			hsv.H = rad / Math::TwoPI;
+			_RSI->DrawPoint(target + offsets[ix], hsv.ToLinearColor());
+			rad += increment;
+		}
+	}
+
+	// 현재 회전 값을 화면에 출력
 	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
 }
 
