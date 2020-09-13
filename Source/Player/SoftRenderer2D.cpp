@@ -88,19 +88,37 @@ void SoftRenderer::Render2D()
 		}
 	}
 
+	// 아핀 변환 행렬 ( 크기 ) 
+	Vector3 sBasis1(_CurrentScale, 0.f, 0.f);
+	Vector3 sBasis2(0.f, _CurrentScale, 0.f);
+	Vector3 sBasis3 = Vector3::UnitZ;
+	Matrix3x3 sMat(sBasis1, sBasis2, sBasis3);
+
+	// 아핀 변환 행렬 ( 회전 ) 
+	float sin, cos;
+	Math::GetSinCos(sin, cos, _CurrentDegree);
+	Vector3 rBasis1(cos, sin, 0.f);
+	Vector3 rBasis2(-sin, cos, 0.f);
+	Vector3 rBasis3 = Vector3::UnitZ;
+	Matrix3x3 rMat(rBasis1, rBasis2, rBasis3);
+
+	// 아핀 변환 행렬 ( 이동 ) 
+	Vector3 tBasis1 = Vector3::UnitX;
+	Vector3 tBasis2 = Vector3::UnitY;
+	Vector3 tBasis3(_CurrentPosition.X, _CurrentPosition.Y, 1.f);
+	Matrix3x3 tMat(tBasis1, tBasis2, tBasis3);
+
+	// 모든 아핀 변환의 조합 행렬
+	Matrix3x3 cMat = tMat * rMat * sMat;
+
 	// 각 값 초기화
 	rad = 0.f;
 	HSVColor hsv(0.f, 1.f, 0.85f); // 잘 보이도록 채도를 조금만 줄였음. 
 	for (auto const& v : hearts)
 	{
-		float sin, cos;
-		Math::GetSinCos(sin, cos, _CurrentDegree);
-		Vector2 target = v * _CurrentScale;
-		Vector2 rotatedTarget = Vector2(target.X * cos - target.Y * sin, target.X * sin + target.Y * cos);
-		rotatedTarget += _CurrentPosition;
-
+		Vector2 target = cMat * v;
 		hsv.H = rad / Math::TwoPI;
-		_RSI->DrawPoint(rotatedTarget, hsv.ToLinearColor());
+		_RSI->DrawPoint(target, hsv.ToLinearColor());
 		rad += increment;
 	}
 
