@@ -100,27 +100,39 @@ void SoftRenderer::Render2D()
 	// 합성 행렬
 	Matrix2x2 cMat = shMat * rMat * sMat;
 
+	// 크기 행렬의 역행렬
+	float invScale = 1.f / _CurrentScale;
+	Vector2 isBasis1(invScale, 0.f);
+	Vector2 isBasis2(0.f, invScale);
+	Matrix2x2 isMat(isBasis1, isBasis2);
+
+	// 회전 행렬의 역행렬
+	Vector2 irBasis1(cos, -sin);
+	Vector2 irBasis2(sin, cos);
+	Matrix2x2 irMat(irBasis1, irBasis2);
+
+	// 밀기 행렬의 역행렬
+	Vector2 ishBasis1 = Vector2::UnitX;
+	Vector2 ishBasis2(-_CurrentShear, 1.f);
+	Matrix2x2 ishMat(ishBasis1, ishBasis2);
+
+	// 역행렬의 합성행렬. ( 역순으로 조합하기 )
+	Matrix2x2 icMat = isMat * irMat * ishMat;
+
 	// 각 값 초기화
 	rad = 0.f;
 	HSVColor hsv(0.f, 1.f, 0.85f); // 잘 보이도록 채도를 조금만 줄였음. 
 
-	// 행렬 연산 횟수 
-	int leftCnt = 0;
-	int rightCnt = 0;
 	for (auto const& v : hearts)
 	{
 		hsv.H = rad / Math::TwoPI;
 
-		// 왼쪽 하트 ( 행렬을 각각 곱하기 )
-		Vector2 left = sMat * v;
-		left = rMat * left;
-		left = shMat * left;
-		leftCnt += 3;
+		// 왼쪽 하트 ( 변환 행렬을 적용하기 )
+		Vector2 left = cMat * v;
 		_RSI->DrawPoint(left - pivot, hsv.ToLinearColor());
 
-		// 오른쪽 하트 ( 행렬을 한 번만 곱하기 )
-		Vector2 right = cMat * v;
-		rightCnt++;
+		// 오른쪽 하트 ( 변환 값에 역행렬을 적용하기 )
+		Vector2 right = icMat * left;
 		_RSI->DrawPoint(right + pivot, hsv.ToLinearColor());
 
 		rad += increment;
@@ -130,7 +142,5 @@ void SoftRenderer::Render2D()
 	_RSI->PushStatisticText(std::string("Shear : ") + std::to_string(_CurrentShear));
 	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
 	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
-	_RSI->PushStatisticText(std::string("Count (Left) : ") + std::to_string(leftCnt));
-	_RSI->PushStatisticText(std::string("Count (Right) : ") + std::to_string(rightCnt));
 }
 
