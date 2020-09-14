@@ -50,12 +50,11 @@ private:
 	int _Grid2DUnit = 10;
 
 	// 로직 구현을 위한 멤버 변수
-	Vector2 _SpherePosition = Vector2::Zero;
+	Vector2 _LineStart = Vector2(-400.f, 50.f);
+	Vector2 _LineEnd = Vector2(400.f, -50.f);
 
 	float _CurrentTime = 0.f;
-	float _Start = 45.f;
-	float _Destination = 180.f;
-	float _CurrentDegree = _Destination;
+	float _CurrentDegree = 0.f;
 
 private:
 	// 초기화 점검 변수
