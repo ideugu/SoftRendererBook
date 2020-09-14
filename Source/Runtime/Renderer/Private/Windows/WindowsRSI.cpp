@@ -61,10 +61,129 @@ void WindowsRSI::DrawPoint(const Vector2& InVectorPos, const LinearColor& InColo
 	SetPixel(ScreenPoint::ToScreenCoordinate(_ScreenSize, InVectorPos), InColor);
 }
 
+int WindowsRSI::TestRegion(const Vector2& InVectorPos, const Vector2& InMinPos, const Vector2& InMaxPos)
+{
+	int result = 0;
+	if (InVectorPos.X < InMinPos.X)
+	{
+		result = result | 0b0001;
+	}
+	else if (InVectorPos.X > InMaxPos.X)
+	{
+		result = result | 0b0010;
+	}
+
+	if (InVectorPos.Y < InMinPos.Y)
+	{
+		result = result | 0b0100;
+	}
+	else if (InVectorPos.Y > InMaxPos.Y)
+	{
+		result = result | 0b1000;
+	}
+
+	return result;
+}
+
+bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutEndPos, const Vector2& InMinPos, const Vector2& InMaxPos)
+{
+	int startTest = TestRegion(InOutStartPos, InMinPos, InMaxPos);
+	int endTest = TestRegion(InOutEndPos, InMinPos, InMaxPos);
+
+	float width = (InOutEndPos.X - InOutStartPos.X);
+	float height = (InOutEndPos.Y - InOutStartPos.Y);
+
+	while (true)
+	{
+		if ((startTest == 0) && (endTest == 0))
+		{
+			return true;
+		}
+		else if (startTest & endTest)
+		{
+			return false;
+		}
+		else
+		{
+			Vector2 clippedPosition;
+			bool isStartTest = (startTest != 0);
+			int currentTest = isStartTest ? startTest : endTest;
+
+			if (currentTest < 0b0100)
+			{
+				if (currentTest & 1)
+				{
+					clippedPosition.X = InMinPos.X;
+				}
+				else
+				{
+					clippedPosition.X = InMaxPos.X;
+				}
+
+				if (Math::EqualsInTolerance(height, 0.0f))
+				{
+					clippedPosition.Y = InOutStartPos.Y;
+
+				}
+				else
+				{
+					clippedPosition.Y = InOutStartPos.Y + height * (clippedPosition.X - InOutStartPos.X) / width;
+				}
+			}
+			else
+			{
+				if (currentTest & 0b0100)
+				{
+					clippedPosition.Y = InMinPos.Y;
+				}
+				else
+				{
+					clippedPosition.Y = InMaxPos.Y;
+				}
+
+				if (Math::EqualsInTolerance(width, 0.0f))
+				{
+					clippedPosition.X = InOutStartPos.X;
+				}
+				else
+				{
+					clippedPosition.X = InOutStartPos.X + width * (clippedPosition.Y - InOutStartPos.Y) / height;
+				}
+			}
+
+			if (isStartTest)
+			{
+				InOutStartPos = clippedPosition;
+				startTest = TestRegion(InOutStartPos, InMinPos, InMaxPos);
+			}
+			else
+			{
+				InOutEndPos = clippedPosition;
+				endTest = TestRegion(InOutEndPos, InMinPos, InMaxPos);
+			}
+		}
+	}
+
+	return true;
+}
+
 void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, const LinearColor& InColor)
 {
-	ScreenPoint startPosition = ScreenPoint::ToScreenCoordinate(_ScreenSize, InStartPos);
-	ScreenPoint endPosition = ScreenPoint::ToScreenCoordinate(_ScreenSize, InEndPos);
+	Vector2 clippedStart = InStartPos;
+	Vector2 clippedEnd = InEndPos;
+	Vector2 screenExtend = Vector2(_ScreenSize.X, _ScreenSize.Y) * 0.5f;
+	Vector2 minScreen = -screenExtend;
+	Vector2 maxScreen = screenExtend;
+	if (!CohenSutherlandLineClip(clippedStart, clippedEnd, minScreen, maxScreen))
+	{
+		return;
+	}
+
+	ScreenPoint startPosition = ScreenPoint::ToScreenCoordinate(_ScreenSize, clippedStart);
+	ScreenPoint endPosition = ScreenPoint::ToScreenCoordinate(_ScreenSize, clippedEnd);
+
+	PushStatisticText(InStartPos.ToString() + "-" + InEndPos.ToString());
+	PushStatisticText(clippedStart.ToString() + "-" + clippedEnd.ToString());
 
 	int width = endPosition.X - startPosition.X;
 	int height = endPosition.Y - startPosition.Y;

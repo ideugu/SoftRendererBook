@@ -27,6 +27,9 @@ public:
 	virtual void PushStatisticTexts(std::vector<std::string> && InTexts) override;
 
 private:
+	int TestRegion(const Vector2& InVectorPos, const Vector2& InMinPos, const Vector2& InMaxPos);
+	bool CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutEndPos, const Vector2& InMinPos, const Vector2& InMaxPos);
+
 	FORCEINLINE void SetPixel(const ScreenPoint& InPos, const LinearColor& InColor);
 };
 
