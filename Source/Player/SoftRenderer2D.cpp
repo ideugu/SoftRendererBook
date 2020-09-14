@@ -58,6 +58,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 		{
 			isMoving = false;
 			_CurrentTime = 0.f;
+			_CurrentPosition = _Destination;
 			return;
 		}
 
@@ -103,7 +104,7 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	// 플레이어와 목표를 위한 구체
+	// 플레이어와 보초를 위한 구체
 	static float radius = 10.f;
 	static std::vector<Vector2> sphere;
 	if (sphere.empty())
