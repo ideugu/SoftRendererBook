@@ -71,8 +71,8 @@ FORCEINLINE Vector2 Vector2::Normalize() const
 		return Vector2::Zero;
 	}
 
-	float invLength = 1 / sqrtf(squareSum);
-	return Vector2(X * invLength, Y * invLength);
+	float invLength = 1.f / sqrtf(squareSum);
+	return Vector2(X, Y) * invLength;
 }
 
 FORCEINLINE float Vector2::operator[](BYTE InIndex) const
