@@ -19,7 +19,7 @@ public:
 		return ScreenPoint(InPos.X + InScreenSize.X * 0.5f, -InPos.Y + InScreenSize.Y * 0.5f);
 	}
 
-	FORCEINLINE Vector2 ToVectorCoordinate(const ScreenPoint& InScreenSize)
+	FORCEINLINE Vector2 ToCartesianCoordinate(const ScreenPoint& InScreenSize)
 	{
 		return Vector2(X - InScreenSize.X * 0.5f + 0.5f, -(Y + 0.5f) + InScreenSize.Y * 0.5f);
 	}
