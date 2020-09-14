@@ -50,16 +50,12 @@ private:
 	int _Grid2DUnit = 10;
 
 	// 로직 구현을 위한 멤버 변수
-	float _SightAngle = 60.f;
-	Vector2 _GuardPosition = Vector2::Zero;
-	LinearColor _GuardColor = LinearColor::Blue;
+	Vector2 _SpherePosition = Vector2::Zero;
 
 	float _CurrentTime = 0.f;
-	bool _IsMoving = true;
-	Vector2 _Start = Vector2(100.f, 100.f);
-	Vector2 _Destination = Vector2(-100.f, 20.f);
-	Vector2 _CurrentPosition = _Start;
-	LinearColor _PlayerColor = LinearColor::Gray;
+	float _Start = 45.f;
+	float _Destination = 180.f;
+	float _CurrentDegree = _Destination;
 
 private:
 	// 초기화 점검 변수
