@@ -71,6 +71,18 @@ struct Math
 		return (A <= B) ? A : B;
 	}
 
+	template< class T >
+	static FORCEINLINE T Max3(const T A, const T B, const T C)
+	{
+		return Max(Max(A, B), C);
+	}
+
+	template< class T >
+	static FORCEINLINE T Min3(const T A, const T B, const T C)
+	{
+		return Min(Min(A, B), C);
+	}
+
 	template<class T>
 	static constexpr FORCEINLINE T Abs(const T A)
 	{

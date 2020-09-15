@@ -118,13 +118,54 @@ void SoftRenderer::Render2D()
 		vertices[vi].Position = cMat * vertices[vi].Position;
 	}
 
-	// 변환된 정점을 잇는 선 그리기
 	for (int ti = 0; ti < triangleCount; ++ti)
 	{
+		// 삼각형마다 칠하기
 		int bi = ti * 3;
-		_RSI->DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 1]].Position, _CurrentColor);
-		_RSI->DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 2]].Position, _CurrentColor);
-		_RSI->DrawLine(vertices[indices[bi + 1]].Position, vertices[indices[bi + 2]].Position, _CurrentColor);
+		std::vector<Vertex> t = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
+
+		Vector2 minPos(Math::Min3(t[0].Position.X, t[1].Position.X, t[2].Position.X), Math::Min3(t[0].Position.Y, t[1].Position.Y, t[2].Position.Y));
+		Vector2 maxPos(Math::Max3(t[0].Position.X, t[1].Position.X, t[2].Position.X), Math::Max3(t[0].Position.Y, t[1].Position.Y, t[2].Position.Y));
+
+		// 무게중심좌표를 위한 준비작업
+		Vector2 u = t[1].Position - t[0].Position;
+		Vector2 v = t[2].Position - t[0].Position;
+
+		// 공통 분모 값을 구할 것. ( uu * vv - uv * uv )
+		float udotv = u.Dot(v);
+		float vdotv = v.Dot(v);
+		float udotu = u.Dot(u);
+		float denominator = udotv * udotv - vdotv * udotu;
+		if (Math::EqualsInTolerance(denominator, 0.0f))
+		{
+			continue;
+		}
+		float invDenominator = 1.f / denominator;
+
+		// 화면상의 점 구하기
+		ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
+		ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+
+		// 모든 점을 Loop
+		for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
+		{
+			for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
+			{
+				ScreenPoint fragment = ScreenPoint(x, y);
+				Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
+				Vector2 w = pointToTest - t[0].Position;
+				float wdotu = w.Dot(u);
+				float wdotv = w.Dot(v);
+
+				float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
+				float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
+				float oneMinusST = 1.f - s - t;
+				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
+				{
+					_RSI->DrawPoint(pointToTest, LinearColor::Blue);
+				}
+			}
+		}
 	}
 
 	// 관련 데이터 화면 출력
