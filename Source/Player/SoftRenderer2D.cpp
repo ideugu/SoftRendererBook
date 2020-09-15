@@ -39,77 +39,97 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	static std::random_device rd;
-	static std::mt19937 mt(rd());
-	static float duration = 6.f;
+	// 게임 로직에만 사용하는 변수
+	static float moveSpeed = 100.f;
+	static float scaleMin = 80.f;
+	static float scaleMax = 200.f;
+	static float scaleSpeed = 50.f;
 	static float rotateSpeed = 180.f;
 
-	_CurrentTime += InDeltaSeconds;
-	_CurrentDegree = Math::FMod(_CurrentDegree + rotateSpeed * InDeltaSeconds, 360.f);
-	if (_CurrentTime >= duration)
-	{
-		std::uniform_real_distribution<float>  randomY(-200.f, 200.f);
-		_LineStart = Vector2(-400.f, randomY(mt));
-		_LineEnd = Vector2(400.f, randomY(mt));
-		_CurrentTime = 0.f;
-		return;
-	}
+	// 엔진 모듈에서 입력 관리자 가져오기
+	InputManager input = _GameEngine.GetInputManager();
+	float deltaScale = input.GetZAxis() * scaleSpeed * InDeltaSeconds;
+	float deltaRotation = input.GetWAxis() * rotateSpeed * InDeltaSeconds;
+	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
+
+	_CurrentScale += deltaScale;
+	_CurrentDegree += deltaRotation;
+	_CurrentPosition += deltaPosition;
+	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
 }
+
+struct Vertex
+{
+	Vertex(Vector2 InPosition) : Position(InPosition) {}
+	Vector2 Position;
+};
 
 // 렌더링 로직
 void SoftRenderer::Render2D()
 {
-	// 점
-	static std::vector<Vector2> point;
-	if (point.empty())
-	{
-		float lightRadius = 5.f;
-		for (float x = -lightRadius; x <= lightRadius; ++x)
-		{
-			for (float y = -lightRadius; y <= lightRadius; ++y)
-			{
-				Vector2 target(x, y);
-				float sizeSquared = target.SizeSquared();
-				float rr = lightRadius * lightRadius;
-				if (sizeSquared < rr)
-				{
-					point.push_back(target);
-				}
-			}
-		}
-	}
+	// 격자 그리기
+	DrawGrid2D();
 
-	// 점 그리기
+	////////////////////// 메시 데이터 //////////////////////
+	static const float squareHalfSize = 0.5f;
+	static const int vertexCount = 4;
+	static const int triangleCount = 2;
+
+	// 정점 배열과 인덱스 배열 생성
+	Vertex vertices[vertexCount] = {
+		Vertex(Vector2(-squareHalfSize, -squareHalfSize)),
+		Vertex(Vector2(-squareHalfSize, squareHalfSize)),
+		Vertex(Vector2(squareHalfSize, squareHalfSize)),
+		Vertex(Vector2(squareHalfSize, -squareHalfSize))
+	};
+
+	static const int indices[triangleCount * 3] = {
+		0, 1, 2,
+		0, 2, 3
+	};
+
+	// 변환 행렬의 설계
+	// 아핀 변환 행렬 ( 크기 ) 
+	Vector3 sBasis1(_CurrentScale, 0.f, 0.f);
+	Vector3 sBasis2(0.f, _CurrentScale, 0.f);
+	Vector3 sBasis3 = Vector3::UnitZ;
+	Matrix3x3 sMat(sBasis1, sBasis2, sBasis3);
+
+	// 아핀 변환 행렬 ( 회전 ) 
 	float sin, cos;
-	static float pointOrbit = 250.f;
 	Math::GetSinCos(sin, cos, _CurrentDegree);
-	Vector2 pointPos = Vector2(cos, sin) * pointOrbit;
-	for (auto const& v : point)
+	Vector3 rBasis1(cos, sin, 0.f);
+	Vector3 rBasis2(-sin, cos, 0.f);
+	Vector3 rBasis3 = Vector3::UnitZ;
+	Matrix3x3 rMat(rBasis1, rBasis2, rBasis3);
+
+	// 아핀 변환 행렬 ( 이동 ) 
+	Vector3 tBasis1 = Vector3::UnitX;
+	Vector3 tBasis2 = Vector3::UnitY;
+	Vector3 tBasis3(_CurrentPosition.X, _CurrentPosition.Y, 1.f);
+	Matrix3x3 tMat(tBasis1, tBasis2, tBasis3);
+
+	// 모든 아핀 변환의 조합 행렬
+	Matrix3x3 cMat = tMat * rMat * sMat;
+
+	// 정점에 행렬을 적용
+	for (int vi = 0; vi < vertexCount; ++vi)
 	{
-		_RSI->DrawPoint(v + pointPos, LinearColor::Red);
+		vertices[vi].Position = cMat * vertices[vi].Position;
 	}
 
-	// 투영할 라인 그리기
-	_RSI->DrawLine(_LineStart, _LineEnd, LinearColor::Black);
-
-	// 투영된 위치 그리기
-	Vector2 hatV = (_LineEnd - _LineStart).Normalize();
-	Vector2 u = pointPos - _LineStart;
-	Vector2 projV = hatV * (u.Dot(hatV));
-	Vector2 projectedPos = _LineStart + projV;
-	float distance = (projectedPos - pointPos).Size();
-	for (auto const& v : point)
+	// 변환된 정점을 잇는 선 그리기
+	for (int ti = 0; ti < triangleCount; ++ti)
 	{
-		_RSI->DrawPoint(v + projectedPos, LinearColor::Magenta);
+		int bi = ti * 3;
+		_RSI->DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 1]].Position, _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 2]].Position, _CurrentColor);
+		_RSI->DrawLine(vertices[indices[bi + 1]].Position, vertices[indices[bi + 2]].Position, _CurrentColor);
 	}
-
-	// 투영 라인 그리기
-	_RSI->DrawLine(projectedPos, pointPos, LinearColor::Gray);
 
 	// 관련 데이터 화면 출력
-	_RSI->PushStatisticText(std::string("Time : ") + std::to_string(_CurrentTime));
-	_RSI->PushStatisticText(std::string("Point : ") + pointPos.ToString());
-	_RSI->PushStatisticText(std::string("Projection : ") + projectedPos.ToString());
-	_RSI->PushStatisticText(std::string("Distance : ") + std::to_string(distance));
+	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
+	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
+	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
 }
 
