@@ -63,14 +63,14 @@ void SoftRenderer::Render2D()
 	static std::vector<Vector2> point;
 	if (point.empty())
 	{
-		float lightRadius = 5.f;
-		for (float x = -lightRadius; x <= lightRadius; ++x)
+		float radius = 5.f;
+		for (float x = -radius; x <= radius; ++x)
 		{
-			for (float y = -lightRadius; y <= lightRadius; ++y)
+			for (float y = -radius; y <= radius; ++y)
 			{
 				Vector2 target(x, y);
 				float sizeSquared = target.SizeSquared();
-				float rr = lightRadius * lightRadius;
+				float rr = radius * radius;
 				if (sizeSquared < rr)
 				{
 					point.push_back(target);
