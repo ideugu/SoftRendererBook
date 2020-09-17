@@ -16,6 +16,7 @@ public:
 	virtual void EndFrame() = 0;
 
 	virtual void DrawPoint(const Vector2& InVectorPos, const LinearColor& InColor) = 0;
+	virtual void DrawPoint(const ScreenPoint& InScreenPos, const LinearColor& InColor) = 0;
 	virtual void DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, const LinearColor& InColor) = 0;
 
 	virtual void DrawFullVerticalLine(int InX, const LinearColor& InColor) = 0;
