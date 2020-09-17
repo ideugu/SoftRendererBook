@@ -61,10 +61,10 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 struct Vertex
 {
 	Vertex() = default;
-	Vertex(const Vector2& InPosition, const LinearColor& InColor) : Position(InPosition), Color(InColor) {}
+	Vertex(const Vector2& InPosition, const Vector2& InUV) : Position(InPosition), UV(InUV) {}
 
 	Vector2 Position;
-	LinearColor Color;
+	Vector2 UV;
 };
 
 // 렌더링 로직
@@ -75,18 +75,20 @@ void SoftRenderer::Render2D()
 
 	////////////////////// 메시 데이터 //////////////////////
 	static const float squareHalfSize = 0.5f;
-	static const int vertexCount = 3;
-	static const int triangleCount = 1;
+	static const int vertexCount = 4;
+	static const int triangleCount = 2;
 
 	// 정점 배열과 인덱스 배열 생성
 	Vertex vertices[vertexCount] = {
-		Vertex(Vector2(0.f, squareHalfSize * 0.5f), LinearColor::Red),
-		Vertex(Vector2(-squareHalfSize, -squareHalfSize * 0.5f), LinearColor::Green),
-		Vertex(Vector2(squareHalfSize, -squareHalfSize * 0.5f), LinearColor::Blue)
+		Vertex(Vector2(-squareHalfSize, -squareHalfSize), Vector2(0.125f, 0.75f)),
+		Vertex(Vector2(-squareHalfSize, squareHalfSize), Vector2(0.125f, 0.875f)),
+		Vertex(Vector2(squareHalfSize, -squareHalfSize), Vector2(0.25f, 0.75f)),
+		Vertex(Vector2(squareHalfSize, squareHalfSize), Vector2(0.25f, 0.875f))
 	};
 
 	static const int indices[triangleCount * 3] = {
-		0, 1, 2
+		0, 1, 2,
+		1, 3, 2
 	};
 
 	// 변환 행렬의 설계
@@ -163,8 +165,8 @@ void SoftRenderer::Render2D()
 				float oneMinusST = 1.f - s - t;
 				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 				{
-					LinearColor outColor = tv[0].Color * oneMinusST + tv[1].Color * s + tv[2].Color * t;
-					_RSI->DrawPoint(fragment, outColor);
+					Vector2 outUV = tv[0].UV * oneMinusST + tv[1].UV * s + tv[2].UV * t;
+					_RSI->DrawPoint(fragment, _GameEngine.GetMainTexture().GetColor(outUV));
 				}
 			}
 		}
