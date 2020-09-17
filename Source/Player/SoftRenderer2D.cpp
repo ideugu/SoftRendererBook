@@ -1,7 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
-#include <random>
+using namespace CK::DD;
 
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
@@ -39,33 +39,19 @@ void SoftRenderer::DrawGrid2D()
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	// 게임 로직에만 사용하는 변수
 	static float moveSpeed = 100.f;
-	static float scaleMin = 80.f;
-	static float scaleMax = 200.f;
-	static float scaleSpeed = 50.f;
 	static float rotateSpeed = 180.f;
+	static float scaleSpeed = 180.f;
 
-	// 엔진 모듈에서 입력 관리자 가져오기
 	InputManager input = _GameEngine.GetInputManager();
-	float deltaScale = input.GetZAxis() * scaleSpeed * InDeltaSeconds;
-	float deltaRotation = input.GetWAxis() * rotateSpeed * InDeltaSeconds;
-	Vector2 deltaPosition = Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds;
 
-	_CurrentScale += deltaScale;
-	_CurrentDegree += deltaRotation;
-	_CurrentPosition += deltaPosition;
-	_CurrentColor = input.SpacePressed() ? LinearColor::Red : LinearColor::Blue;
+	// 플레이어 게임 오브젝트의 트랜스폼
+	Transform& playerTransform = _GameEngine.FindGameObject(GameEngine::PlayerKey).GetTransform();
+	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
+	playerTransform.AddRotation(input.GetWAxis() * rotateSpeed * InDeltaSeconds);
+	float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetZAxis() * InDeltaSeconds, 10.f, 30.f);
+	playerTransform.SetScale(Vector2::One * newScale);
 }
-
-struct Vertex
-{
-	Vertex() = default;
-	Vertex(const Vector2& InPosition, const Vector2& InUV) : Position(InPosition), UV(InUV) {}
-
-	Vector2 Position;
-	Vector2 UV;
-};
 
 // 렌더링 로직
 void SoftRenderer::Render2D()
@@ -73,108 +59,57 @@ void SoftRenderer::Render2D()
 	// 격자 그리기
 	DrawGrid2D();
 
-	////////////////////// 메시 데이터 //////////////////////
-	static const float squareHalfSize = 0.5f;
-	static const int vertexCount = 4;
-	static const int triangleCount = 2;
+	// 전체 그릴 물체의 수
+	size_t totalObjectCount = _GameEngine.GetScene().size();
 
-	// 정점 배열과 인덱스 배열 생성
-	Vertex vertices[vertexCount] = {
-		Vertex(Vector2(-squareHalfSize, -squareHalfSize), Vector2(0.125f, 0.75f)),
-		Vertex(Vector2(-squareHalfSize, squareHalfSize), Vector2(0.125f, 0.875f)),
-		Vertex(Vector2(squareHalfSize, -squareHalfSize), Vector2(0.25f, 0.75f)),
-		Vertex(Vector2(squareHalfSize, squareHalfSize), Vector2(0.25f, 0.875f))
-	};
-
-	static const int indices[triangleCount * 3] = {
-		0, 1, 2,
-		1, 3, 2
-	};
-
-	// 변환 행렬의 설계
-	// 아핀 변환 행렬 ( 크기 ) 
-	Vector3 sBasis1(_CurrentScale, 0.f, 0.f);
-	Vector3 sBasis2(0.f, _CurrentScale, 0.f);
-	Vector3 sBasis3 = Vector3::UnitZ;
-	Matrix3x3 sMat(sBasis1, sBasis2, sBasis3);
-
-	// 아핀 변환 행렬 ( 회전 ) 
-	float sin, cos;
-	Math::GetSinCos(sin, cos, _CurrentDegree);
-	Vector3 rBasis1(cos, sin, 0.f);
-	Vector3 rBasis2(-sin, cos, 0.f);
-	Vector3 rBasis3 = Vector3::UnitZ;
-	Matrix3x3 rMat(rBasis1, rBasis2, rBasis3);
-
-	// 아핀 변환 행렬 ( 이동 ) 
-	Vector3 tBasis1 = Vector3::UnitX;
-	Vector3 tBasis2 = Vector3::UnitY;
-	Vector3 tBasis3(_CurrentPosition.X, _CurrentPosition.Y, 1.f);
-	Matrix3x3 tMat(tBasis1, tBasis2, tBasis3);
-
-	// 모든 아핀 변환의 조합 행렬
-	Matrix3x3 cMat = tMat * rMat * sMat;
-
-	// 정점에 행렬을 적용
-	for (int vi = 0; vi < vertexCount; ++vi)
+	// 랜덤하게 생성된 모든 게임 오브젝트들
+	for (auto it = _GameEngine.SceneBegin(); it != _GameEngine.SceneEnd(); ++it)
 	{
-		vertices[vi].Position = cMat * vertices[vi].Position;
-	}
-
-	for (int ti = 0; ti < triangleCount; ++ti)
-	{
-		// 삼각형마다 칠하기
-		int bi = ti * 3;
-		std::vector<Vertex> tv = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
-
-		Vector2 minPos(Math::Min3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Min3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
-		Vector2 maxPos(Math::Max3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Max3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
-
-		// 무게중심좌표를 위한 준비작업
-		Vector2 u = tv[1].Position - tv[0].Position;
-		Vector2 v = tv[2].Position - tv[0].Position;
-
-		// 공통 분모 값을 구할 것. ( uu * vv - uv * uv )
-		float udotv = u.Dot(v);
-		float vdotv = v.Dot(v);
-		float udotu = u.Dot(u);
-		float denominator = udotv * udotv - vdotv * udotu;
-		if (Math::EqualsInTolerance(denominator, 0.0f))
+		// 게임 오브젝트에 필요한 내부 정보를 가져오기
+		GameObject& gameObject = *it->get();
+		if (!gameObject.HasMesh())
 		{
 			continue;
 		}
-		float invDenominator = 1.f / denominator;
 
-		// 화면상의 점 구하기
-		ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
-		ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+		const Mesh& mesh = _GameEngine.GetMesh(gameObject.GetMeshKey());
+		Transform& transform = gameObject.GetTransform();
+		Matrix3x3 finalMat = transform.GetModelingMatrix();
 
-		// 모든 점을 Loop
-		for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
+		size_t vertexCount = mesh._Vertices.size();
+		size_t indexCount = mesh._Indices.size();
+		size_t triangleCount = indexCount / 3;
+
+		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼 생성
+		Vector2* vertices = new Vector2[vertexCount];
+		std::memcpy(vertices, &mesh._Vertices[0], sizeof(Vector2) * vertexCount);
+		int* indices = new int[indexCount];
+		std::memcpy(indices, &mesh._Indices[0], sizeof(int) * indexCount);
+
+		// 각 정점에 행렬을 적용
+		for (int vi = 0; vi < vertexCount; ++vi)
 		{
-			for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
-			{
-				ScreenPoint fragment = ScreenPoint(x, y);
-				Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-				Vector2 w = pointToTest - tv[0].Position;
-				float wdotu = w.Dot(u);
-				float wdotv = w.Dot(v);
-
-				float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
-				float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
-				float oneMinusST = 1.f - s - t;
-				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
-				{
-					Vector2 outUV = tv[0].UV * oneMinusST + tv[1].UV * s + tv[2].UV * t;
-					_RSI->DrawPoint(fragment, _GameEngine.GetMainTexture().GetColor(outUV));
-				}
-			}
+			vertices[vi] = finalMat * vertices[vi];
 		}
+
+		// 변환된 정점을 잇는 선 그리기
+		for (int ti = 0; ti < triangleCount; ++ti)
+		{
+			int bi = ti * 3;
+			_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 1]], gameObject.GetColor());
+			_RSI->DrawLine(vertices[indices[bi]], vertices[indices[bi + 2]], gameObject.GetColor());
+			_RSI->DrawLine(vertices[indices[bi + 1]], vertices[indices[bi + 2]], gameObject.GetColor());
+		}
+
+		delete[] vertices;
+		delete[] indices;
 	}
 
-	// 관련 데이터 화면 출력
-	_RSI->PushStatisticText(std::string("Position : ") + _CurrentPosition.ToString());
-	_RSI->PushStatisticText(std::string("Rotation : ") + std::to_string(_CurrentDegree));
-	_RSI->PushStatisticText(std::string("Scale : ") + std::to_string(_CurrentScale));
+	Transform& playerTransform = _GameEngine.FindGameObject(GameEngine::PlayerKey).GetTransform();
+	
+	_RSI->PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
+	_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
+	_RSI->PushStatisticText("Player Rotation : " + std::to_string(playerTransform.GetRotation()) + " (deg)");
+	_RSI->PushStatisticText("Player Scale : " + std::to_string(playerTransform.GetScale().X));
 }
 
