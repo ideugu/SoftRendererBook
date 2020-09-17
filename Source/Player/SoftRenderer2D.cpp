@@ -60,8 +60,11 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 struct Vertex
 {
-	Vertex(Vector2 InPosition) : Position(InPosition) {}
+	Vertex() = default;
+	Vertex(const Vector2& InPosition, const LinearColor& InColor) : Position(InPosition), Color(InColor) {}
+
 	Vector2 Position;
+	LinearColor Color;
 };
 
 // 렌더링 로직
@@ -72,20 +75,18 @@ void SoftRenderer::Render2D()
 
 	////////////////////// 메시 데이터 //////////////////////
 	static const float squareHalfSize = 0.5f;
-	static const int vertexCount = 4;
-	static const int triangleCount = 2;
+	static const int vertexCount = 3;
+	static const int triangleCount = 1;
 
 	// 정점 배열과 인덱스 배열 생성
 	Vertex vertices[vertexCount] = {
-		Vertex(Vector2(-squareHalfSize, -squareHalfSize)),
-		Vertex(Vector2(-squareHalfSize, squareHalfSize)),
-		Vertex(Vector2(squareHalfSize, squareHalfSize)),
-		Vertex(Vector2(squareHalfSize, -squareHalfSize))
+		Vertex(Vector2(0.f, squareHalfSize * 0.5f), LinearColor::Red),
+		Vertex(Vector2(-squareHalfSize, -squareHalfSize * 0.5f), LinearColor::Green),
+		Vertex(Vector2(squareHalfSize, -squareHalfSize * 0.5f), LinearColor::Blue)
 	};
 
 	static const int indices[triangleCount * 3] = {
-		0, 1, 2,
-		0, 2, 3
+		0, 1, 2
 	};
 
 	// 변환 행렬의 설계
@@ -122,14 +123,14 @@ void SoftRenderer::Render2D()
 	{
 		// 삼각형마다 칠하기
 		int bi = ti * 3;
-		std::vector<Vertex> t = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
+		std::vector<Vertex> tv = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
 
-		Vector2 minPos(Math::Min3(t[0].Position.X, t[1].Position.X, t[2].Position.X), Math::Min3(t[0].Position.Y, t[1].Position.Y, t[2].Position.Y));
-		Vector2 maxPos(Math::Max3(t[0].Position.X, t[1].Position.X, t[2].Position.X), Math::Max3(t[0].Position.Y, t[1].Position.Y, t[2].Position.Y));
+		Vector2 minPos(Math::Min3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Min3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
+		Vector2 maxPos(Math::Max3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Max3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
 
 		// 무게중심좌표를 위한 준비작업
-		Vector2 u = t[1].Position - t[0].Position;
-		Vector2 v = t[2].Position - t[0].Position;
+		Vector2 u = tv[1].Position - tv[0].Position;
+		Vector2 v = tv[2].Position - tv[0].Position;
 
 		// 공통 분모 값을 구할 것. ( uu * vv - uv * uv )
 		float udotv = u.Dot(v);
@@ -153,7 +154,7 @@ void SoftRenderer::Render2D()
 			{
 				ScreenPoint fragment = ScreenPoint(x, y);
 				Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-				Vector2 w = pointToTest - t[0].Position;
+				Vector2 w = pointToTest - tv[0].Position;
 				float wdotu = w.Dot(u);
 				float wdotv = w.Dot(v);
 
@@ -162,7 +163,8 @@ void SoftRenderer::Render2D()
 				float oneMinusST = 1.f - s - t;
 				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 				{
-					_RSI->DrawPoint(pointToTest, LinearColor::Blue);
+					LinearColor outColor = tv[0].Color * oneMinusST + tv[1].Color * s + tv[2].Color * t;
+					_RSI->DrawPoint(fragment, outColor);
 				}
 			}
 		}
