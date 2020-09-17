@@ -75,9 +75,6 @@ bool GameEngine::LoadScene()
 	player->SetColor(LinearColor::Blue);
 	_Scene.push_back(std::move(player));
 
-	// 카메라 생성
-	_Camera = std::make_unique<DD::Camera>();
-
 	// 고정 시드로 랜덤하게 생성
 	std::mt19937 generator(0);
 	std::uniform_real_distribution<float> dist(-1000.f, 1000.f);

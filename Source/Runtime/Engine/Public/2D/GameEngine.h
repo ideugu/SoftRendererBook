@@ -41,7 +41,7 @@ public:
 	const DD::Mesh& GetMesh(const std::string& InMeshKey) { return *_Meshes[InMeshKey].get(); }
 
 	// Ä«¸Þ¶ó 
-	DD::Camera& GetCamera() { return *_Camera.get(); }
+	DD::Camera& GetMainCamera() { return _MainCamera; }
 
 	const static std::string QuadMeshKey;
 	const static std::string PlayerKey;
@@ -52,7 +52,7 @@ private:
 	InputManager _InputManager;
 
 	std::vector<std::unique_ptr<DD::GameObject>> _Scene;
-	std::unique_ptr<DD::Camera> _Camera;
+	Camera _MainCamera;
 
 	std::unordered_map<std::string, std::unique_ptr<DD::Mesh>> _Meshes;
 	std::unique_ptr<Texture> _MainTexture;

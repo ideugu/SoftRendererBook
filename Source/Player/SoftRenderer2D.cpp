@@ -10,7 +10,7 @@ void SoftRenderer::DrawGrid2D()
 	LinearColor gridColor(LinearColor(0.8f, 0.8f, 0.8f, 0.3f));
 
 	// 뷰의 영역 계산
-	Vector2 viewPos = _GameEngine.GetCamera().GetTransform().GetPosition();
+	Vector2 viewPos = _GameEngine.GetMainCamera().GetTransform().GetPosition();
 	Vector2 extent = Vector2(_ScreenSize.X * 0.5f, _ScreenSize.Y * 0.5f);
 
 	// 좌측 하단에서부터 격자 그리기
@@ -57,7 +57,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
-	Transform& cameraTransform = _GameEngine.GetCamera().GetTransform();
+	Transform& cameraTransform = _GameEngine.GetMainCamera().GetTransform();
 	Vector2 playerPosition = playerTransform.GetPosition();
 	Vector2 prevCameraPosition = cameraTransform.GetPosition();
 	if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
@@ -84,7 +84,7 @@ void SoftRenderer::Render2D()
 	size_t totalObjectCount = _GameEngine.GetScene().size();
 
 	// 카메라의 뷰 행렬
-	Matrix3x3 viewMat = _GameEngine.GetCamera().GetViewMatrix();
+	Matrix3x3 viewMat = _GameEngine.GetMainCamera().GetViewMatrix();
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
 	for (auto it = _GameEngine.SceneBegin(); it != _GameEngine.SceneEnd(); ++it)

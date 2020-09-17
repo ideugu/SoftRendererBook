@@ -12,11 +12,16 @@ public:
 
 public:
 	Transform& GetTransform() { return _Transform; }
-	Matrix3x3 GetViewMatrix() const;
+	FORCEINLINE Matrix3x3 GetViewMatrix() const;
 
 protected:
 	Transform _Transform;
 };
+
+FORCEINLINE Matrix3x3 Camera::GetViewMatrix() const
+{
+	return Matrix3x3(Vector3::UnitX, Vector3::UnitY, Vector3(-_Transform.GetPosition()));
+}
 
 }
 }
