@@ -60,7 +60,9 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 struct Vertex
 {
+	Vertex() = default;
 	Vertex(Vector2 InPosition) : Position(InPosition) {}
+
 	Vector2 Position;
 };
 
