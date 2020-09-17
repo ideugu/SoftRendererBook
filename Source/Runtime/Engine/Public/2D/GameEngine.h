@@ -40,6 +40,9 @@ public:
 	// 메시
 	const DD::Mesh& GetMesh(const std::string& InMeshKey) { return *_Meshes[InMeshKey].get(); }
 
+	// 카메라 
+	DD::Camera& GetCamera() { return *_Camera.get(); }
+
 	const static std::string QuadMeshKey;
 	const static std::string PlayerKey;
 	const static std::string SteveTextureKey;
@@ -49,6 +52,8 @@ private:
 	InputManager _InputManager;
 
 	std::vector<std::unique_ptr<DD::GameObject>> _Scene;
+	std::unique_ptr<DD::Camera> _Camera;
+
 	std::unordered_map<std::string, std::unique_ptr<DD::Mesh>> _Meshes;
 	std::unique_ptr<Texture> _MainTexture;
 };

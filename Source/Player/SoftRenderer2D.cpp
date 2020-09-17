@@ -9,37 +9,40 @@ void SoftRenderer::DrawGrid2D()
 	// 그리드 색상
 	LinearColor gridColor(LinearColor(0.8f, 0.8f, 0.8f, 0.3f));
 
-	// 가로 세로 라인 그리기
-	ScreenPoint screenHalfSize = _ScreenSize.GetHalf();
+	// 뷰의 영역 계산
+	Vector2 viewPos = _GameEngine.GetCamera().GetTransform().GetPosition();
+	Vector2 extent = Vector2(_ScreenSize.X * 0.5f, _ScreenSize.Y * 0.5f);
 
-	for (int x = screenHalfSize.X; x <= _ScreenSize.X; x += _Grid2DUnit)
+	// 좌측 하단에서부터 격자 그리기
+	int xGridCount = _ScreenSize.X / _Grid2DUnit;
+	int yGridCount = _ScreenSize.Y / _Grid2DUnit;
+
+	// 그리드가 시작되는 좌하단 좌표 값 계산
+	Vector2 minPos = viewPos - extent;
+	Vector2 minGridPos = Vector2(ceilf(minPos.X / (float)_Grid2DUnit), ceilf(minPos.Y / (float)_Grid2DUnit)) * (float)_Grid2DUnit;
+	ScreenPoint gridBottomLeft = ScreenPoint::ToScreenCoordinate(_ScreenSize, minGridPos - viewPos);
+
+	for (int ix = 0; ix < xGridCount; ++ix)
 	{
-		_RSI->DrawFullVerticalLine(x, gridColor);
-		if (x > screenHalfSize.X)
-		{
-			_RSI->DrawFullVerticalLine(2 * screenHalfSize.X - x, gridColor);
-		}
+		_RSI->DrawFullVerticalLine(gridBottomLeft.X + ix * _Grid2DUnit, gridColor);
 	}
 
-	for (int y = screenHalfSize.Y; y <= _ScreenSize.Y; y += _Grid2DUnit)
+	for (int iy = 0; iy < yGridCount; ++iy)
 	{
-		_RSI->DrawFullHorizontalLine(y, gridColor);
-		if (y > screenHalfSize.Y)
-		{
-			_RSI->DrawFullHorizontalLine(2 * screenHalfSize.Y - y, gridColor);
-		}
+		_RSI->DrawFullHorizontalLine(gridBottomLeft.Y - iy * _Grid2DUnit, gridColor);
 	}
 
-	// 월드 축 그리기
-	_RSI->DrawFullHorizontalLine(screenHalfSize.Y, LinearColor::Red);
-	_RSI->DrawFullVerticalLine(screenHalfSize.X, LinearColor::Green);
+	// 월드의 원점
+	ScreenPoint worldOrigin = ScreenPoint::ToScreenCoordinate(_ScreenSize, -viewPos);
+	_RSI->DrawFullHorizontalLine(worldOrigin.Y, LinearColor::Red);
+	_RSI->DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
 }
 
 
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
-	static float moveSpeed = 100.f;
+	static float moveSpeed = 300.f;
 	static float rotateSpeed = 180.f;
 	static float scaleSpeed = 180.f;
 
@@ -51,6 +54,24 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	playerTransform.AddRotation(input.GetWAxis() * rotateSpeed * InDeltaSeconds);
 	float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetZAxis() * InDeltaSeconds, 10.f, 30.f);
 	playerTransform.SetScale(Vector2::One * newScale);
+
+	// 플레이어를 따라다니는 카메라의 트랜스폼
+	static float thresholdDistance = 1.f;
+	Transform& cameraTransform = _GameEngine.GetCamera().GetTransform();
+	Vector2 playerPosition = playerTransform.GetPosition();
+	Vector2 prevCameraPosition = cameraTransform.GetPosition();
+	if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
+	{
+		cameraTransform.SetPosition(playerPosition);
+	}
+	else
+	{
+		static float lerpSpeed = 2.f;
+		float ratio = lerpSpeed * InDeltaSeconds;
+		ratio = Math::Clamp(ratio, 0.f, 1.f);
+		Vector2 newCameraPosition = prevCameraPosition + (playerPosition - prevCameraPosition) * ratio;
+		cameraTransform.SetPosition(newCameraPosition);
+	}
 }
 
 // 렌더링 로직
@@ -61,6 +82,9 @@ void SoftRenderer::Render2D()
 
 	// 전체 그릴 물체의 수
 	size_t totalObjectCount = _GameEngine.GetScene().size();
+
+	// 카메라의 뷰 행렬
+	Matrix3x3 viewMat = _GameEngine.GetCamera().GetViewMatrix();
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
 	for (auto it = _GameEngine.SceneBegin(); it != _GameEngine.SceneEnd(); ++it)
@@ -74,7 +98,7 @@ void SoftRenderer::Render2D()
 
 		const Mesh& mesh = _GameEngine.GetMesh(gameObject.GetMeshKey());
 		Transform& transform = gameObject.GetTransform();
-		Matrix3x3 finalMat = transform.GetModelingMatrix();
+		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
