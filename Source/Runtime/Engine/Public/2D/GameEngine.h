@@ -18,6 +18,7 @@ public:
 
 	// 입력 관리자
 	InputManager& GetInputManager() { return _InputManager; }
+	FORCEINLINE bool CheckInputSystem();
 
 	// 메인 텍스쳐
 	Texture& GetMainTexture() { return _MainTexture; }
@@ -45,6 +46,11 @@ private:
 	std::vector<GameObject> _Scene;
 	std::unordered_map<std::string, Mesh> _Meshes;
 };
+
+FORCEINLINE bool GameEngine::CheckInputSystem()
+{
+	return (_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed);
+}
 
 }
 }

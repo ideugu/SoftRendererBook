@@ -3,6 +3,7 @@
 #include "SoftRenderer.h"
 using namespace CK::DD;
 
+// 정점의 선언
 struct Vertex2D
 {
 public:
@@ -12,7 +13,6 @@ public:
 	Vector2 Position;
 	Vector2 UV;
 };
-
 
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
@@ -68,6 +68,16 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	}
 }
 
+// 정점 변환 코드
+FORCEINLINE void VertexShader2D(std::vector<Vertex2D>& InVertices, Matrix3x3 InMatrix)
+{
+	// 위치 값에 최종 행렬을 적용해 변환
+	for (Vertex2D& v : InVertices)
+	{
+		v.Position = InMatrix * v.Position;
+	}
+}
+
 // 렌더링 로직
 void SoftRenderer::Render2D()
 {
@@ -95,56 +105,50 @@ void SoftRenderer::Render2D()
 		size_t indexCount = mesh._Indices.size();
 		size_t triangleCount = indexCount / 3;
 
-		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼 생성
-		Vertex2D* vertices = new Vertex2D[vertexCount];
+		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼로 변환
+		std::vector<Vertex2D> vertices(vertexCount);
+		std::vector<int> indice(mesh._Indices);
 		for (int vi = 0; vi < vertexCount; ++vi)
 		{
 			vertices[vi].Position = mesh._Vertices[vi];
 			vertices[vi].UV = mesh._UVs[vi];
 		}
 
-		int* indices = new int[indexCount];
-		std::memcpy(indices, &mesh._Indices[0], sizeof(int) * indexCount);
+		// 정점 변환 진행
+		VertexShader2D(vertices, finalMat);
 
-		// 각 정점에 행렬을 적용
-		for (int vi = 0; vi < vertexCount; ++vi)
+		for (int ti = 0; ti < triangleCount; ++ti)
 		{
-			vertices[vi].Position = finalMat * vertices[vi].Position;
-		}
+			int bi0 = ti * 3, bi1 = ti * 3 + 1, bi2 = ti * 3 + 2;
+			Vertex2D& tv0 = vertices[indice[bi0]];
+			Vertex2D& tv1 = vertices[indice[bi1]];
+			Vertex2D& tv2 = vertices[indice[bi2]];
 
-		if (gameObject != GameEngine::PlayerKey)
-		{
-			// 변환된 정점을 잇는 선 그리기
-			for (int ti = 0; ti < triangleCount; ++ti)
+			if (gameObject != GameEngine::PlayerKey)
 			{
-				int bi = ti * 3;
-				_RSI->DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 1]].Position, gameObject.GetColor());
-				_RSI->DrawLine(vertices[indices[bi]].Position, vertices[indices[bi + 2]].Position, gameObject.GetColor());
-				_RSI->DrawLine(vertices[indices[bi + 1]].Position, vertices[indices[bi + 2]].Position, gameObject.GetColor());
+				_RSI->DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
+				_RSI->DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
+				_RSI->DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
 			}
-		}
-		else
-		{
-			for (int ti = 0; ti < triangleCount; ++ti)
+			else
 			{
-				// 삼각형마다 칠하기
-				int bi = ti * 3;
-				std::vector<Vertex2D> tv = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
+				Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+				Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
 
-				Vector2 minPos(Math::Min3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Min3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
-				Vector2 maxPos(Math::Max3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Max3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
+				// 무게중심좌표를 위해 점을 벡터로 변환
+				Vector2 u = tv1.Position - tv0.Position;
+				Vector2 v = tv2.Position - tv0.Position;
 
-				// 무게중심좌표를 위한 준비작업
-				Vector2 u = tv[1].Position - tv[0].Position;
-				Vector2 v = tv[2].Position - tv[0].Position;
-
-				// 공통 분모 값을 구할 것. ( uu * vv - uv * uv )
+				// 공통 분모 값 ( uu * vv - uv * uv )
 				float udotv = u.Dot(v);
 				float vdotv = v.Dot(v);
 				float udotu = u.Dot(u);
 				float denominator = udotv * udotv - vdotv * udotu;
+
+				// 퇴화 삼각형의 판정
 				if (Math::EqualsInTolerance(denominator, 0.0f))
 				{
+					// 퇴화 삼각형이면 건너뜀.
 					continue;
 				}
 				float invDenominator = 1.f / denominator;
@@ -153,14 +157,14 @@ void SoftRenderer::Render2D()
 				ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
 				ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
 
-				// 모든 점을 Loop
+				// 삼각형 영역 내 모든 점을 점검하고 색칠
 				for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
 				{
 					for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
 					{
 						ScreenPoint fragment = ScreenPoint(x, y);
 						Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-						Vector2 w = pointToTest - tv[0].Position;
+						Vector2 w = pointToTest - tv0.Position;
 						float wdotu = w.Dot(u);
 						float wdotv = w.Dot(v);
 
@@ -169,16 +173,13 @@ void SoftRenderer::Render2D()
 						float oneMinusST = 1.f - s - t;
 						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 						{
-							Vector2 outUV = tv[0].UV * oneMinusST + tv[1].UV * s + tv[2].UV * t;
+							Vector2 outUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
 							_RSI->DrawPoint(fragment, _GameEngine.GetMainTexture().GetColor(outUV));
 						}
 					}
 				}
 			}
 		}
-
-		delete[] vertices;
-		delete[] indices;
 	}
 
 	_RSI->PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
