@@ -68,6 +68,9 @@ private:
 	// 화면 크기
 	ScreenPoint _ScreenSize;
 
+	// 배경 색상
+	LinearColor _BackgroundColor = LinearColor::White;
+
 	// 성능 측정 관련 변수들
 	long long _StartTimeStamp = 0;
 	long long _FrameTimeStamp = 0;

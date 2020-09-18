@@ -13,16 +13,19 @@ bool GameEngine::Init(const ScreenPoint& InViewportSize)
 	// 화면 크기의 설정
 	_ViewportSize = InViewportSize;
 
-	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed)
+	// 입력 시스템 체크
+	if (!CheckInputSystem())
 	{
 		return false;
 	}
 
+	// 게임에 사용할 리소스 로딩
 	if (!LoadResources())
 	{
 		return false;
 	}
 
+	// 게임 씬 로딩
 	if (!LoadScene())
 	{
 		return false;

@@ -17,7 +17,7 @@ public:
 	UINT32 GetWidth() const { return _Width; }
 	UINT32 GetHeight() const { return _Height; }
 	UINT32 GetSize() const { return _Width * _Height; }
-	LinearColor GetColor(Vector2 InUV);
+	LinearColor GetSample(Vector2 InUV);
 
 private:
 	std::vector<LinearColor> _Buffer;

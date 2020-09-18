@@ -93,14 +93,16 @@ bool GameEngine::LoadScene()
 	// 플레이어 설정
 	GameObject player(GameEngine::PlayerKey);
 	player.SetMesh(GameEngine::CubeMeshKey);
+	player.GetTransform().SetPosition(Vector3::Zero);
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
-	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
-	player.SetColor(LinearColor::Blue);
+	player.GetTransform().SetRotation(Rotator(30.f, 0.f, 0.f));
+	player.SetColor(LinearColor::Black);
 	InsertGameObject(std::move(player));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(300.f, 300.f, -300.f));
-	_MainCamera.SetLookAtRotation(Vector3::Zero);
+	_MainCamera.GetTransform().SetPosition(Vector3(-300.f, 300.f, -300.f));
+	_MainCamera.GetTransform().AddYawRotation(45.f);
+	_MainCamera.GetTransform().AddPitchRotation(35.f);
 
 	return true;
 }

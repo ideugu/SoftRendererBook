@@ -91,7 +91,7 @@ void SoftRenderer::PreUpdate()
 	}
 
 	// 배경 지우기.
-	_RSI->Clear(LinearColor::White);
+	_RSI->Clear(_BackgroundColor);
 }
 
 void SoftRenderer::PostUpdate()
