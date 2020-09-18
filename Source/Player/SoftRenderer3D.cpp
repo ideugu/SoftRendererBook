@@ -69,7 +69,6 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 {
 	static float moveSpeed = 100.f;
 	static float rotateSpeed = 180.f;
-	static float scaleSpeed = 100.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
 
@@ -78,11 +77,11 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddYawRotation(input.GetZAxis() * rotateSpeed * InDeltaSeconds);
-		playerTransform.AddPitchRotation(-input.GetWAxis() * rotateSpeed * InDeltaSeconds);
-		playerTransform.AddPosition(Vector3(0.f, 0.f, input.GetXAxis() * moveSpeed * InDeltaSeconds));
-		float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetYAxis() * InDeltaSeconds, 15.f, 500.f);
-		playerTransform.SetScale(Vector3::One * newScale);
+		Rotator r = playerTransform.GetRotation();
+		r.Pitch = input.SpacePressed() ? -90.f : 0.f;
+		r.Roll += input.GetZAxis() * rotateSpeed * InDeltaSeconds;
+		r.Yaw += input.GetWAxis() * rotateSpeed * InDeltaSeconds;
+		playerTransform.SetRotation(r);
 	}
 }
 
@@ -93,6 +92,7 @@ void SoftRenderer::Render3D()
 	DrawGizmo3D();
 
 	Matrix4x4 viewMat = _GameEngine3.GetMainCamera().GetViewMatrix();
+	Matrix4x4 perspMat = _GameEngine3.GetMainCamera().GetPerspectiveMatrix(_ScreenSize.X, _ScreenSize.Y);
 	const Texture& steveTexture = _GameEngine3.GetMainTexture();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
@@ -100,7 +100,7 @@ void SoftRenderer::Render3D()
 		const GameObject& gameObject = *it;
 		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		const Transform& transform = gameObject.GetTransformConst();
-		Matrix4x4 finalMat = viewMat * transform.GetModelingMatrix();
+		Matrix4x4 finalMat = perspMat * viewMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
@@ -118,7 +118,19 @@ void SoftRenderer::Render3D()
 		// 정점 변환 진행
 		VertexShader3D(vertices, finalMat);
 
-		// 변환된 정점을 잇는 선 그리기
+		// 화면 크기로 늘려주기
+		for (Vertex3D& v : vertices)
+		{
+			float invW = 1.f / v.Position.W;
+			v.Position.X *= invW;
+			v.Position.Y *= invW;
+			v.Position.Z *= invW;
+			v.Position.W = invW;
+
+			v.Position.X *= (_ScreenSize.X * 0.5f);
+			v.Position.Y *= (_ScreenSize.Y * 0.5f);
+		}
+
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
 			int bi0 = ti * 3, bi1 = ti * 3 + 1, bi2 = ti * 3 + 2;
@@ -126,11 +138,67 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
-			LinearColor lineColor = FragmentShader3D(gameObject.GetColor());
+			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
+			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
+			Vector3 faceNormal = edge1.Cross(edge2).Normalize();
+			if (faceNormal.Dot(-Vector3::UnitZ) > 0.f)
+			{
+				continue;
+			}
 
-			_RSI->DrawLine(tv0.Position, tv1.Position, lineColor);
-			_RSI->DrawLine(tv0.Position, tv2.Position, lineColor);
-			_RSI->DrawLine(tv1.Position, tv2.Position, lineColor);
+			// 플레이어는 텍스쳐와 색상을 입혀서 렌더링
+			Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+			Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+
+			// 무게중심좌표를 위해 점을 벡터로 변환
+			Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
+			Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
+
+			// 공통 분모 값 ( uu * vv - uv * uv )
+			float udotv = u.Dot(v);
+			float vdotv = v.Dot(v);
+			float udotu = u.Dot(u);
+			float denominator = udotv * udotv - vdotv * udotu;
+
+			// 퇴화 삼각형의 판정
+			if (Math::EqualsInTolerance(denominator, 0.0f))
+			{
+				// 퇴화 삼각형이면 건너뜀.
+				continue;
+			}
+			float invDenominator = 1.f / denominator;
+
+			// 화면상의 점 구하기
+			ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
+			ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+			float z0 = tv0.Position.W;
+			float z1 = tv1.Position.W;
+			float z2 = tv2.Position.W;
+
+			// 삼각형 영역 내 모든 점을 점검하고 색칠
+			for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
+			{
+				for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
+				{
+					ScreenPoint fragment = ScreenPoint(x, y);
+					Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
+					Vector2 w = pointToTest - tv0.Position.ToVector2();
+					float wdotu = w.Dot(u);
+					float wdotv = w.Dot(v);
+
+					float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
+					float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
+					float oneMinusST = 1.f - s - t;
+					if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
+					{
+						float z = z0 * oneMinusST + z1 * s + z2 * t;
+						float invZ = 1.f / z;
+
+						Vector2 targetUV = (tv0.UV * oneMinusST * z0 + tv1.UV * s * z1 + tv2.UV * t * z2) * invZ;
+						_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
+					}
+				}
+			}
 		}
 	}
 }
