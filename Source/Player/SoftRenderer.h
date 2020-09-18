@@ -28,7 +28,7 @@ public:
 	std::function<void(float DeltaSeconds)> UpdateFunc;
 
 	// 게임 엔진 레퍼런스
-	DD::GameEngine& GetGameEngine() { return _GameEngine; }
+	DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
 
 private:
 	// 기본 루프 함수
@@ -48,6 +48,13 @@ private:
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
+
+	// 3D 구현함수
+	void DrawGizmo3D();
+	void Update3D(float InDeltaSeconds);
+	void Render3D();
+
+	float _GizmoUnitLength = 50.f;
 
 private:
 	// 초기화 점검 변수
@@ -74,5 +81,6 @@ private:
 	std::unique_ptr<RenderingSoftwareInterface> _RSI;
 
 	// 게임 엔진
-	DD::GameEngine _GameEngine;
+	DD::GameEngine _GameEngine2;
+	DDD::GameEngine _GameEngine3;
 };

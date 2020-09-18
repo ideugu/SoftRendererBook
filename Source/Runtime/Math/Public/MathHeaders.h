@@ -26,4 +26,6 @@
 #include "LinearColor.h"
 #include "HSVColor.h"
 
+#include "Rotator.h"
+
 using namespace CK;

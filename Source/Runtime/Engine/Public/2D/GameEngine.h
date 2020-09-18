@@ -31,17 +31,17 @@ public:
 	Texture& GetMainTexture() { return *_MainTexture.get(); }
 
 	// 게임 오브젝트
-	std::vector<std::unique_ptr<DD::GameObject>>& GetScene() { return _Scene; }
-	std::vector<std::unique_ptr<DD::GameObject>>::const_iterator SceneBegin() const { return _Scene.begin(); }
-	std::vector<std::unique_ptr<DD::GameObject>>::const_iterator SceneEnd() const { return _Scene.end(); }
+	std::vector<std::unique_ptr<GameObject>>& GetScene() { return _Scene; }
+	std::vector<std::unique_ptr<GameObject>>::const_iterator SceneBegin() const { return _Scene.begin(); }
+	std::vector<std::unique_ptr<GameObject>>::const_iterator SceneEnd() const { return _Scene.end(); }
 	bool InsertGameObject(std::unique_ptr<GameObject> InGameObject);
-	DD::GameObject& FindGameObject(const std::string& InName);
+	GameObject& FindGameObject(const std::string& InName);
 
 	// 메시
-	const DD::Mesh& GetMesh(const std::string& InMeshKey) { return *_Meshes[InMeshKey].get(); }
+	const Mesh& GetMesh(const std::string& InMeshKey) { return *_Meshes[InMeshKey].get(); }
 
 	// 카메라 
-	DD::Camera& GetMainCamera() { return _MainCamera; }
+	Camera& GetMainCamera() { return _MainCamera; }
 
 	const static std::string QuadMeshKey;
 	const static std::string PlayerKey;
@@ -51,10 +51,10 @@ private:
 	ScreenPoint _ViewportSize;
 	InputManager _InputManager;
 
-	std::vector<std::unique_ptr<DD::GameObject>> _Scene;
+	std::vector<std::unique_ptr<GameObject>> _Scene;
 	Camera _MainCamera;
 
-	std::unordered_map<std::string, std::unique_ptr<DD::Mesh>> _Meshes;
+	std::unordered_map<std::string, std::unique_ptr<Mesh>> _Meshes;
 	std::unique_ptr<Texture> _MainTexture;
 };
 

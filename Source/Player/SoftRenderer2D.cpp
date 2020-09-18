@@ -10,7 +10,7 @@ void SoftRenderer::DrawGrid2D()
 	LinearColor gridColor(LinearColor(0.8f, 0.8f, 0.8f, 0.3f));
 
 	// 뷰의 영역 계산
-	Vector2 viewPos = _GameEngine.GetMainCamera().GetTransform().GetPosition();
+	Vector2 viewPos = _GameEngine2.GetMainCamera().GetTransform().GetPosition();
 	Vector2 extent = Vector2(_ScreenSize.X * 0.5f, _ScreenSize.Y * 0.5f);
 
 	// 좌측 하단에서부터 격자 그리기
@@ -46,10 +46,10 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float rotateSpeed = 180.f;
 	static float scaleSpeed = 180.f;
 
-	InputManager input = _GameEngine.GetInputManager();
+	InputManager input = _GameEngine2.GetInputManager();
 
 	// 플레이어 게임 오브젝트의 트랜스폼
-	Transform& playerTransform = _GameEngine.FindGameObject(GameEngine::PlayerKey).GetTransform();
+	Transform& playerTransform = _GameEngine2.FindGameObject(GameEngine::PlayerKey).GetTransform();
 	playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 	playerTransform.AddRotation(input.GetWAxis() * rotateSpeed * InDeltaSeconds);
 	float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetZAxis() * InDeltaSeconds, 10.f, 30.f);
@@ -57,7 +57,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	// 플레이어를 따라다니는 카메라의 트랜스폼
 	static float thresholdDistance = 1.f;
-	Transform& cameraTransform = _GameEngine.GetMainCamera().GetTransform();
+	Transform& cameraTransform = _GameEngine2.GetMainCamera().GetTransform();
 	Vector2 playerPosition = playerTransform.GetPosition();
 	Vector2 prevCameraPosition = cameraTransform.GetPosition();
 	if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
@@ -81,13 +81,13 @@ void SoftRenderer::Render2D()
 	DrawGrid2D();
 
 	// 전체 그릴 물체의 수
-	size_t totalObjectCount = _GameEngine.GetScene().size();
+	size_t totalObjectCount = _GameEngine2.GetScene().size();
 
 	// 카메라의 뷰 행렬
-	Matrix3x3 viewMat = _GameEngine.GetMainCamera().GetViewMatrix();
+	Matrix3x3 viewMat = _GameEngine2.GetMainCamera().GetViewMatrix();
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
-	for (auto it = _GameEngine.SceneBegin(); it != _GameEngine.SceneEnd(); ++it)
+	for (auto it = _GameEngine2.SceneBegin(); it != _GameEngine2.SceneEnd(); ++it)
 	{
 		// 게임 오브젝트에 필요한 내부 정보를 가져오기
 		GameObject& gameObject = *it->get();
@@ -96,7 +96,7 @@ void SoftRenderer::Render2D()
 			continue;
 		}
 
-		const Mesh& mesh = _GameEngine.GetMesh(gameObject.GetMeshKey());
+		const Mesh& mesh = _GameEngine2.GetMesh(gameObject.GetMeshKey());
 		Transform& transform = gameObject.GetTransform();
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
@@ -129,7 +129,7 @@ void SoftRenderer::Render2D()
 		delete[] indices;
 	}
 
-	Transform& playerTransform = _GameEngine.FindGameObject(GameEngine::PlayerKey).GetTransform();
+	Transform& playerTransform = _GameEngine2.FindGameObject(GameEngine::PlayerKey).GetTransform();
 	
 	_RSI->PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
 	_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
