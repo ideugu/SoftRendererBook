@@ -19,6 +19,7 @@ public:
 public:
 	// 트랜스폼
 	Transform& GetTransform() { return _Transform; }
+	const Transform& GetTransformConst() const { return _Transform; }
 
 	// 메시
 	void SetMesh(const std::string& InMeshKey);
@@ -27,11 +28,22 @@ public:
 
 	// 색상
 	void SetColor(const LinearColor& InColor) { _Color = InColor; }
-	LinearColor& GetColor() { return _Color; }
+	const LinearColor& GetColor() const { return _Color; }
 
 	// 키 관련
 	const std::string& GetName() const { return _Name; }
-	std::size_t GetHash() { return _Hash; }
+	std::size_t GetHash() const { return _Hash; }
+
+	// 검색 관련
+	bool IsNotFound() const { return _Hash == std::hash<std::string>()("!NOTFOUND"); }
+	FORCEINLINE bool operator<(const GameObject& InGameObject) const;
+	FORCEINLINE bool operator<(const std::string& InString) const;
+	FORCEINLINE bool operator==(const GameObject& InGameObject) const;
+	FORCEINLINE bool operator==(const std::string& InString) const;
+	FORCEINLINE bool operator!=(const GameObject& InGameObject) const;
+	FORCEINLINE bool operator!=(const std::string& InString) const;
+
+	const static GameObject NotFound;
 
 private:
 	std::size_t _Hash = 0;
@@ -40,6 +52,37 @@ private:
 	Transform _Transform;
 	LinearColor _Color = LinearColor::Error;
 };
+
+
+FORCEINLINE bool GameObject::operator<(const GameObject& InGameObject) const
+{
+	return _Hash < InGameObject.GetHash();
+}
+
+FORCEINLINE bool GameObject::operator<(const std::string& InString) const
+{
+	return _Hash < std::hash<std::string>()(InString);
+}
+
+FORCEINLINE bool GameObject::operator==(const GameObject& InGameObject) const
+{
+	return _Hash == InGameObject.GetHash();
+}
+
+FORCEINLINE bool GameObject::operator==(const std::string& InString) const
+{
+	return _Hash == std::hash<std::string>()(InString);
+}
+
+FORCEINLINE bool GameObject::operator!=(const GameObject& InGameObject) const
+{
+	return _Hash != InGameObject.GetHash();
+}
+
+FORCEINLINE bool GameObject::operator!=(const std::string& InString) const
+{
+	return _Hash != std::hash<std::string>()(InString);
+}
 
 }
 }
