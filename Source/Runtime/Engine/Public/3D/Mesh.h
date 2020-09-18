@@ -2,7 +2,7 @@
 
 namespace CK
 {
-namespace DD
+namespace DDD
 {
 
 class Mesh
@@ -12,11 +12,10 @@ public:
 	~Mesh() {};
 
 public:
-	std::vector<Vector2> _Vertices;
+	std::vector<Vector3> _Vertices;
 	std::vector<int> _Indices;
 	std::vector<Vector2> _UVs;
 };
 
 }
 }
-

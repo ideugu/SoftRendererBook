@@ -172,6 +172,11 @@ bool WindowsRSI::CohenSutherlandLineClip(Vector2& InOutStartPos, Vector2& InOutE
 	return true;
 }
 
+void WindowsRSI::DrawLine(const Vector4& InStartPos, const Vector4& InEndPos, const LinearColor& InColor)
+{
+	DrawLine(InStartPos.ToVector2(), InEndPos.ToVector2(), InColor);
+}
+
 void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, const LinearColor& InColor)
 {
 	Vector2 clippedStart = InStartPos;

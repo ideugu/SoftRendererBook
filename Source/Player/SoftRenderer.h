@@ -55,6 +55,7 @@ private:
 	void Render3D();
 
 	float _GizmoUnitLength = 50.f;
+	float _GizmoWorldAxesLength = 500.f;
 
 private:
 	// 초기화 점검 변수

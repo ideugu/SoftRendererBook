@@ -2,7 +2,7 @@
 
 namespace CK
 {
-namespace DD
+namespace DDD
 {
 
 class GameEngine
@@ -36,7 +36,7 @@ public:
 	Camera& GetMainCamera() { return _MainCamera; }
 
 	// 주요 키 값
-	const static std::string QuadMeshKey;
+	const static std::string CubeMeshKey;
 	const static std::string PlayerKey;
 	const static std::string SteveTextureKey;
 

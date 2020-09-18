@@ -2,7 +2,7 @@
 
 namespace CK
 {
-namespace DD
+namespace DDD
 {
 
 class GameObject

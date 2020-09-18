@@ -34,28 +34,35 @@ bool GameEngine::Init(const ScreenPoint& InViewportSize)
 bool GameEngine::LoadResources()
 {
 	// 메시 데이터 로딩
-	auto quadMesh = std::make_unique<Mesh>();
+	Mesh quadMesh;
 
 	float squareHalfSize = 0.5f;
 	int vertexCount = 4;
 	int triangleCount = 2;
 	int indexCount = triangleCount * 3;
 
-	quadMesh->_Vertices = {
+	quadMesh._Vertices = {
 		Vector2(-squareHalfSize, -squareHalfSize),
 		Vector2(-squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, -squareHalfSize)
 	};
 
-	quadMesh->_Indices = {
+	quadMesh._UVs = {
+		Vector2(0.125f, 0.75f),
+		Vector2(0.125f, 0.875f),
+		Vector2(0.25f, 0.875f),
+		Vector2(0.25f, 0.75f)
+	};
+
+	quadMesh._Indices = {
 		0, 2, 1, 0, 3, 2
 	};
 
-	_Meshes.insert({ GameEngine::QuadMeshKey , std::move(quadMesh) });
+	_Meshes.insert({ GameEngine::QuadMeshKey , quadMesh });
 
 	// 텍스쳐 로딩
-	_MainTexture = std::make_unique<Texture>(SteveTextureKey);
+	_MainTexture = Texture(SteveTextureKey);
 	if (!GetMainTexture().IsIntialized())
 	{
 		return false;
@@ -66,14 +73,15 @@ bool GameEngine::LoadResources()
 
 bool GameEngine::LoadScene()
 {
+	static float playerScale = 20.f;
 	static float squareScale = 10.f;
 
 	// 플레이어 게임 오브젝트 생성
-	auto player = std::make_unique<GameObject>(GameEngine::PlayerKey);
-	player->SetMesh(GameEngine::QuadMeshKey);
-	player->GetTransform().SetScale(Vector2::One * squareScale);
-	player->SetColor(LinearColor::Blue);
-	InsertGameObject(std::move(player));
+	GameObject player(GameEngine::PlayerKey);
+	player.SetMesh(GameEngine::QuadMeshKey);
+	player.GetTransform().SetScale(Vector2::One * playerScale);
+	player.SetColor(LinearColor::Red);
+	InsertGameObject(player);
 
 	// 고정 시드로 랜덤하게 생성
 	std::mt19937 generator(0);
@@ -84,11 +92,11 @@ bool GameEngine::LoadScene()
 	{
 		char name[64];
 		std::snprintf(name, sizeof(name), "GameObject%d", i);
-		auto newGo = std::make_unique<GameObject>(name);
-		newGo->GetTransform().SetPosition(Vector2(dist(generator), dist(generator)));
-		newGo->GetTransform().SetScale(Vector2::One * squareScale);
-		newGo->SetMesh(GameEngine::QuadMeshKey);
-		newGo->SetColor(LinearColor::Red);
+		GameObject newGo(name);
+		newGo.GetTransform().SetPosition(Vector2(dist(generator), dist(generator)));
+		newGo.GetTransform().SetScale(Vector2::One * squareScale);
+		newGo.SetMesh(GameEngine::QuadMeshKey);
+		newGo.SetColor(LinearColor::Blue);
 		if (!InsertGameObject(std::move(newGo)))
 		{
 			// 같은 이름 중복이 발생하면 로딩 취소.
@@ -101,17 +109,17 @@ bool GameEngine::LoadScene()
 
 
 // 정렬하면서 삽입하기
-bool GameEngine::InsertGameObject(std::unique_ptr<GameObject> InGameObject)
+bool GameEngine::InsertGameObject(GameObject& InGameObject)
 {
-	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InGameObject->GetName(), OrderByHash());
+	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InGameObject);
 	if (it == _Scene.end())
 	{
 		_Scene.push_back(std::move(InGameObject));
 		return true;
 	}
 
-	std::size_t inHash = InGameObject->GetHash();
-	std::size_t targetHash = (*it->get()).GetHash();
+	std::size_t inHash = InGameObject.GetHash();
+	std::size_t targetHash = (*it).GetHash();
 
 	if (targetHash == inHash)
 	{
@@ -132,5 +140,11 @@ bool GameEngine::InsertGameObject(std::unique_ptr<GameObject> InGameObject)
 
 GameObject& GameEngine::FindGameObject(const std::string& InName)
 {
-	return *std::lower_bound(_Scene.begin(), _Scene.end(), InName, OrderByHash())->get();
+	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InName);
+	if (it != _Scene.end())
+	{
+		return (*it);
+	}
+
+	return const_cast<GameObject&>(GameObject::NotFound);
 }
