@@ -7,7 +7,7 @@ struct Vertex2D
 {
 public:
 	Vertex2D() = default;
-	Vertex2D(const Vector2& InPosition, const Vector2& InTextureCoordinate) : Position(InPosition), UV(InTextureCoordinate) { }
+	Vertex2D(const Vector2& InPosition, const Vector2& InUV) : Position(InPosition), UV(InUV) { }
 
 	Vector2 Position;
 	Vector2 UV;
