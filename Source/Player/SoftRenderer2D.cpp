@@ -46,10 +46,28 @@ void SoftRenderer::DrawGrid2D()
 	_RSI->DrawFullVerticalLine(screenHalfSize.X, LinearColor::Green);
 }
 
+// 정점 변환 코드
+FORCEINLINE void VertexShader2D(std::vector<Vertex2D>& InVertices, Matrix3x3 InMatrix)
+{
+	// 위치 값에 최종 행렬을 적용해 변환
+	for (Vertex2D& v : InVertices)
+	{
+		v.Position = InMatrix * v.Position;
+	}
+}
+
+LinearColor colorParam;
+
+// 픽셀 변환 코드
+FORCEINLINE LinearColor FragmentShader2D(LinearColor InColor)
+{
+	return InColor * colorParam;
+}
 
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
+	static float elapsedTime = 0.f;
 	static float moveSpeed = 100.f;
 	static float rotateSpeed = 180.f;
 	static float scaleSpeed = 180.f;
@@ -66,16 +84,10 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 		float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetZAxis() * InDeltaSeconds, 15.f, 30.f);
 		playerTransform.SetScale(Vector2::One * newScale);
 	}
-}
 
-// 정점 변환 코드
-FORCEINLINE void VertexShader2D(std::vector<Vertex2D>& InVertices, Matrix3x3 InMatrix)
-{
-	// 위치 값에 최종 행렬을 적용해 변환
-	for (Vertex2D& v : InVertices)
-	{
-		v.Position = InMatrix * v.Position;
-	}
+	elapsedTime += InDeltaSeconds;
+	elapsedTime = Math::FMod(elapsedTime, 1.f);
+	colorParam = HSVColor(elapsedTime, 0.3f, 1.f).ToLinearColor();
 }
 
 // 렌더링 로직
@@ -126,12 +138,14 @@ void SoftRenderer::Render2D()
 
 			if (gameObject != GameEngine::PlayerKey)
 			{
+				// 플레이어가 아니면 와이어프레임으로 렌더링
 				_RSI->DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
 				_RSI->DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
 				_RSI->DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
 			}
 			else
 			{
+				// 플레이어는 텍스쳐와 색상을 입혀서 렌더링
 				Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
 				Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
 
@@ -173,8 +187,8 @@ void SoftRenderer::Render2D()
 						float oneMinusST = 1.f - s - t;
 						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 						{
-							Vector2 outUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
-							_RSI->DrawPoint(fragment, _GameEngine.GetMainTexture().GetColor(outUV));
+							Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
+							_RSI->DrawPoint(fragment, FragmentShader2D(_GameEngine.GetMainTexture().GetSample(targetUV)));
 						}
 					}
 				}

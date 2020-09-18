@@ -41,7 +41,7 @@ void Texture::Release()
 	_Buffer.clear();
 }
 
-LinearColor Texture::GetColor(Vector2 InUV)
+LinearColor Texture::GetSample(Vector2 InUV)
 {
 	if (!IsIntialized())
 	{
