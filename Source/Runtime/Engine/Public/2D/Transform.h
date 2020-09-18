@@ -24,10 +24,10 @@ public:
 	const Vector2& GetLocalY() const { return Up; }
 
 	// 렌더링 로직에서 사용할 행렬 생성 함수
-	Matrix3x3 GetModelingMatrix() const;
+	FORCEINLINE Matrix3x3 GetModelingMatrix() const;
 
 private:
-	void CalculateLocalAxis();
+	FORCEINLINE void CalculateLocalAxis();
 
 private:
 	Vector2 Position = Vector2::Zero;
@@ -37,6 +37,24 @@ private:
 	Vector2 Right = Vector2::UnitX;
 	Vector2 Up = Vector2::UnitY;
 };
+
+FORCEINLINE Matrix3x3 Transform::GetModelingMatrix() const
+{
+	return Matrix3x3(
+		Vector3(Scale.X * Right.X, Scale.X * Right.Y, 0.f),
+		Vector3(Scale.Y * Up.X, Scale.Y * Up.Y, 0.f),
+		Vector3(Position.X, Position.Y, 1.f)
+	);
+}
+
+FORCEINLINE void Transform::CalculateLocalAxis()
+{
+	float sin, cos;
+	Math::GetSinCos(sin, cos, Rotation);
+
+	Right = Vector2(cos, sin);
+	Up = Vector2(-sin, cos);
+}
 
 }
 }

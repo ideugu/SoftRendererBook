@@ -78,10 +78,10 @@ void SoftRenderer::Render2D()
 	size_t totalObjectCount = _GameEngine.GetScene().size();
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
-	for (auto go = _GameEngine.SceneBegin(); go != _GameEngine.SceneEnd(); ++go)
+	for (auto it = _GameEngine.SceneBegin(); it != _GameEngine.SceneEnd(); ++it)
 	{
 		// 게임 오브젝트에 필요한 내부 정보를 가져오기
-		const GameObject& gameObject = *go;
+		const GameObject& gameObject = *it;
 		if (!gameObject.HasMesh())
 		{
 			continue;

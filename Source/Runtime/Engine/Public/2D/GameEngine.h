@@ -32,6 +32,7 @@ public:
 	// 메시
 	const Mesh& GetMesh(const std::string& InMeshKey) { return _Meshes[InMeshKey]; }
 
+	// 주요 키 값
 	const static std::string QuadMeshKey;
 	const static std::string PlayerKey;
 	const static std::string SteveTextureKey;
