@@ -165,8 +165,8 @@ void SoftRenderer::Render2D()
 				float oneMinusST = 1.f - s - t;
 				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 				{
-					Vector2 outUV = tv[0].UV * oneMinusST + tv[1].UV * s + tv[2].UV * t;
-					_RSI->DrawPoint(fragment, _GameEngine.GetMainTexture().GetColor(outUV));
+					Vector2 targetUV = tv[0].UV * oneMinusST + tv[1].UV * s + tv[2].UV * t;
+					_RSI->DrawPoint(fragment, _GameEngine.GetMainTexture().GetSample(targetUV));
 				}
 			}
 		}
