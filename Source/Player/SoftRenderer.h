@@ -55,7 +55,8 @@ private:
 	void Render3D();
 
 	float _GizmoUnitLength = 50.f;
-	float _GizmoWorldAxesLength = 500.f;
+	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);
+	bool _Show3DGizmo = true;
 
 private:
 	// 초기화 점검 변수

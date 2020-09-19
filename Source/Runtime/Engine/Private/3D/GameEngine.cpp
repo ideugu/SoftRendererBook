@@ -4,6 +4,7 @@
 using namespace CK::DDD;
 
 const std::string GameEngine::CubeMeshKey("SM_Cube");
+const std::string GameEngine::GizmoArrowMeshKey("SM_Arrow");
 const std::string GameEngine::PlayerKey("Player");
 const std::string GameEngine::SteveTextureKey("Steve.png");
 
@@ -32,22 +33,23 @@ bool GameEngine::Init(const ScreenPoint& InViewportSize)
 
 bool GameEngine::LoadResources()
 {
+	// 큐브 메시
 	Mesh cubeMesh;
-	static const float cubeHalfSize = 0.5f;
+	static const float halfSize = 0.5f;
 
 	cubeMesh._Vertices = {
 		// Right 
-		Vector3(-1.f, -1.f, -1.f)* cubeHalfSize, Vector3(-1.f, -1.f, 1.f)* cubeHalfSize, Vector3(-1.f, 1.f, 1.f)* cubeHalfSize, Vector3(-1.f, 1.f, -1.f)* cubeHalfSize,
+		Vector3(-1.f, -1.f, -1.f)* halfSize, Vector3(-1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, -1.f)* halfSize,
 		// Front
-		Vector3(-1.f, -1.f, 1.f)* cubeHalfSize, Vector3(-1.f, 1.f, 1.f)* cubeHalfSize, Vector3(1.f, 1.f, 1.f)* cubeHalfSize, Vector3(1.f, -1.f, 1.f)* cubeHalfSize,
+		Vector3(-1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize,
 		// Back
-		Vector3(-1.f, -1.f, -1.f)* cubeHalfSize, Vector3(-1.f, 1.f, -1.f)* cubeHalfSize, Vector3(1.f, 1.f, -1.f)* cubeHalfSize, Vector3(1.f, -1.f, -1.f)* cubeHalfSize,
+		Vector3(-1.f, -1.f, -1.f)* halfSize, Vector3(-1.f, 1.f, -1.f)* halfSize, Vector3(1.f, 1.f, -1.f)* halfSize, Vector3(1.f, -1.f, -1.f)* halfSize,
 		// Left
-		Vector3(1.f, -1.f, -1.f)* cubeHalfSize, Vector3(1.f, -1.f, 1.f)* cubeHalfSize, Vector3(1.f, 1.f, 1.f)* cubeHalfSize, Vector3(1.f, 1.f, -1.f)* cubeHalfSize,
+		Vector3(1.f, -1.f, -1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(1.f, 1.f, -1.f)* halfSize,
 		// Top
-		Vector3(-1.f, 1.f, -1.f)* cubeHalfSize, Vector3(1.f, 1.f, -1.f)* cubeHalfSize, Vector3(1.f, 1.f, 1.f)* cubeHalfSize, Vector3(-1.f, 1.f, 1.f)* cubeHalfSize,
+		Vector3(-1.f, 1.f, -1.f)* halfSize, Vector3(1.f, 1.f, -1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize,
 		// Bottom
-		Vector3(-1.f, -1.f, -1.f)* cubeHalfSize, Vector3(1.f, -1.f, -1.f)* cubeHalfSize, Vector3(1.f, -1.f, 1.f)* cubeHalfSize, Vector3(-1.f, -1.f, 1.f)* cubeHalfSize
+		Vector3(-1.f, -1.f, -1.f)* halfSize, Vector3(1.f, -1.f, -1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, -1.f, 1.f)* halfSize
 	};
 
 	cubeMesh._Indices = {
@@ -76,6 +78,37 @@ bool GameEngine::LoadResources()
 
 	_Meshes.insert({ GameEngine::CubeMeshKey , std::move(cubeMesh) });
 
+	// 기즈모 화살표
+	Mesh gizmoArrow;
+	gizmoArrow._Vertices = {
+		// Shaft
+		Vector3(-1.f, -1.f, 0.f) * halfSize, Vector3(-1.f, -1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 0.f) * halfSize,
+		Vector3(-1.f, -1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 5.f) * halfSize, Vector3(1.f, 1.f, 5.f) * halfSize, Vector3(1.f, -1.f, 5.f) * halfSize,
+		Vector3(-1.f, -1.f, 0.f) * halfSize, Vector3(-1.f, 1.f, 0.f) * halfSize, Vector3(1.f, 1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 0.f) * halfSize,
+		Vector3(1.f, -1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 5.f) * halfSize, Vector3(1.f, 1.f, 5.f) * halfSize, Vector3(1.f, 1.f, 0.f) * halfSize,
+		Vector3(-1.f, 1.f, 0.f) * halfSize, Vector3(1.f, 1.f, 0.f) * halfSize, Vector3(1.f, 1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 5.f) * halfSize,
+		Vector3(-1.f, -1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 5.f) * halfSize, Vector3(-1.f, -1.f, 5.f) * halfSize,
+
+		// Head
+		Vector3(-1.f, -1.f, 2.5f), Vector3(-1.f, 1.f, 2.5f), Vector3(1.f, 1.f, 2.5f), Vector3(1.f, -1.f, 2.5f),
+		Vector3(0.f, 0.f, 4.f)
+	};
+
+	gizmoArrow._Indices = {
+		// Shaft
+		0, 1, 2, 0, 2, 3,
+		4, 6, 5, 4, 7, 6,
+		8, 9, 10, 8, 10, 11,
+		12, 14, 13, 12, 15, 14,
+		16, 18, 17, 16, 19, 18,
+		20, 21, 22, 20, 22, 23,
+		// Head
+		24, 26, 25, 24, 27, 26,
+		24, 28, 27, 24, 25, 28, 25, 26, 28, 26, 27, 28
+	};
+
+	_Meshes.insert({ GameEngine::GizmoArrowMeshKey , std::move(gizmoArrow) });
+
 	// 텍스쳐 로딩
 	_MainTexture = Texture(SteveTextureKey);
 	if (!GetMainTexture().IsIntialized())
@@ -88,21 +121,41 @@ bool GameEngine::LoadResources()
 
 bool GameEngine::LoadScene()
 {
-	static float cubeScale = 100.f;
-
 	// 플레이어 설정
+	static float cubeScale = 100.f;
 	GameObject player(GameEngine::PlayerKey);
 	player.SetMesh(GameEngine::CubeMeshKey);
 	player.GetTransform().SetPosition(Vector3::Zero);
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
-	player.GetTransform().SetRotation(Rotator(30.f, 0.f, 0.f));
-	player.SetColor(LinearColor::Black);
+	player.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
+	player.SetColor(LinearColor::Blue);
 	InsertGameObject(std::move(player));
 
+	// 기즈모 화살표 설정
+	static float arrowScale = 5.f;
+	GameObject gizmoX("GizmoX");
+	gizmoX.SetMesh(GameEngine::GizmoArrowMeshKey);
+	gizmoX.GetTransform().SetScale(Vector3::One * arrowScale);
+	gizmoX.GetTransform().SetRotation(Rotator(90.f, 0.f, 0.f));
+	gizmoX.SetColor(LinearColor::Red);
+
+	GameObject gizmoY("GizmoY");
+	gizmoY.SetMesh(GameEngine::GizmoArrowMeshKey);
+	gizmoY.GetTransform().SetScale(Vector3::One * arrowScale);
+	gizmoY.GetTransform().SetRotation(Rotator(0.f, 0.f, -90.f));
+	gizmoY.SetColor(LinearColor::Green);
+
+	GameObject gizmoZ("GizmoZ");
+	gizmoZ.SetMesh(GameEngine::GizmoArrowMeshKey);
+	gizmoZ.GetTransform().SetScale(Vector3::One * arrowScale);
+	gizmoZ.SetColor(LinearColor::Blue);
+
+	InsertGameObject(std::move(gizmoX));
+	InsertGameObject(std::move(gizmoY));
+	InsertGameObject(std::move(gizmoZ));
+
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(-300.f, 300.f, -300.f));
-	_MainCamera.GetTransform().AddYawRotation(45.f);
-	_MainCamera.GetTransform().AddPitchRotation(35.f);
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 0.f, -200.f));
 
 	return true;
 }

@@ -41,35 +41,32 @@ namespace CK::DDD
 // 그리드 그리기
 void SoftRenderer::DrawGizmo3D()
 {
-	std::vector<Vertex3D> gizmosInSW = { 
+	// 뷰 기즈모 그리기
+	std::vector<Vertex3D> viewGizmo = { 
 		Vertex3D(Vector4(Vector3::Zero)),
 		Vertex3D(Vector4(Vector3::UnitX * _GizmoUnitLength)),
 		Vertex3D(Vector4(Vector3::UnitY * _GizmoUnitLength)),
 		Vertex3D(Vector4(Vector3::UnitZ * _GizmoUnitLength)),
 	};
 
-	Matrix4x4 finalMat = _GameEngine3.GetMainCamera().GetViewMatrix();
-	VertexShader3D(gizmosInSW, finalMat);
+	Matrix4x4 viewMatRotationOnly = _GameEngine3.GetMainCamera().GetViewMatrixRotationOnly();
+	VertexShader3D(viewGizmo, viewMatRotationOnly);
 
-	static Vector4 gizmoPositionOffset(-320.f, -250.f, 0.f, 0.f);
-
-	// X축 그리기
-	_RSI->DrawLine(gizmosInSW[0].Position + gizmoPositionOffset, gizmosInSW[1].Position + gizmoPositionOffset, LinearColor::Red);
-
-	// Y축 그리기
-	_RSI->DrawLine(gizmosInSW[0].Position + gizmoPositionOffset, gizmosInSW[2].Position + gizmoPositionOffset, LinearColor::Green);
-
-	// Z축 그리기
-	_RSI->DrawLine(gizmosInSW[0].Position + gizmoPositionOffset, gizmosInSW[3].Position + gizmoPositionOffset, LinearColor::Blue);
+	// 축 그리기
+	Vector2 v0 = viewGizmo[0].Position.ToVector2() + _GizmoPositionOffset;
+	Vector2 v1 = viewGizmo[1].Position.ToVector2() + _GizmoPositionOffset;
+	Vector2 v2 = viewGizmo[2].Position.ToVector2() + _GizmoPositionOffset;
+	Vector2 v3 = viewGizmo[3].Position.ToVector2() + _GizmoPositionOffset;
+	_RSI->DrawLine(v0, v1, LinearColor::Red);
+	_RSI->DrawLine(v0, v2, LinearColor::Green);
+	_RSI->DrawLine(v0, v3, LinearColor::Blue);
 }
-
 
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
 	static float moveSpeed = 100.f;
 	static float rotateSpeed = 180.f;
-	static float scaleSpeed = 100.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
 
@@ -78,22 +75,28 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddYawRotation(input.GetZAxis() * rotateSpeed * InDeltaSeconds);
+		playerTransform.AddPosition(Vector3::UnitZ * input.GetZAxis() * moveSpeed * InDeltaSeconds);
 		playerTransform.AddPitchRotation(-input.GetWAxis() * rotateSpeed * InDeltaSeconds);
-		playerTransform.AddPosition(Vector3(0.f, 0.f, input.GetXAxis() * moveSpeed * InDeltaSeconds));
-		float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetYAxis() * InDeltaSeconds, 15.f, 500.f);
-		playerTransform.SetScale(Vector3::One * newScale);
 	}
+
+	// 카메라 회전에는 좌우 반전을 적용
+	_GameEngine3.GetMainCamera().GetTransform().AddYawRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
+	_GameEngine3.GetMainCamera().GetTransform().AddPitchRotation(-input.GetYAxis() * rotateSpeed * InDeltaSeconds);
+
+	// 기즈모 토글
+	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }
 }
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
 {
-	// 격자 그리기
-	DrawGizmo3D();
+	// 기즈모 그리기
+	if (_Show3DGizmo)
+	{
+		DrawGizmo3D();
+	}
 
 	Matrix4x4 viewMat = _GameEngine3.GetMainCamera().GetViewMatrix();
-	const Texture& steveTexture = _GameEngine3.GetMainTexture();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -105,6 +108,7 @@ void SoftRenderer::Render3D()
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
 		size_t triangleCount = indexCount / 3;
+		bool hasUV = mesh._UVs.size() > 0;
 
 		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼로 변환
 		std::vector<Vertex3D> vertices(vertexCount);
@@ -112,7 +116,10 @@ void SoftRenderer::Render3D()
 		for (int vi = 0; vi < vertexCount; ++vi)
 		{
 			vertices[vi].Position = Vector4(mesh._Vertices[vi]);
-			vertices[vi].UV = mesh._UVs[vi];
+			if(hasUV)
+			{
+				vertices[vi].UV = mesh._UVs[vi];
+			}
 		}
 
 		// 정점 변환 진행
@@ -126,12 +133,85 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
-			LinearColor lineColor = FragmentShader3D(gameObject.GetColor());
+			// 세 점이 모두 카메라 뒤에 있으면 그리기 생략
+			if (tv0.Position.Z < 0.f && tv1.Position.Z < 0.f && tv2.Position.Z < 0.f)
+			{
+				continue;
+			}
 
-			_RSI->DrawLine(tv0.Position, tv1.Position, lineColor);
-			_RSI->DrawLine(tv0.Position, tv2.Position, lineColor);
-			_RSI->DrawLine(tv1.Position, tv2.Position, lineColor);
+			// 게임 오브젝트의 색상 결정
+			LinearColor objectColor = FragmentShader3D(gameObject.GetColor());
+
+			if (gameObject == GameEngine::PlayerKey)
+			{
+				// 와이어프레임 그리기
+				_RSI->DrawLine(tv0.Position, tv1.Position, objectColor);
+				_RSI->DrawLine(tv0.Position, tv2.Position, objectColor);
+				_RSI->DrawLine(tv1.Position, tv2.Position, objectColor);
+			}
+			else
+			{
+				if (!_Show3DGizmo)
+					continue;
+
+				// 삼각형 칠하기
+				Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+				Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+
+				// 무게중심좌표를 위해 점을 벡터로 변환
+				Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
+				Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
+
+				// 공통 분모 값 ( uu * vv - uv * uv )
+				float udotv = u.Dot(v);
+				float vdotv = v.Dot(v);
+				float udotu = u.Dot(u);
+				float denominator = udotv * udotv - vdotv * udotu;
+
+				// 퇴화 삼각형의 판정
+				if (Math::EqualsInTolerance(denominator, 0.0f))
+				{
+					// 퇴화 삼각형이면 건너뜀.
+					continue;
+				}
+				float invDenominator = 1.f / denominator;
+
+				// 화면상의 점 구하기
+				ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
+				ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+				float z0 = tv0.Position.W;
+				float z1 = tv1.Position.W;
+				float z2 = tv2.Position.W;
+
+				// 삼각형 영역 내 모든 점을 점검하고 색칠
+				for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
+				{
+					for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
+					{
+						ScreenPoint fragment = ScreenPoint(x, y);
+						Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
+						Vector2 w = pointToTest - tv0.Position.ToVector2();
+						float wdotu = w.Dot(u);
+						float wdotv = w.Dot(v);
+
+						float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
+						float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
+						float oneMinusST = 1.f - s - t;
+						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
+						{
+							_RSI->DrawPoint(fragment, objectColor);
+						}
+					}
+				}
+			}
 		}
+	}
+
+	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
+	if (!player.IsNotFound())
+	{
+		const Transform& playerTransform = player.GetTransformConst();
+		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
 	}
 }
 
