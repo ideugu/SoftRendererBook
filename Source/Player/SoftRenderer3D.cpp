@@ -75,13 +75,10 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector3::UnitZ * input.GetZAxis() * moveSpeed * InDeltaSeconds);
+		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetYAxis(), input.GetZAxis()) * moveSpeed * InDeltaSeconds);
 		playerTransform.AddPitchRotation(-input.GetWAxis() * rotateSpeed * InDeltaSeconds);
+		_GameEngine3.GetMainCamera().SetLookAtRotation(player.GetTransform().GetPosition());
 	}
-
-	// 카메라 회전에는 좌우 반전을 적용
-	_GameEngine3.GetMainCamera().GetTransform().AddYawRotation(-input.GetXAxis() * rotateSpeed * InDeltaSeconds);
-	_GameEngine3.GetMainCamera().GetTransform().AddPitchRotation(-input.GetYAxis() * rotateSpeed * InDeltaSeconds);
 
 	// 기즈모 토글
 	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }
