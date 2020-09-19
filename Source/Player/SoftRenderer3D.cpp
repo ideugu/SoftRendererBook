@@ -60,24 +60,44 @@ void SoftRenderer::DrawGizmo3D()
 	_RSI->DrawLine(v0, v1, LinearColor::Red);
 	_RSI->DrawLine(v0, v2, LinearColor::Green);
 	_RSI->DrawLine(v0, v3, LinearColor::Blue);
+
+	// 회전 축 그리기
+	static float axisLength = 100.f;
+	Vector2 axisTo = (viewMatRotationOnly * _RotationAxis).ToVector2() * axisLength;
+	Vector2 axisFrom = -axisTo;
+
+	// 직교한 축 그리기
+	Vector2 orthoAxisTo = (viewMatRotationOnly * _RotationOrthoAxis).ToVector2() * axisLength * 0.5f;
+	Vector2 orthoAxisFrom = -orthoAxisTo;
+
+	_RSI->DrawLine(orthoAxisFrom, orthoAxisTo, LinearColor::Blue);
+	_RSI->DrawLine(axisFrom, axisTo, LinearColor::Red);
 }
 
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
-	static float moveSpeed = 100.f;
 	static float rotateSpeed = 180.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
+
+	// 회전축을 반대방향으로 설정
+	_AxisRotator.Yaw += -input.GetWAxis() * rotateSpeed * InDeltaSeconds;
+	_AxisRotator.Pitch += -input.GetYAxis() * rotateSpeed * InDeltaSeconds;
+	_AxisRotator.Roll += input.GetZAxis() * rotateSpeed * InDeltaSeconds;
+	_AxisRotator.Clamp();
+	float cy, sy, cp, sp, cr, sr;
+	Math::GetSinCos(sy, cy, _AxisRotator.Yaw);
+	Math::GetSinCos(sp, cp, _AxisRotator.Pitch);
+	Math::GetSinCos(sr, cr, _AxisRotator.Roll);
+	_RotationAxis = Vector3(-cy * sr + sy * sp * cr, cp * cr, sy * sr + cy * sp * cr);
+	_RotationOrthoAxis = Vector3(cy * cr + sy * sp * sr, cp * sr, -sy * cr + cy * sp * sr);
 
 	// 플레이어 게임 오브젝트 트랜스폼의 변경
 	GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
-		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetYAxis(), input.GetZAxis()) * moveSpeed * InDeltaSeconds);
-		playerTransform.AddPitchRotation(-input.GetWAxis() * rotateSpeed * InDeltaSeconds);
-		_GameEngine3.GetMainCamera().SetLookAtRotation(player.GetTransform().GetPosition());
+		_RotationDegree = Math::FMod(_RotationDegree + input.GetXAxis() * rotateSpeed * InDeltaSeconds, 360.f);
 	}
 
 	// 기즈모 토글
@@ -100,7 +120,6 @@ void SoftRenderer::Render3D()
 		const GameObject& gameObject = *it;
 		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		const Transform& transform = gameObject.GetTransformConst();
-		Matrix4x4 finalMat = viewMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
@@ -119,8 +138,16 @@ void SoftRenderer::Render3D()
 			}
 		}
 
-		// 정점 변환 진행
-		VertexShader3D(vertices, finalMat);
+		for (Vertex3D& v : vertices)
+		{
+			float sin, cos;
+			Math::GetSinCos(sin, cos, _RotationDegree);
+			Vector3 u = v.Position.ToVector3();
+			float udotn = u.Dot(_RotationAxis);
+			Vector3 ncrossu = _RotationAxis.Cross(u);
+			Vector3 result = Vector3(u * cos + _RotationAxis * ((1.f - cos) * udotn) + ncrossu * sin) * transform.GetScale();
+			v.Position = viewMat * Vector4(result);
+		}
 
 		// 변환된 정점을 잇는 선 그리기
 		for (int ti = 0; ti < triangleCount; ++ti)
@@ -147,76 +174,15 @@ void SoftRenderer::Render3D()
 			// 게임 오브젝트의 색상 결정
 			LinearColor objectColor = FragmentShader3D(gameObject.GetColor());
 
-			if (gameObject == GameEngine::PlayerKey)
-			{
-				// 와이어프레임 그리기
-				_RSI->DrawLine(tv0.Position, tv1.Position, objectColor);
-				_RSI->DrawLine(tv0.Position, tv2.Position, objectColor);
-				_RSI->DrawLine(tv1.Position, tv2.Position, objectColor);
-			}
-			else
-			{
-				if (!_Show3DGizmo)
-					continue;
-
-				// 삼각형 칠하기
-				Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
-				Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
-
-				// 무게중심좌표를 위해 점을 벡터로 변환
-				Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
-				Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
-
-				// 공통 분모 값 ( uu * vv - uv * uv )
-				float udotv = u.Dot(v);
-				float vdotv = v.Dot(v);
-				float udotu = u.Dot(u);
-				float denominator = udotv * udotv - vdotv * udotu;
-
-				// 퇴화 삼각형의 판정
-				if (Math::EqualsInTolerance(denominator, 0.0f))
-				{
-					// 퇴화 삼각형이면 건너뜀.
-					continue;
-				}
-				float invDenominator = 1.f / denominator;
-
-				// 화면상의 점 구하기
-				ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
-				ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
-				float z0 = tv0.Position.W;
-				float z1 = tv1.Position.W;
-				float z2 = tv2.Position.W;
-
-				// 삼각형 영역 내 모든 점을 점검하고 색칠
-				for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
-				{
-					for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
-					{
-						ScreenPoint fragment = ScreenPoint(x, y);
-						Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-						Vector2 w = pointToTest - tv0.Position.ToVector2();
-						float wdotu = w.Dot(u);
-						float wdotv = w.Dot(v);
-
-						float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
-						float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
-						float oneMinusST = 1.f - s - t;
-						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
-						{
-							_RSI->DrawPoint(fragment, objectColor);
-						}
-					}
-				}
-			}
+			// 와이어프레임 그리기
+			_RSI->DrawLine(tv0.Position, tv1.Position, objectColor);
+			_RSI->DrawLine(tv0.Position, tv2.Position, objectColor);
+			_RSI->DrawLine(tv1.Position, tv2.Position, objectColor);
 		}
+
+		_RSI->PushStatisticText("Rotation Axis : " + _RotationAxis.ToString());
+		_RSI->PushStatisticText("Rotation : " + std::to_string(_RotationDegree) + "(deg)");
 	}
 
-	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
-	if (!player.IsNotFound())
-	{
-		const Transform& playerTransform = player.GetTransformConst();
-		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
-	}
 }
 

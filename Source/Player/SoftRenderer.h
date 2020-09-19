@@ -58,6 +58,12 @@ private:
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);
 	bool _Show3DGizmo = true;
 
+	// 게임 로직 변수
+	Rotator _AxisRotator;
+	Vector3 _RotationAxis = Vector3::UnitY;
+	Vector3 _RotationOrthoAxis = Vector3::UnitX;
+	float _RotationDegree = 0.f;
+
 private:
 	// 초기화 점검 변수
 	bool _PerformanceCheckInitialized = false;
