@@ -136,6 +136,14 @@ void SoftRenderer::Render3D()
 				continue;
 			}
 
+			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
+			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
+			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
+			if (edge1.Cross(edge2).Z >= 0.f)
+			{
+				continue;
+			}
+
 			// 게임 오브젝트의 색상 결정
 			LinearColor objectColor = FragmentShader3D(gameObject.GetColor());
 
