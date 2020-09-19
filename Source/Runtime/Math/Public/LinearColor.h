@@ -32,6 +32,9 @@ public:
 	static const LinearColor White;
 	static const LinearColor Black;
 	static const LinearColor Gray;
+	static const LinearColor Silver;
+	static const LinearColor LightGray;
+	static const LinearColor DimGray;
 	static const LinearColor Red;
 	static const LinearColor Green;
 	static const LinearColor Blue;

@@ -38,29 +38,27 @@ namespace CK::DDD
 }
 
 
-// 그리드 그리기
 void SoftRenderer::DrawGizmo3D()
 {
-	std::vector<Vertex3D> gizmosInSW = { 
+	// 뷰 기즈모 그리기
+	std::vector<Vertex3D> viewGizmo = {
 		Vertex3D(Vector4(Vector3::Zero)),
 		Vertex3D(Vector4(Vector3::UnitX * _GizmoUnitLength)),
 		Vertex3D(Vector4(Vector3::UnitY * _GizmoUnitLength)),
 		Vertex3D(Vector4(Vector3::UnitZ * _GizmoUnitLength)),
 	};
 
-	Matrix4x4 finalMat = _GameEngine3.GetMainCamera().GetViewMatrix();
-	VertexShader3D(gizmosInSW, finalMat);
+	Matrix4x4 viewMatRotationOnly = _GameEngine3.GetMainCamera().GetViewMatrixRotationOnly();
+	VertexShader3D(viewGizmo, viewMatRotationOnly);
 
-	static Vector4 gizmoPositionOffset(-320.f, -250.f, 0.f, 0.f);
-
-	// X축 그리기
-	_RSI->DrawLine(gizmosInSW[0].Position + gizmoPositionOffset, gizmosInSW[1].Position + gizmoPositionOffset, LinearColor::Red);
-
-	// Y축 그리기
-	_RSI->DrawLine(gizmosInSW[0].Position + gizmoPositionOffset, gizmosInSW[2].Position + gizmoPositionOffset, LinearColor::Green);
-
-	// Z축 그리기
-	_RSI->DrawLine(gizmosInSW[0].Position + gizmoPositionOffset, gizmosInSW[3].Position + gizmoPositionOffset, LinearColor::Blue);
+	// 축 그리기
+	Vector2 v0 = viewGizmo[0].Position.ToVector2() + _GizmoPositionOffset;
+	Vector2 v1 = viewGizmo[1].Position.ToVector2() + _GizmoPositionOffset;
+	Vector2 v2 = viewGizmo[2].Position.ToVector2() + _GizmoPositionOffset;
+	Vector2 v3 = viewGizmo[3].Position.ToVector2() + _GizmoPositionOffset;
+	_RSI->DrawLine(v0, v1, LinearColor::Red);
+	_RSI->DrawLine(v0, v2, LinearColor::Green);
+	_RSI->DrawLine(v0, v3, LinearColor::Blue);
 }
 
 
@@ -83,16 +81,22 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 		r.Yaw += input.GetWAxis() * rotateSpeed * InDeltaSeconds;
 		playerTransform.SetRotation(r);
 	}
+
+	// 기즈모 토글
+	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }
 }
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
 {
-	// 격자 그리기
-	DrawGizmo3D();
+	// 기즈모 그리기
+	if (_Show3DGizmo)
+	{
+		DrawGizmo3D();
+	}
 
 	Matrix4x4 viewMat = _GameEngine3.GetMainCamera().GetViewMatrix();
-	Matrix4x4 perspMat = _GameEngine3.GetMainCamera().GetPerspectiveMatrix(_ScreenSize.X, _ScreenSize.Y);
+	Matrix4x4 perspMat = _GameEngine3.GetMainCamera().GetPerspectiveMatrix();
 	const Texture& steveTexture = _GameEngine3.GetMainTexture();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
@@ -141,7 +145,7 @@ void SoftRenderer::Render3D()
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
 			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
 			Vector3 faceNormal = edge1.Cross(edge2).Normalize();
-			if (faceNormal.Dot(-Vector3::UnitZ) > 0.f)
+			if (faceNormal.Z > 0.f)
 			{
 				continue;
 			}

@@ -4,17 +4,17 @@ using namespace CK::DDD;
 
 void Camera::SetLookAtRotation(const Vector3& InTargetPosition)
 {
-	Vector3 r, u, f;
-	f = (_Transform.GetPosition() - InTargetPosition).Normalize();
-	if (f.EqualsInTolerance(Vector3::UnitY) || f.EqualsInTolerance(-Vector3::UnitY))
+	Vector3 localX, localY, localZ;
+	localZ = (InTargetPosition - _Transform.GetPosition()).Normalize();
+	if (localZ.EqualsInTolerance(Vector3::UnitY) || localZ.EqualsInTolerance(-Vector3::UnitY))
 	{
-		r = Vector3::UnitX;
+		localX = Vector3::UnitX;
 	}
 	else
 	{
-		r = Vector3::UnitY.Cross(f).Normalize();
+		localX = Vector3::UnitY.Cross(localZ).Normalize();
 	}
-	u = f.Cross(r).Normalize();
+	localY = localZ.Cross(localX).Normalize();
 
-	_Transform.SetLocalAxes(r, u, f);
+	_Transform.SetLocalAxes(localX, localY, localZ);
 }
