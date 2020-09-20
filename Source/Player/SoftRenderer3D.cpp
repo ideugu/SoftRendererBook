@@ -145,7 +145,7 @@ void SoftRenderer::Render3D()
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
 			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
 			Vector3 faceNormal = edge1.Cross(edge2).Normalize();
-			if (faceNormal.Z > 0.f)
+			if (faceNormal.Z <= 0.f)
 			{
 				continue;
 			}

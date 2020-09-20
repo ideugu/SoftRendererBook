@@ -8,7 +8,7 @@ void Camera::SetLookAtRotation(const Vector3& InTargetPosition)
 	localZ = (InTargetPosition - _Transform.GetPosition()).Normalize();
 	if (localZ.EqualsInTolerance(Vector3::UnitY) || localZ.EqualsInTolerance(-Vector3::UnitY))
 	{
-		localX = Vector3::UnitX;
+		localX = Vector3::UnitZ;
 	}
 	else
 	{
