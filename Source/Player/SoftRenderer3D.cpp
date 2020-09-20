@@ -101,8 +101,16 @@ void SoftRenderer::Render3D()
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
-		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		const Transform& transform = gameObject.GetTransformConst();
+
+		// 물체가 카메라 뒤에 있으면 그리지 않도록 처리
+		Vector3 viewPos = viewMat * transform.GetPosition();
+		if (viewPos.Z <= 0.f)
+		{
+			continue;
+		}
+
+		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		Matrix4x4 finalMat = viewMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
@@ -133,12 +141,6 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
-			// 세 점이 모두 카메라 뒤에 있으면 그리기 생략
-			if (tv0.Position.Z < 0.f && tv1.Position.Z < 0.f && tv2.Position.Z < 0.f)
-			{
-				continue;
-			}
-
 			// 게임 오브젝트의 색상 결정
 			LinearColor objectColor = FragmentShader3D(gameObject.GetColor());
 
@@ -155,6 +157,7 @@ void SoftRenderer::Render3D()
 					continue;
 
 				// 삼각형 칠하기
+				// 삼각형의 영역 설정
 				Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
 				Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
 
@@ -179,9 +182,12 @@ void SoftRenderer::Render3D()
 				// 화면상의 점 구하기
 				ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
 				ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
-				float z0 = tv0.Position.W;
-				float z1 = tv1.Position.W;
-				float z2 = tv2.Position.W;
+
+				// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
+				lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
+				lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
+				upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
+				upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
 
 				// 삼각형 영역 내 모든 점을 점검하고 색칠
 				for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
