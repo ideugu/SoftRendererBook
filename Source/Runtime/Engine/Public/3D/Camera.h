@@ -13,12 +13,13 @@ public:
 
 public:
 	Transform& GetTransform() { return _Transform; }
+	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
+	void SetAspectRatio(float InAspectRatio) { _AspectRatio = InAspectRatio; }
+
 	FORCEINLINE void GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
 	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
-	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
-	void SetAspectRatio(float InAspectRatio) { _AspectRatio = InAspectRatio; }
 
 private:
 	Transform _Transform;
