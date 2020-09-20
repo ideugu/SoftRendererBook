@@ -61,6 +61,11 @@ void WindowsRSI::DrawPoint(const Vector2& InVectorPos, const LinearColor& InColo
 	SetPixel(ScreenPoint::ToScreenCoordinate(_ScreenSize, InVectorPos), InColor);
 }
 
+void WindowsRSI::DrawPoint(const ScreenPoint& InScreenPos, const LinearColor& InColor)
+{
+	SetPixel(InScreenPos, InColor);
+}
+
 int WindowsRSI::TestRegion(const Vector2& InVectorPos, const Vector2& InMinPos, const Vector2& InMaxPos)
 {
 	int result = 0;

@@ -60,6 +60,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 struct Vertex
 {
+	Vertex() = default;
 	Vertex(Vector2 InPosition) : Position(InPosition) {}
 	Vector2 Position;
 };
@@ -122,14 +123,14 @@ void SoftRenderer::Render2D()
 	{
 		// 삼각형마다 칠하기
 		int bi = ti * 3;
-		std::vector<Vertex> t = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
+		std::vector<Vertex> tv = { vertices[indices[bi]] , vertices[indices[bi + 1]], vertices[indices[bi + 2]] };
 
-		Vector2 minPos(Math::Min3(t[0].Position.X, t[1].Position.X, t[2].Position.X), Math::Min3(t[0].Position.Y, t[1].Position.Y, t[2].Position.Y));
-		Vector2 maxPos(Math::Max3(t[0].Position.X, t[1].Position.X, t[2].Position.X), Math::Max3(t[0].Position.Y, t[1].Position.Y, t[2].Position.Y));
+		Vector2 minPos(Math::Min3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Min3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
+		Vector2 maxPos(Math::Max3(tv[0].Position.X, tv[1].Position.X, tv[2].Position.X), Math::Max3(tv[0].Position.Y, tv[1].Position.Y, tv[2].Position.Y));
 
 		// 무게중심좌표를 위한 준비작업
-		Vector2 u = t[1].Position - t[0].Position;
-		Vector2 v = t[2].Position - t[0].Position;
+		Vector2 u = tv[1].Position - tv[0].Position;
+		Vector2 v = tv[2].Position - tv[0].Position;
 
 		// 공통 분모 값을 구할 것. ( uu * vv - uv * uv )
 		float udotv = u.Dot(v);
@@ -159,7 +160,7 @@ void SoftRenderer::Render2D()
 			{
 				ScreenPoint fragment = ScreenPoint(x, y);
 				Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-				Vector2 w = pointToTest - t[0].Position;
+				Vector2 w = pointToTest - tv[0].Position;
 				float wdotu = w.Dot(u);
 				float wdotv = w.Dot(v);
 
@@ -168,7 +169,7 @@ void SoftRenderer::Render2D()
 				float oneMinusST = 1.f - s - t;
 				if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 				{
-					_RSI->DrawPoint(pointToTest, LinearColor::Blue);
+					_RSI->DrawPoint(fragment, LinearColor::Blue);
 				}
 			}
 		}
