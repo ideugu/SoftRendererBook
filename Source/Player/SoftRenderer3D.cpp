@@ -131,7 +131,7 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
 			// 세 점이 모두 카메라 뒤에 있으면 그리기 생략
-			if (tv0.Position.Z < 0.f && tv1.Position.Z < 0.f && tv2.Position.Z < 0.f)
+			if (tv0.Position.Z > 0.f && tv1.Position.Z > 0.f && tv2.Position.Z > 0.f)
 			{
 				continue;
 			}
@@ -139,7 +139,7 @@ void SoftRenderer::Render3D()
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
 			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
-			if (edge1.Cross(edge2).Z >= 0.f)
+			if (edge1.Cross(edge2).Z <= 0.f)
 			{
 				continue;
 			}
