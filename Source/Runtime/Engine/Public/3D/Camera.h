@@ -13,7 +13,7 @@ public:
 
 public:
 	Transform& GetTransform() { return _Transform; }
-	void SetLookAtRotation(const Vector3& InTargetPosition);
+	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
 
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
