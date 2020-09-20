@@ -97,13 +97,20 @@ void SoftRenderer::Render3D()
 
 	Matrix4x4 viewMat = _GameEngine3.GetMainCamera().GetViewMatrix();
 	Matrix4x4 perspMat = _GameEngine3.GetMainCamera().GetPerspectiveMatrix();
+	Matrix4x4 perspMatT = perspMat.Tranpose();
 	const Texture& steveTexture = _GameEngine3.GetMainTexture();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
-		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		const Transform& transform = gameObject.GetTransformConst();
+		Vector3 viewPos = viewMat * transform.GetPosition();
+		if (viewPos.Z > -10.f)
+		{
+			continue;
+		}
+
+		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		Matrix4x4 finalMat = perspMat * viewMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
@@ -175,6 +182,13 @@ void SoftRenderer::Render3D()
 			// 화면상의 점 구하기
 			ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
 			ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+
+			// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
+			lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
+			lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
+			upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
+			upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
+
 			float z0 = tv0.Position.W;
 			float z1 = tv1.Position.W;
 			float z2 = tv2.Position.W;

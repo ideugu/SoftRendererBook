@@ -100,9 +100,9 @@ bool GameEngine::LoadScene()
 	InsertGameObject(std::move(player));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 200.f, -600.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(300.f, 300.f, -300.f));
 	_MainCamera.SetAspectRatio((float)_ViewportSize.X / (float)_ViewportSize.Y);
-	_MainCamera.SetLookAtRotation(player.GetTransformConst().GetPosition());
+	_MainCamera.SetLookAtRotation(Vector3::Zero);
 
 	return true;
 }

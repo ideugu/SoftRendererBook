@@ -198,6 +198,12 @@ void SoftRenderer::Render2D()
 				ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
 				ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
 
+				// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
+				lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
+				lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
+				upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
+				upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
+
 				// 삼각형 영역 내 모든 점을 점검하고 색칠
 				for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
 				{
