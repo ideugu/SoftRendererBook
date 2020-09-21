@@ -14,13 +14,20 @@ public:
 public:
 	Transform& GetTransform() { return _Transform; }
 	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
+	void SetFOV(float InFOV) { _FOV = InFOV; }
+	void SetViewportSize(const ScreenPoint& InViewportSize) { _ViewportSize = InViewportSize; }
+	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
 
 	FORCEINLINE void GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
+	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
 
 private:
 	Transform _Transform;
+
+	float _FOV = 60.f;
+	ScreenPoint _ViewportSize;
 };
 
 FORCEINLINE void Camera::GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
@@ -55,6 +62,19 @@ FORCEINLINE Matrix4x4 Camera::GetViewMatrixRotationOnly() const
 		Vector4(Vector3(viewX.Z, viewY.Z, viewZ.Z), false),
 		Vector4::UnitW
 	);
+}
+
+FORCEINLINE Matrix4x4 Camera::GetPerspectiveMatrix() const
+{
+	// 투영 행렬. 깊이 값의 범위는 -1~1
+	float invA = 1.f / _ViewportSize.AspectRatio();
+
+	float d = 1.f / tanf(Math::Deg2Rad(_FOV) * 0.5f);
+	return Matrix4x4(
+		Vector4::UnitX * invA * d,
+		Vector4::UnitY * d,
+		Vector4(0.f, 0.f, -1.f, 0.f),
+		Vector4::UnitW);
 }
 
 }

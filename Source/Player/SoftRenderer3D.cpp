@@ -93,7 +93,11 @@ void SoftRenderer::Render3D()
 		DrawGizmo3D();
 	}
 
-	Matrix4x4 viewMat = _GameEngine3.GetMainCamera().GetViewMatrix();
+	const Camera& mainCamera = _GameEngine3.GetMainCamera();
+	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
+	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
+	Matrix4x4 pvMat = perspMat * viewMat;
+	ScreenPoint viewportSize = mainCamera.GetViewportSize();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -108,7 +112,7 @@ void SoftRenderer::Render3D()
 		}
 
 		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
-		Matrix4x4 finalMat = viewMat * transform.GetModelingMatrix();
+		Matrix4x4 finalMat = pvMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
@@ -130,6 +134,22 @@ void SoftRenderer::Render3D()
 		// 정점 변환 진행
 		VertexShader3D(vertices, finalMat);
 
+		// 클립 공간을 화면 공간으로 변환
+		for (Vertex3D& v : vertices)
+		{
+			// NDC 공간으로 변환
+			float invZ = 1.f / v.Position.Z;
+			v.Position.X *= invZ;
+			v.Position.Y *= invZ;
+
+			// Z 값은 백페이스 컬링을 위해 원래대로 돌려둠
+			v.Position.Z = -v.Position.Z;
+
+			// 화면 공간으로 확장
+			v.Position.X *= (viewportSize.X * 0.5f);
+			v.Position.Y *= (viewportSize.Y * 0.5f);
+		}
+
 		// 변환된 정점을 잇는 선 그리기
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
@@ -141,7 +161,7 @@ void SoftRenderer::Render3D()
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
 			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
-			if (edge1.Cross(edge2).Z >= 0.f)
+			if (edge1.Cross(edge2).Z <= 0.f)
 			{
 				continue;
 			}
