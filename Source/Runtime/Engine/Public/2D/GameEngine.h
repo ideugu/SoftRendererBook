@@ -12,7 +12,8 @@ public:
 
 public:
 	// 엔진 초기화 
-	bool Init(const ScreenPoint& InViewportSize);
+	bool Init();
+	void OnViewportResize(const ScreenPoint& InViewportSize);
 	bool LoadResources();
 	bool LoadScene();
 

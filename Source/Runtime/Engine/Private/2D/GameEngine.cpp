@@ -8,10 +8,19 @@ const std::string GameEngine::QuadMeshKey("SM_Quad");
 const std::string GameEngine::PlayerKey("Player");
 const std::string GameEngine::SteveTextureKey("Steve.png");
 
-bool GameEngine::Init(const ScreenPoint& InViewportSize)
+void GameEngine::OnViewportResize(const ScreenPoint& InViewportSize)
 {
 	// 화면 크기의 설정
 	_ViewportSize = InViewportSize;
+}
+
+bool GameEngine::Init()
+{
+	// 화면 크기가 올바로 설정되어 있는지 확인
+	if (_ViewportSize.HasZero())
+	{
+		return false;
+	}
 
 	// 입력 시스템 체크
 	if (!CheckInputSystem())
