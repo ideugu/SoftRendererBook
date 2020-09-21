@@ -12,15 +12,24 @@ public:
 	~Camera() { }
 
 public:
+	// 트랜스폼
 	Transform& GetTransform() { return _Transform; }
 	const Transform& GetTransformConst() const { return _Transform; }
+
+	// 카메라 값을 가져오는 함수
+	float GetFOV() const { return _FOV; }
+	float GetNearZ() const { return _NearZ; }
+	float GetFarZ() const { return _FarZ; }
+	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
+
+	// 카메라 값을 설정하는 함수
 	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
 	void SetFOV(float InFOV) { _FOV = InFOV; }
 	void SetNearZ(float InNearZ) { _NearZ = InNearZ; }
 	void SetFarZ(float InFarZ) { _FarZ = InFarZ; }
 	void SetViewportSize(const ScreenPoint& InViewportSize) { _ViewportSize = InViewportSize; }
-	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
 
+	// 행렬 생성
 	FORCEINLINE void GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
@@ -31,7 +40,7 @@ private:
 
 	float _FOV = 60.f;
 	float _NearZ = 5.5f;
-	float _FarZ = 1000.f;
+	float _FarZ = 1500.f;
 	ScreenPoint _ViewportSize;
 };
 
@@ -73,12 +82,11 @@ FORCEINLINE Matrix4x4 Camera::GetPerspectiveMatrix() const
 {
 	// 투영 행렬. 깊이 값의 범위는 -1~1
 	float invA = 1.f / _ViewportSize.AspectRatio();
-
 	float d = 1.f / tanf(Math::Deg2Rad(_FOV) * 0.5f);
 
 	// 근평면과 원평면에 반대 부호를 붙여서 계산
-	float invNF = 1.f / (_FarZ - _NearZ);
-	float k = -(_FarZ + _NearZ) * invNF;
+	float invNF = 1.f / (_NearZ - _FarZ);
+	float k = (_FarZ + _NearZ) * invNF;
 	float l = 2.f * _FarZ * _NearZ * invNF;
 	return Matrix4x4(
 		Vector4::UnitX * invA * d,

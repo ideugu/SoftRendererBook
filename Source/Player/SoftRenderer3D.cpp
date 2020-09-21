@@ -66,7 +66,7 @@ void SoftRenderer::DrawGizmo3D()
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
 	static float moveSpeed = 500.f;
-	static float rotateSpeed = 180.f;
+	static float fovSpeed = 100.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
 
@@ -75,10 +75,14 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetYAxis(), input.GetZAxis()) * moveSpeed * InDeltaSeconds);
-		playerTransform.AddPitchRotation(-input.GetWAxis() * rotateSpeed * InDeltaSeconds);
+		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetWAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 		_GameEngine3.GetMainCamera().SetLookAtRotation(player.GetTransform().GetPosition());
 	}
+
+	// 카메라 FOV 조절
+	Camera& camera = _GameEngine3.GetMainCamera();
+	float newFOV = Math::Clamp(camera.GetFOV() + input.GetZAxis() * fovSpeed * InDeltaSeconds, 5.f, 179.f);
+	camera.SetFOV(newFOV);
 
 	// 기즈모 토글
 	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }
@@ -100,6 +104,7 @@ void SoftRenderer::Render3D()
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
 
 	static float playerDepth = 0.f;
+	static float distanceFromCamera = 0.f;
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -107,20 +112,21 @@ void SoftRenderer::Render3D()
 		const Transform& transform = gameObject.GetTransformConst();
 
 		// 투영 좌표로 변환
-		Vector4 clippedPos = pvMat * Vector4(Vector3(0.f, 0.f, -405.f));
+		Vector4 clippedPos = pvMat * Vector4(transform.GetPosition());
 		float cameraDepth = clippedPos.W;
 		// 0이 나오는 것을 방지.
 		if (Math::EqualsInTolerance(cameraDepth, 0.f)) { cameraDepth = KINDA_SMALL_NUMBER; }
 		float ndcZ = clippedPos.Z / cameraDepth;
 
-		// 통계를 보여주기 위한 뎁스 값 저장
+		// 주요 지표 값 저장
 		if (gameObject.GetName() == _GameEngine3.PlayerKey)
 		{
 			playerDepth = ndcZ;
+			distanceFromCamera = clippedPos.W;
 		}
 
-		// 물체가 프러스텀 영역을 벗어날 때 그리지 않도록 처리
-		if (ndcZ < -1.f && ndcZ > 1.f)
+		// 게임 오브젝트의 위치가 프러스텀 영역을 벗어날 때 그리지 않도록 처리
+		if (ndcZ < -1.f || ndcZ > 1.f)
 		{
 			continue;
 		}
@@ -254,12 +260,14 @@ void SoftRenderer::Render3D()
 	}
 
 	_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
+	_RSI->PushStatisticText("Camera FOV : " + std::to_string(mainCamera.GetFOV()));
 	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
 		_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
-		_RSI->PushStatisticText("Player Depth : " + std::to_string(playerDepth));
+		_RSI->PushStatisticText("Player Depth: " + std::to_string(playerDepth));
+		_RSI->PushStatisticText("Distance: " + std::to_string(distanceFromCamera));
 	}
 }
 
