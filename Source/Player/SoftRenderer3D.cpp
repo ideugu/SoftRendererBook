@@ -66,7 +66,6 @@ void SoftRenderer::DrawGizmo3D()
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
 	static float moveSpeed = 500.f;
-	static float rotateSpeed = 180.f;
 	static float fovSpeed = 100.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
@@ -84,7 +83,6 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	Camera& camera = _GameEngine3.GetMainCamera();
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetZAxis() * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
-		 
 
 	// 기즈모 토글
 	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }
@@ -145,6 +143,7 @@ void SoftRenderer::Render3D()
 		{
 			// NDC 공간으로 변환
 			float invZ = 1.f / v.Position.Z;
+			if (Math::EqualsInTolerance(invZ, 0.f)) { invZ = KINDA_SMALL_NUMBER; }
 			v.Position.X *= invZ;
 			v.Position.Y *= invZ;
 
@@ -244,11 +243,13 @@ void SoftRenderer::Render3D()
 		}
 	}
 
+	_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
+	_RSI->PushStatisticText("Camera FOV : " + std::to_string(mainCamera.GetFOV()));
 	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
-		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
+		_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
 	}
 }
 
