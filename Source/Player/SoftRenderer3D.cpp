@@ -187,72 +187,61 @@ void SoftRenderer::Render3D()
 				continue;
 			}
 
-			// 게임 오브젝트의 색상 결정
-			LinearColor objectColor = FragmentShader3D(gameObject.GetColor());
+			// 삼각형 칠하기
+			// 삼각형의 영역 설정
+			Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+			Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
 
-			if (gameObject == GameEngine::PlayerKey)
+			// 무게중심좌표를 위해 점을 벡터로 변환
+			Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
+			Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
+
+			// 공통 분모 값 ( uu * vv - uv * uv )
+			float udotv = u.Dot(v);
+			float vdotv = v.Dot(v);
+			float udotu = u.Dot(u);
+			float denominator = udotv * udotv - vdotv * udotu;
+
+			// 퇴화 삼각형의 판정
+			if (Math::EqualsInTolerance(denominator, 0.0f))
 			{
-				// 와이어프레임 그리기
-				_RSI->DrawLine(tv0.Position, tv1.Position, objectColor);
-				_RSI->DrawLine(tv0.Position, tv2.Position, objectColor);
-				_RSI->DrawLine(tv1.Position, tv2.Position, objectColor);
+				// 퇴화 삼각형이면 건너뜀.
+				continue;
 			}
-			else
+			float invDenominator = 1.f / denominator;
+
+			// 화면상의 점 구하기
+			ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
+			ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+
+			// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
+			lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
+			lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
+			upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
+			upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
+
+			// 삼각형 영역 내 모든 점을 점검하고 색칠
+			for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
 			{
-				if (!_Show3DGizmo)
-					continue;
-
-				// 삼각형 칠하기
-				// 삼각형의 영역 설정
-				Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
-				Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
-
-				// 무게중심좌표를 위해 점을 벡터로 변환
-				Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
-				Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
-
-				// 공통 분모 값 ( uu * vv - uv * uv )
-				float udotv = u.Dot(v);
-				float vdotv = v.Dot(v);
-				float udotu = u.Dot(u);
-				float denominator = udotv * udotv - vdotv * udotu;
-
-				// 퇴화 삼각형의 판정
-				if (Math::EqualsInTolerance(denominator, 0.0f))
+				for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
 				{
-					// 퇴화 삼각형이면 건너뜀.
-					continue;
-				}
-				float invDenominator = 1.f / denominator;
+					ScreenPoint fragment = ScreenPoint(x, y);
+					Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
+					Vector2 w = pointToTest - tv0.Position.ToVector2();
+					float wdotu = w.Dot(u);
+					float wdotv = w.Dot(v);
 
-				// 화면상의 점 구하기
-				ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
-				ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
-
-				// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
-				lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
-				lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
-				upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
-				upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
-
-				// 삼각형 영역 내 모든 점을 점검하고 색칠
-				for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
-				{
-					for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
+					float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
+					float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
+					float oneMinusST = 1.f - s - t;
+					if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 					{
-						ScreenPoint fragment = ScreenPoint(x, y);
-						Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-						Vector2 w = pointToTest - tv0.Position.ToVector2();
-						float wdotu = w.Dot(u);
-						float wdotv = w.Dot(v);
+						// 무게중심좌표로 보간한 해당 픽셀의 UV 값
+						Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
 
-						float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
-						float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
-						float oneMinusST = 1.f - s - t;
-						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
-						{
-							_RSI->DrawPoint(fragment, objectColor);
-						}
+						// 메시에 UV 값이 없으면 색상으로 칠하고 있으면 텍스쳐 매핑 진행
+						LinearColor targetColor = mesh.HasUV() ? _GameEngine3.GetMainTexture().GetSample(targetUV) : gameObject.GetColor();
+						_RSI->DrawPoint(fragment, FragmentShader3D(targetColor));
 					}
 				}
 			}

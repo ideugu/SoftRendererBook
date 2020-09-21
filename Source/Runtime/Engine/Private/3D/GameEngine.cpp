@@ -137,7 +137,7 @@ bool GameEngine::LoadScene()
 	player.SetMesh(GameEngine::CubeMeshKey);
 	player.GetTransform().SetPosition(Vector3::Zero);
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
-	player.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
+	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
 	player.SetColor(LinearColor::Blue);
 	InsertGameObject(std::move(player));
 
@@ -165,7 +165,7 @@ bool GameEngine::LoadScene()
 	InsertGameObject(std::move(gizmoZ));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -500.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(300.f, 300.f, -300.f));
 
 	return true;
 }

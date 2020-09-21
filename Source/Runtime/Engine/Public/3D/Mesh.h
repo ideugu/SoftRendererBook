@@ -11,6 +11,8 @@ public:
 	Mesh() {};
 	~Mesh() {};
 
+	bool HasUV() const { return _UVs.size() > 0; }
+
 public:
 	std::vector<Vector3> _Vertices;
 	std::vector<int> _Indices;
