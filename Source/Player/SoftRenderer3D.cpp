@@ -65,7 +65,7 @@ void SoftRenderer::DrawGizmo3D()
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
-	static float moveSpeed = 100.f;
+	static float moveSpeed = 500.f;
 	static float rotateSpeed = 180.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
@@ -99,14 +99,28 @@ void SoftRenderer::Render3D()
 	Matrix4x4 pvMat = perspMat * viewMat;
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
 
+	static float playerDepth = 0.f;
+
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
 		const Transform& transform = gameObject.GetTransformConst();
 
-		// 물체가 카메라 뒤에 있으면 그리지 않도록 처리
-		Vector3 viewPos = viewMat * transform.GetPosition();
-		if (viewPos.Z >= 0.f)
+		// 투영 좌표로 변환
+		Vector4 clippedPos = pvMat * Vector4(Vector3(0.f, 0.f, -405.f));
+		float cameraDepth = clippedPos.W;
+		// 0이 나오는 것을 방지.
+		if (Math::EqualsInTolerance(cameraDepth, 0.f)) { cameraDepth = KINDA_SMALL_NUMBER; }
+		float ndcZ = clippedPos.Z / cameraDepth;
+
+		// 통계를 보여주기 위한 뎁스 값 저장
+		if (gameObject.GetName() == _GameEngine3.PlayerKey)
+		{
+			playerDepth = ndcZ;
+		}
+
+		// 물체가 프러스텀 영역을 벗어날 때 그리지 않도록 처리
+		if (ndcZ < -1.f && ndcZ > 1.f)
 		{
 			continue;
 		}
@@ -137,13 +151,14 @@ void SoftRenderer::Render3D()
 		// 클립 공간을 화면 공간으로 변환
 		for (Vertex3D& v : vertices)
 		{
-			// NDC 공간으로 변환
-			float invZ = 1.f / v.Position.Z;
-			v.Position.X *= invZ;
-			v.Position.Y *= invZ;
+			// 0이 나오는 것을 방지.
+			if (Math::EqualsInTolerance(v.Position.W, 0.f)) { v.Position.W = KINDA_SMALL_NUMBER; }
 
-			// Z 값은 백페이스 컬링을 위해 원래대로 돌려둠
-			v.Position.Z = -v.Position.Z;
+			// NDC 공간으로 변환
+			float invW = 1.f / v.Position.W;
+			v.Position.X *= invW;
+			v.Position.Y *= invW;
+			v.Position.Z *= invW;
 
 			// 화면 공간으로 확장
 			v.Position.X *= (viewportSize.X * 0.5f);
@@ -238,11 +253,13 @@ void SoftRenderer::Render3D()
 		}
 	}
 
+	_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
 	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
-		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
+		_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
+		_RSI->PushStatisticText("Player Depth : " + std::to_string(playerDepth));
 	}
 }
 

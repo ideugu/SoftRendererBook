@@ -165,7 +165,7 @@ bool GameEngine::LoadScene()
 	InsertGameObject(std::move(gizmoZ));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 300.f, -500.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(500.f, 500.f, -500.f));
 
 	return true;
 }

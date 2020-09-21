@@ -13,8 +13,11 @@ public:
 
 public:
 	Transform& GetTransform() { return _Transform; }
+	const Transform& GetTransformConst() const { return _Transform; }
 	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
 	void SetFOV(float InFOV) { _FOV = InFOV; }
+	void SetNearZ(float InNearZ) { _NearZ = InNearZ; }
+	void SetFarZ(float InFarZ) { _FarZ = InFarZ; }
 	void SetViewportSize(const ScreenPoint& InViewportSize) { _ViewportSize = InViewportSize; }
 	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
 
@@ -27,6 +30,8 @@ private:
 	Transform _Transform;
 
 	float _FOV = 60.f;
+	float _NearZ = 5.5f;
+	float _FarZ = 1000.f;
 	ScreenPoint _ViewportSize;
 };
 
@@ -70,11 +75,16 @@ FORCEINLINE Matrix4x4 Camera::GetPerspectiveMatrix() const
 	float invA = 1.f / _ViewportSize.AspectRatio();
 
 	float d = 1.f / tanf(Math::Deg2Rad(_FOV) * 0.5f);
+
+	// 근평면과 원평면에 반대 부호를 붙여서 계산
+	float invNF = 1.f / (_FarZ - _NearZ);
+	float k = -(_FarZ + _NearZ) * invNF;
+	float l = 2.f * _FarZ * _NearZ * invNF;
 	return Matrix4x4(
 		Vector4::UnitX * invA * d,
 		Vector4::UnitY * d,
-		Vector4(0.f, 0.f, -1.f, 0.f),
-		Vector4::UnitW);
+		Vector4(0.f, 0.f, k, -1.f),
+		Vector4(0.f, 0.f, l, 0.f));
 }
 
 }
