@@ -1,7 +1,6 @@
 
 #pragma once
 
-class WindowsGDI;
 class WindowsRSI : public WindowsGDI, public RenderingSoftwareInterface
 {
 public:
@@ -21,6 +20,9 @@ public:
 	virtual void DrawPoint(const ScreenPoint& InScreenPos, const LinearColor& InColor) override;
 	virtual void DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, const LinearColor& InColor) override;
 	virtual void DrawLine(const Vector4& InStartPos, const Vector4& InEndPos, const LinearColor& InColor) override;
+
+	virtual float GetDepthBufferValue(const ScreenPoint& InPos) const override;
+	virtual void SetDepthBufferValue(const ScreenPoint& InPos, float InDepthValue) override;
 
 	virtual void DrawFullVerticalLine(int InX, const LinearColor& InColor) override;
 	virtual void DrawFullHorizontalLine(int InY, const LinearColor& InColor) override;

@@ -179,38 +179,8 @@ void WindowsGDI::ClearDepthBuffer()
 	if (_DepthBuffer != nullptr)
 	{
 		float* dest = _DepthBuffer;
-		float defValue = INFINITY;
+		static float defValue = 1.01f;
 		UINT32 totalCount = _ScreenSize.X * _ScreenSize.Y;
 		CopyBuffer<float>(_DepthBuffer, &defValue, totalCount);
 	}
-}
-
-float WindowsGDI::GetDepthBufferValue(const ScreenPoint& InPos) const
-{
-	if (_DepthBuffer == nullptr)
-	{
-		return INFINITY;
-	}
-
-	if (!IsInScreen(InPos))
-	{
-		return INFINITY;
-	}
-
-	return *(_DepthBuffer + GetScreenBufferIndex(InPos));
-}
-
-void WindowsGDI::SetDepthBufferValue(const ScreenPoint& InPos, float InDepthValue)
-{
-	if (_DepthBuffer == nullptr)
-	{
-		return;
-	}
-
-	if (!IsInScreen(InPos))
-	{
-		return;
-	}
-
-	*(_DepthBuffer + GetScreenBufferIndex(InPos)) = InDepthValue;
 }

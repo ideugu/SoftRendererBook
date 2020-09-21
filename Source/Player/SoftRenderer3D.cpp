@@ -84,27 +84,27 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetZAxis() * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
 
-	// 기즈모 토글
-	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }
+	// 버퍼 시각화 토글
+	if (input.SpacePressed()) { _ShowDepthBuffer = !_ShowDepthBuffer; }
 }
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
 {
 	// 기즈모 그리기
-	if (_Show3DGizmo)
-	{
-		DrawGizmo3D();
-	}
+	DrawGizmo3D();
 
 	const Camera& mainCamera = _GameEngine3.GetMainCamera();
 	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
 	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
 	Matrix4x4 pvMat = perspMat * viewMat;
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
+	float f = mainCamera.GetFarZ();
+	float n = mainCamera.GetNearZ();
 
 	static float playerDepth = 0.f;
 	static float distanceFromCamera = 0.f;
+	static float linearDepth = 0.f;
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -123,6 +123,7 @@ void SoftRenderer::Render3D()
 		{
 			playerDepth = ndcZ;
 			distanceFromCamera = clippedPos.W;
+			linearDepth = (cameraDepth - n) / (f - n);
 		}
 
 		// 게임 오브젝트의 위치가 프러스텀 영역을 벗어날 때 그리지 않도록 처리
@@ -236,22 +237,38 @@ void SoftRenderer::Render3D()
 					float oneMinusST = 1.f - s - t;
 					if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 					{
-						if (!mesh.HasUV())
+						// 각 점마다 보존된 뷰 공간의 z값
+						float invZ0 = 1.f / tv0.Position.W;
+						float invZ1 = 1.f / tv1.Position.W;
+						float invZ2 = 1.f / tv2.Position.W;
+
+						// 투영 보정보간에 사용할 공통 분모
+						float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
+						float invZ = 1.f / z;
+
+						// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
+						float newDepth = Math::Clamp(-perspMat[2][2] + perspMat[3][2] * z, 0.f, 1.f);
+						float prevDepth = _RSI->GetDepthBufferValue(fragment);
+						if (newDepth < prevDepth)
 						{
-							// 메시에 UV 값이 없으면 게임 오브젝트에 지정한 색상으로 색칠
-							_RSI->DrawPoint(fragment, FragmentShader3D(gameObject.GetColor()));
+							_RSI->SetDepthBufferValue(fragment, newDepth);
 						}
 						else
 						{
-							// 각 점마다 보존된 뷰 공간의 z값
-							float invZ0 = 1.f / tv0.Position.W;
-							float invZ1 = 1.f / tv1.Position.W;
-							float invZ2 = 1.f / tv2.Position.W;
+							// 이미 앞에 무언가 그려져있으므로 픽셀그리기는 생략
+							continue;
+						}
 
-							// 투영 보정보간에 사용할 공통 분모
-							float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
-							float invZ = 1.f / z;
+						if (_ShowDepthBuffer)
+						{
+							// 시각화를 위해 선형화된 흑백 값
+							float grayScale = (invZ - n) / (f - n);
 
+							// 뎁스 버퍼 그리기
+							_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
+						}
+						else
+						{
 							// 투영보정보간으로 보간한 해당 픽셀의 UV 값
 							Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
 
@@ -273,6 +290,7 @@ void SoftRenderer::Render3D()
 		_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
 		_RSI->PushStatisticText("Player Depth: " + std::to_string(playerDepth));
 		_RSI->PushStatisticText("Distance: " + std::to_string(distanceFromCamera));
+		_RSI->PushStatisticText("Linear Depth: " + std::to_string(linearDepth));
 	}
 }
 

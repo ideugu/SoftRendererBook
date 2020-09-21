@@ -177,6 +177,37 @@ void WindowsRSI::DrawLine(const Vector4& InStartPos, const Vector4& InEndPos, co
 	DrawLine(InStartPos.ToVector2(), InEndPos.ToVector2(), InColor);
 }
 
+
+float WindowsRSI::GetDepthBufferValue(const ScreenPoint& InPos) const
+{
+	if (_DepthBuffer == nullptr)
+	{
+		return INFINITY;
+	}
+
+	if (!IsInScreen(InPos))
+	{
+		return INFINITY;
+	}
+
+	return *(_DepthBuffer + GetScreenBufferIndex(InPos));
+}
+
+void WindowsRSI::SetDepthBufferValue(const ScreenPoint& InPos, float InDepthValue)
+{
+	if (_DepthBuffer == nullptr)
+	{
+		return;
+	}
+
+	if (!IsInScreen(InPos))
+	{
+		return;
+	}
+
+	*(_DepthBuffer + GetScreenBufferIndex(InPos)) = InDepthValue;
+}
+
 void WindowsRSI::DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, const LinearColor& InColor)
 {
 	Vector2 clippedStart = InStartPos;

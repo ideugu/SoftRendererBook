@@ -19,8 +19,6 @@ public:
 
 	void CreateDepthBuffer();
 	void ClearDepthBuffer();
-	float GetDepthBufferValue(const ScreenPoint& InPos) const;
-	void SetDepthBufferValue(const ScreenPoint& InPos, float InDepthValue);
 
 	Color32* GetScreenBuffer() const;
 

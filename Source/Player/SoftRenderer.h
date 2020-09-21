@@ -56,7 +56,7 @@ private:
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);
-	bool _Show3DGizmo = true;
+	bool _ShowDepthBuffer = false;
 
 private:
 	// 초기화 점검 변수

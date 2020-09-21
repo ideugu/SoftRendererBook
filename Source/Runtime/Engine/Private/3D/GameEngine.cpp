@@ -141,31 +141,8 @@ bool GameEngine::LoadScene()
 	player.SetColor(LinearColor::Blue);
 	InsertGameObject(std::move(player));
 
-	// 기즈모 화살표 설정
-	static float arrowScale = 5.f;
-	GameObject gizmoX("GizmoX");
-	gizmoX.SetMesh(GameEngine::GizmoArrowMeshKey);
-	gizmoX.GetTransform().SetScale(Vector3::One * arrowScale);
-	gizmoX.GetTransform().SetRotation(Rotator(90.f, 0.f, 0.f));
-	gizmoX.SetColor(LinearColor::Red);
-
-	GameObject gizmoY("GizmoY");
-	gizmoY.SetMesh(GameEngine::GizmoArrowMeshKey);
-	gizmoY.GetTransform().SetScale(Vector3::One * arrowScale);
-	gizmoY.GetTransform().SetRotation(Rotator(0.f, 0.f, -90.f));
-	gizmoY.SetColor(LinearColor::Green);
-
-	GameObject gizmoZ("GizmoZ");
-	gizmoZ.SetMesh(GameEngine::GizmoArrowMeshKey);
-	gizmoZ.GetTransform().SetScale(Vector3::One * arrowScale);
-	gizmoZ.SetColor(LinearColor::Blue);
-
-	InsertGameObject(std::move(gizmoX));
-	InsertGameObject(std::move(gizmoY));
-	InsertGameObject(std::move(gizmoZ));
-
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(300.f, 300.f, -300.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 0.f, -300.f));
 
 	return true;
 }

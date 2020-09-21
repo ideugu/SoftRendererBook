@@ -20,6 +20,9 @@ public:
 	virtual void DrawLine(const Vector2& InStartPos, const Vector2& InEndPos, const LinearColor& InColor) = 0;
 	virtual void DrawLine(const Vector4& InStartPos, const Vector4& InEndPos, const LinearColor& InColor) = 0;
 
+	virtual float GetDepthBufferValue(const ScreenPoint& InScreenPos) const = 0;
+	virtual void SetDepthBufferValue(const ScreenPoint& InScreenPos, float InDepthValue) = 0;
+
 	virtual void DrawFullVerticalLine(int InX, const LinearColor& InColor) = 0;
 	virtual void DrawFullHorizontalLine(int InY, const LinearColor& InColor) = 0;
 
