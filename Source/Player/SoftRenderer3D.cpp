@@ -236,12 +236,28 @@ void SoftRenderer::Render3D()
 					float oneMinusST = 1.f - s - t;
 					if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 					{
-						// 무게중심좌표로 보간한 해당 픽셀의 UV 값
-						Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
+						if (!mesh.HasUV())
+						{
+							// 메시에 UV 값이 없으면 게임 오브젝트에 지정한 색상으로 색칠
+							_RSI->DrawPoint(fragment, FragmentShader3D(gameObject.GetColor()));
+						}
+						else
+						{
+							// 각 점마다 보존된 뷰 공간의 z값
+							float invZ0 = 1.f / tv0.Position.W;
+							float invZ1 = 1.f / tv1.Position.W;
+							float invZ2 = 1.f / tv2.Position.W;
 
-						// 메시에 UV 값이 없으면 색상으로 칠하고 있으면 텍스쳐 매핑 진행
-						LinearColor targetColor = mesh.HasUV() ? _GameEngine3.GetMainTexture().GetSample(targetUV) : gameObject.GetColor();
-						_RSI->DrawPoint(fragment, FragmentShader3D(targetColor));
+							// 투영 보정보간에 사용할 공통 분모
+							float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
+							float invZ = 1.f / z;
+
+							// 투영보정보간으로 보간한 해당 픽셀의 UV 값
+							Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
+
+							// 텍스쳐 매핑 진행
+							_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
+						}
 					}
 				}
 			}
