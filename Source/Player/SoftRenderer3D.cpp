@@ -236,12 +236,19 @@ void SoftRenderer::Render3D()
 					float oneMinusST = 1.f - s - t;
 					if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 					{
-						// 무게중심좌표로 보간한 해당 픽셀의 UV 값
-						Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
+						if (!mesh.HasUV())
+						{
+							// 메시에 UV 값이 없으면 게임 오브젝트에 지정한 색상으로 색칠
+							_RSI->DrawPoint(fragment, FragmentShader3D(gameObject.GetColor()));
+						}
+						else
+						{
+							// 무게중심좌표로 보간한 해당 픽셀의 UV 값
+							Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
 
-						// 메시에 UV 값이 없으면 색상으로 칠하고 있으면 텍스쳐 매핑 진행
-						LinearColor targetColor = mesh.HasUV() ? _GameEngine3.GetMainTexture().GetSample(targetUV) : gameObject.GetColor();
-						_RSI->DrawPoint(fragment, FragmentShader3D(targetColor));
+							// 텍스쳐 매핑 진행
+							_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
+						}
 					}
 				}
 			}
