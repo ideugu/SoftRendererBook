@@ -65,8 +65,9 @@ void SoftRenderer::DrawGizmo3D()
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
-	static float moveSpeed = 100.f;
+	static float moveSpeed = 500.f;
 	static float rotateSpeed = 180.f;
+	static float fovSpeed = 100.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
 
@@ -75,10 +76,15 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetYAxis(), input.GetZAxis()) * moveSpeed * InDeltaSeconds);
-		playerTransform.AddPitchRotation(-input.GetWAxis() * rotateSpeed * InDeltaSeconds);
+		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetWAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
 		_GameEngine3.GetMainCamera().SetLookAtRotation(player.GetTransform().GetPosition());
 	}
+
+	// 카메라 FOV 조절
+	Camera& camera = _GameEngine3.GetMainCamera();
+	float newFOV = Math::Clamp(camera.GetFOV() + input.GetZAxis() * fovSpeed * InDeltaSeconds, 5.f, 179.f);
+	camera.SetFOV(newFOV);
+		 
 
 	// 기즈모 토글
 	if (input.SpacePressed()) { _Show3DGizmo = !_Show3DGizmo; }

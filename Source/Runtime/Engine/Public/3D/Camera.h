@@ -12,12 +12,20 @@ public:
 	~Camera() { }
 
 public:
+	// 트랜스폼
 	Transform& GetTransform() { return _Transform; }
+	const Transform& GetTransformConst() const { return _Transform; }
+
+	// 카메라 값을 가져오는 함수
+	float GetFOV() const { return _FOV; }
+	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
+
+	// 카메라 값을 설정하는 함수
 	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
 	void SetFOV(float InFOV) { _FOV = InFOV; }
 	void SetViewportSize(const ScreenPoint& InViewportSize) { _ViewportSize = InViewportSize; }
-	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
 
+	// 행렬 생성
 	FORCEINLINE void GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
