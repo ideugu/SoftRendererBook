@@ -12,14 +12,25 @@ public:
 	~Camera() { }
 
 public:
+	// 트랜스폼
 	Transform& GetTransform() { return _Transform; }
-	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
+	const Transform& GetTransformConst() const { return _Transform; }
 
+	// 카메라 값을 가져오는 함수
+	const ScreenPoint& GetViewportSize() const { return _ViewportSize; }
+
+	// 카메라 값을 설정하는 함수
+	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
+	void SetViewportSize(const ScreenPoint& InViewportSize) { _ViewportSize = InViewportSize; }
+
+	// 행렬 생성
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
 
 private:
 	Transform _Transform;
+
+	ScreenPoint _ViewportSize;
 };
 
 FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const

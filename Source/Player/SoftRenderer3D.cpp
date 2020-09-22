@@ -65,7 +65,7 @@ void SoftRenderer::DrawGizmo3D()
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
-	static float moveSpeed = 100.f;
+	static float moveSpeed = 500.f;
 	static float rotateSpeed = 180.f;
 
 	InputManager input = _GameEngine3.GetInputManager();
@@ -93,7 +93,8 @@ void SoftRenderer::Render3D()
 		DrawGizmo3D();
 	}
 
-	Matrix4x4 viewMat = _GameEngine3.GetMainCamera().GetViewMatrix();
+	const Camera& mainCamera = _GameEngine3.GetMainCamera();
+	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -210,11 +211,12 @@ void SoftRenderer::Render3D()
 		}
 	}
 
+	_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
 	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
-		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
+		_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
 	}
 }
 

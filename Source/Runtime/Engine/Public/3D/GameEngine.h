@@ -12,7 +12,8 @@ public:
 
 public:
 	// 엔진 초기화 
-	bool Init(const ScreenPoint& InViewportSize);
+	bool Init();
+	void OnScreenResize(const ScreenPoint& InScreenSize);
 	bool LoadResources();
 	bool LoadScene();
 
@@ -42,7 +43,7 @@ public:
 	const static std::string SteveTextureKey;
 
 private:
-	ScreenPoint _ViewportSize;
+	ScreenPoint _ScreenSize;
 	InputManager _InputManager;
 	Texture _MainTexture;
 	Camera _MainCamera;
