@@ -8,10 +8,20 @@ const std::string GameEngine::GizmoArrowMeshKey("SM_Arrow");
 const std::string GameEngine::PlayerKey("Player");
 const std::string GameEngine::SteveTextureKey("Steve.png");
 
-bool GameEngine::Init(const ScreenPoint& InViewportSize)
+void GameEngine::OnScreenResize(const ScreenPoint& InScreenSize)
 {
 	// 화면 크기의 설정
-	_ViewportSize = InViewportSize;
+	_ScreenSize = InScreenSize;
+	_MainCamera.SetViewportSize(_ScreenSize);
+}
+
+bool GameEngine::Init()
+{
+	// 화면 크기가 올바로 설정되어 있는지 확인
+	if (_ScreenSize.HasZero())
+	{
+		return false;
+	}
 
 	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed)
 	{
@@ -155,7 +165,7 @@ bool GameEngine::LoadScene()
 	InsertGameObject(std::move(gizmoZ));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 0.f, -200.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 0.f, -500.f));
 
 	return true;
 }
