@@ -118,8 +118,16 @@ void SoftRenderer::Render3D()
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
-		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		const Transform& transform = gameObject.GetTransformConst();
+
+		// 물체가 카메라 뒤에 있으면 그리지 않도록 처리
+		Vector3 viewPos = viewMat * transform.GetPosition();
+		if (viewPos.Z <= 0.f)
+		{
+			continue;
+		}
+
+		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
@@ -156,12 +164,6 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv0 = vertices[indice[bi0]];
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
-
-			// 세 점이 모두 카메라 뒤에 있으면 그리기 생략
-			if (tv0.Position.Z < 0.f && tv1.Position.Z < 0.f && tv2.Position.Z < 0.f)
-			{
-				continue;
-			}
 
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
