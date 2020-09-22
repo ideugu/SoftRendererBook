@@ -102,33 +102,46 @@ void SoftRenderer::Render3D()
 	float nearZ = mainCamera.GetNearZ();
 	float farZ = mainCamera.GetFarZ();
 
-	static float playerDepth = 0.f;
-	static float distanceFromCamera = 0.f;
-	static float linearDepth = 0.f;
+	// 절두체 컬링을 수행하기 위한 기본 설정 값
+	float halfFOV = mainCamera.GetFOV() * 0.5f;
+	float pSin, pCos;
+	Math::GetSinCos(pSin, pCos, halfFOV);
+
+	// 절두체 평면의 방정식
+	static std::vector<Plane> frustumPlanes = {
+		Plane(Vector3(0.f, pSin, pCos), 0.f),
+		Plane(Vector3(0.f, -pSin, pCos), 0.f),
+		Plane(Vector3(pSin, 0.f, pCos), 0.f),
+		Plane(Vector3(-pSin, 0.f, pCos), 0.f),
+		Plane(Vector3::UnitZ, nearZ),
+		Plane(Vector3::UnitZ, farZ)
+	};
+
+	size_t totalObjects = _GameEngine3.GetScene().size();
+	size_t culledObjects = 0;
+	size_t renderedObjects = 0;
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
 		const Transform& transform = gameObject.GetTransformConst();
 
-		// 투영 좌표로 변환
-		Vector4 clippedPos = pvMat * Vector4(transform.GetPosition());
-		float cameraDepth = clippedPos.W;
-		// 0이 나오는 것을 방지.
-		if (Math::EqualsInTolerance(cameraDepth, 0.f)) { cameraDepth = KINDA_SMALL_NUMBER; }
-		float ndcZ = clippedPos.Z / cameraDepth;
+		// 뷰 공간에서 프러스텀 컬링을 수행
+		Vector3 viewPos = viewMat * transform.GetPosition();
 
-		// 주요 지표 값 저장
-		if (gameObject.GetName() == _GameEngine3.PlayerKey)
+		bool isOutside = false;
+		for(const auto& p : frustumPlanes)
 		{
-			playerDepth = ndcZ;
-			distanceFromCamera = clippedPos.W;
-			linearDepth = (cameraDepth - nearZ) / (farZ - nearZ);
+			if (p.Distance < p.Normal.Dot(viewPos))
+			{
+				isOutside = true;
+				break;
+			}
 		}
 
-		// 게임 오브젝트의 위치가 프러스텀 영역을 벗어날 때 그리지 않도록 처리
-		if (ndcZ < -1.f || ndcZ > 1.f)
+		if (isOutside)
 		{
+			culledObjects++;
 			continue;
 		}
 
@@ -286,20 +299,12 @@ void SoftRenderer::Render3D()
 				}
 			}
 		}
+
+		renderedObjects++;
 	}
 
-	if (_ShowDepthBuffer)
-	{
-		_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
-		const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
-		if (!player.IsNotFound())
-		{
-			const Transform& playerTransform = player.GetTransformConst();
-			_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
-			_RSI->PushStatisticText("Depth : " + std::to_string(playerDepth));
-			_RSI->PushStatisticText("Linear Depth: " + std::to_string(linearDepth));
-		}
-	}
-
+	_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
+	_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
+	_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 
