@@ -102,24 +102,20 @@ void SoftRenderer::Render3D()
 	float nearZ = mainCamera.GetNearZ();
 	float farZ = mainCamera.GetFarZ();
 
-	// 절두체 컬링을 수행하기 위한 기본 설정 값
-	float halfFOV = mainCamera.GetFOV() * 0.5f;
-	float pSin, pCos;
-	Math::GetSinCos(pSin, pCos, halfFOV);
-
-	// 절두체 평면의 방정식
-	static std::vector<Plane> frustumPlanes = {
-		Plane(Vector3(0.f, pSin, pCos), 0.f),
-		Plane(Vector3(0.f, -pSin, pCos), 0.f),
-		Plane(Vector3(pSin, 0.f, pCos), 0.f),
-		Plane(Vector3(-pSin, 0.f, pCos), 0.f),
-		Plane(Vector3::UnitZ, nearZ),
-		Plane(Vector3::UnitZ, farZ)
-	};
-
 	size_t totalObjects = _GameEngine3.GetScene().size();
 	size_t culledObjects = 0;
 	size_t renderedObjects = 0;
+
+	// 절두체 컬링을 위한 준비 작업. 행벡터를 쉽게 구할 수 있게 전치시켜둔다.
+	Matrix4x4 perspMatT = perspMat.Tranpose();
+	std::vector<Vector4> frustumVectors = {
+		perspMatT[3] + perspMatT[0],
+		perspMatT[3] - perspMatT[0],
+		perspMatT[3] + perspMatT[1],
+		perspMatT[3] - perspMatT[1],
+		perspMatT[3] + perspMatT[2],
+		perspMatT[3] + perspMatT[2]
+	};
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -127,12 +123,12 @@ void SoftRenderer::Render3D()
 		const Transform& transform = gameObject.GetTransformConst();
 
 		// 뷰 공간에서 절두체 컬링을 수행
-		Vector3 viewPos = viewMat * transform.GetPosition();
+		Vector4 viewPos = viewMat * Vector4(transform.GetPosition());
 
 		bool isOutside = false;
-		for(const auto& p : frustumPlanes)
+		for(const auto& v : frustumVectors)
 		{
-			if (p.Distance < p.Normal.Dot(viewPos))
+			if (v.Dot(viewPos) < 0.f)
 			{
 				isOutside = true;
 				break;
