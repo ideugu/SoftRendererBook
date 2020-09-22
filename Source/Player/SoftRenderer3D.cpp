@@ -126,7 +126,7 @@ void SoftRenderer::Render3D()
 		const GameObject& gameObject = *it;
 		const Transform& transform = gameObject.GetTransformConst();
 
-		// 뷰 공간에서 프러스텀 컬링을 수행
+		// 뷰 공간에서 절두체 컬링을 수행
 		Vector3 viewPos = viewMat * transform.GetPosition();
 
 		bool isOutside = false;
