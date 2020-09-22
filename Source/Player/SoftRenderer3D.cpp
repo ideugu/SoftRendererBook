@@ -102,6 +102,7 @@ void SoftRenderer::Render3D()
 	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
 	Matrix4x4 pvMat = perspMat * viewMat;
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
+	float nearZ = mainCamera.GetNearZ();
 
 	static float playerDepth = 0.f;
 	static float distanceFromCamera = 0.f;
@@ -179,8 +180,8 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
-			// 한 점이라도 카메라 뒤에 위치하면 삼각형을 그리지 않도록 안전장치 마련
-			if (tv0.Position.W < KINDA_SMALL_NUMBER || tv1.Position.W < KINDA_SMALL_NUMBER || tv2.Position.W < KINDA_SMALL_NUMBER)
+			// 한 점이라도 근평면 뒤에 있다면 그리지 않도록 안전장치 마련
+			if (tv0.Position.W < nearZ || tv1.Position.W < nearZ || tv2.Position.W < nearZ)
 			{
 				continue;
 			}
