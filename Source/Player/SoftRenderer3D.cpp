@@ -262,7 +262,8 @@ void SoftRenderer::Render3D()
 						if (_ShowDepthBuffer)
 						{
 							// 시각화를 위해 선형화된 흑백 값
-							float grayScale = (invZ - n) / (f - n);
+							//float grayScale = (invZ - n) / (f - n);
+							float grayScale = (newDepth + 1.f) * 0.5f;
 
 							// 뎁스 버퍼 그리기
 							_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
@@ -281,16 +282,18 @@ void SoftRenderer::Render3D()
 		}
 	}
 
-	_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
-	_RSI->PushStatisticText("Camera FOV : " + std::to_string(mainCamera.GetFOV()));
-	const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
-	if (!player.IsNotFound())
+	if (_ShowDepthBuffer)
 	{
-		const Transform& playerTransform = player.GetTransformConst();
-		_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
-		_RSI->PushStatisticText("Player Depth: " + std::to_string(playerDepth));
-		_RSI->PushStatisticText("Distance: " + std::to_string(distanceFromCamera));
-		_RSI->PushStatisticText("Linear Depth: " + std::to_string(linearDepth));
+		_RSI->PushStatisticText("Camera : " + mainCamera.GetTransformConst().GetPosition().ToString());
+		const GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
+		if (!player.IsNotFound())
+		{
+			const Transform& playerTransform = player.GetTransformConst();
+			_RSI->PushStatisticText("Player : " + playerTransform.GetPosition().ToString());
+			_RSI->PushStatisticText("Depth : " + std::to_string(playerDepth));
+			_RSI->PushStatisticText("Linear Depth: " + std::to_string(linearDepth));
+		}
 	}
+
 }
 

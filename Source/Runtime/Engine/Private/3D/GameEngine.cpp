@@ -141,8 +141,32 @@ bool GameEngine::LoadScene()
 	player.SetColor(LinearColor::Blue);
 	InsertGameObject(std::move(player));
 
+	// 고정 시드로 랜덤하게 생성
+	std::mt19937 generator(0);
+	std::uniform_real_distribution<float> distZ(0.f, 1500.f);
+	std::uniform_real_distribution<float> distXY(-1000.f, 1000.f);
+
+	// 100개의 배경 게임 오브젝트 생성
+	for (int i = 0; i < 100; ++i)
+	{
+		char name[64];
+		std::snprintf(name, sizeof(name), "GameObject%d", i);
+		GameObject newGo(name);
+		newGo.GetTransform().SetPosition(Vector3(distXY(generator), distXY(generator), distZ(generator)));
+		newGo.GetTransform().SetScale(Vector3::One * cubeScale);
+		newGo.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
+		newGo.SetMesh(GameEngine::CubeMeshKey);
+		newGo.SetColor(LinearColor::Blue);
+		if (!InsertGameObject(std::move(newGo)))
+		{
+			// 같은 이름 중복이 발생하면 로딩 취소.
+			return false;
+		}
+	}
+
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 0.f, -300.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 200.f, -500.f));
+	_MainCamera.SetFarZ(3000.f);
 
 	return true;
 }
