@@ -179,6 +179,12 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
+			// 한 점이라도 카메라 뒤에 위치하면 삼각형을 그리지 않도록 안전장치 마련
+			if (tv0.Position.W < KINDA_SMALL_NUMBER || tv1.Position.W < KINDA_SMALL_NUMBER || tv2.Position.W < KINDA_SMALL_NUMBER)
+			{
+				continue;
+			}
+
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
 			Vector3 edge2 = (tv2.Position - tv0.Position).ToVector3();
