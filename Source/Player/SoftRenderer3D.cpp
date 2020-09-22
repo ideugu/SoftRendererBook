@@ -99,8 +99,8 @@ void SoftRenderer::Render3D()
 	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
 	Matrix4x4 pvMat = perspMat * viewMat;
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
-	float f = mainCamera.GetFarZ();
-	float n = mainCamera.GetNearZ();
+	float nearZ = mainCamera.GetNearZ();
+	float farZ = mainCamera.GetFarZ();
 
 	static float playerDepth = 0.f;
 	static float distanceFromCamera = 0.f;
@@ -123,7 +123,7 @@ void SoftRenderer::Render3D()
 		{
 			playerDepth = ndcZ;
 			distanceFromCamera = clippedPos.W;
-			linearDepth = (cameraDepth - n) / (f - n);
+			linearDepth = (cameraDepth - nearZ) / (farZ - nearZ);
 		}
 
 		// 게임 오브젝트의 위치가 프러스텀 영역을 벗어날 때 그리지 않도록 처리
@@ -179,6 +179,12 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv0 = vertices[indice[bi0]];
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
+
+			// 한 점이라도 근평면 뒤에 있다면 그리지 않도록 안전장치 마련
+			if (tv0.Position.W < nearZ || tv1.Position.W < nearZ || tv2.Position.W < nearZ)
+			{
+				continue;
+			}
 
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
