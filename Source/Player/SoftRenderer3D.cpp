@@ -106,7 +106,7 @@ void SoftRenderer::Render3D()
 	size_t culledObjects = 0;
 	size_t renderedObjects = 0;
 
-	// 절두체 컬링을 위한 준비 작업. 행벡터를 쉽게 구할 수 있게 전치시켜둔다.
+	// 절두체 컬링을 위한 준비 작업. 행 벡터를 쉽게 구할 수 있게 전치시켜둔다.
 	Matrix4x4 perspMatT = perspMat.Tranpose();
 	std::vector<Vector4> frustumVectors = {
 		perspMatT[3] + perspMatT[0],
@@ -122,7 +122,7 @@ void SoftRenderer::Render3D()
 		const GameObject& gameObject = *it;
 		const Transform& transform = gameObject.GetTransformConst();
 
-		// 뷰 공간에서 절두체 컬링을 수행
+		// 동차좌표계를 사용해 절두체 컬링을 수행
 		Vector4 viewPos = viewMat * Vector4(transform.GetPosition());
 
 		bool isOutside = false;
