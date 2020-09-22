@@ -28,4 +28,6 @@
 
 #include "Rotator.h"
 
+#include "Plane.h"
+
 using namespace CK;
