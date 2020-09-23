@@ -164,24 +164,29 @@ void SoftRenderer::Render3D()
 		// 정점 변환 진행
 		VertexShader3D(vertices, finalMat);
 
-		// 클립 공간을 화면 공간으로 변환
-		for (Vertex3D& v : vertices)
-		{
-			// 0이 나오는 것을 방지.
-			if (Math::EqualsInTolerance(v.Position.W, 0.f)) { v.Position.W = KINDA_SMALL_NUMBER; }
 
-			// NDC 공간으로 변환
-			float invW = 1.f / v.Position.W;
-			v.Position.X *= invW;
-			v.Position.Y *= invW;
-			v.Position.Z *= invW;
+		// 클립 공간에서의 클리핑
 
-			// 화면 공간으로 확장
-			v.Position.X *= (viewportSize.X * 0.5f);
-			v.Position.Y *= (viewportSize.Y * 0.5f);
-		}
 
-		// 변환된 정점을 잇는 선 그리기
+
+		//// 클립 공간을 화면 공간으로 변환
+		//for (Vertex3D& v : vertices)
+		//{
+		//	// 0이 나오는 것을 방지.
+		//	if (Math::EqualsInTolerance(v.Position.W, 0.f)) { v.Position.W = KINDA_SMALL_NUMBER; }
+
+		//	// NDC 공간으로 변환
+		//	float invW = 1.f / v.Position.W;
+		//	v.Position.X *= invW;
+		//	v.Position.Y *= invW;
+		//	v.Position.Z *= invW;
+
+		//	// 화면 공간으로 확장
+		//	v.Position.X *= (viewportSize.X * 0.5f);
+		//	v.Position.Y *= (viewportSize.Y * 0.5f);
+		//}
+
+		// 삼각형 별로 그리기
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
 			int bi0 = ti * 3, bi1 = ti * 3 + 1, bi2 = ti * 3 + 2;
@@ -189,11 +194,31 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
-			// 한 점이라도 근평면 뒤에 있다면 그리지 않도록 안전장치 마련
-			if (tv0.Position.W < nearZ || tv1.Position.W < nearZ || tv2.Position.W < nearZ)
+			// 세 점에 대한 테스트 진행
+			// X축에 벗어났는가?
+			if (frustumVectors[0].Dot(tv0.Position) < 0.f || frustumVectors[1].Dot(tv0.Position) < 0.f)
 			{
-				continue;
+
 			}
+			
+			// 세 점이 모두 밖에 있으면 넘어가기
+			// 두 점이 밖에 있으면 자르고 바로 그리기
+			// 한 점이 밖에 있으면 자른 후 쪼개기
+
+
+			// 한 점이라도 근평면 뒤에 있다면 그리지 않도록 안전장치 마련
+			//if (tv0.Position.W < nearZ || tv1.Position.W < nearZ || tv2.Position.W < nearZ)
+			//{
+			//	continue;
+			//}
+
+			//if (gameObject == "Plane")
+			//{
+			//	_RSI->DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
+			//	_RSI->DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
+			//	_RSI->DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
+			//	continue;
+			//}
 
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
@@ -284,11 +309,18 @@ void SoftRenderer::Render3D()
 						}
 						else
 						{
-							// 투영보정보간으로 보간한 해당 픽셀의 UV 값
-							Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
+							if (mesh.HasUV())
+							{
+								// 투영보정보간으로 보간한 해당 픽셀의 UV 값
+								Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
 
-							// 텍스쳐 매핑 진행
-							_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
+								// 텍스쳐 매핑 진행
+								_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
+							}
+							else
+							{
+								_RSI->DrawPoint(fragment, gameObject.GetColor());
+							}
 						}
 					}
 				}
@@ -298,8 +330,8 @@ void SoftRenderer::Render3D()
 		renderedObjects++;
 	}
 
-	_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
-	_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
-	_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
+	//_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
+	//_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
+	//_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 

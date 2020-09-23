@@ -5,6 +5,8 @@ using namespace CK::DDD;
 
 const std::string GameEngine::CubeMeshKey("SM_Cube");
 const std::string GameEngine::GizmoArrowMeshKey("SM_Arrow");
+const std::string GameEngine::PlaneMeshKey("SM_Plane");
+const std::string GameEngine::PlaneKey("Plane");
 const std::string GameEngine::PlayerKey("Player");
 const std::string GameEngine::SteveTextureKey("Steve.png");
 
@@ -119,6 +121,21 @@ bool GameEngine::LoadResources()
 
 	_Meshes.insert({ GameEngine::GizmoArrowMeshKey , std::move(gizmoArrow) });
 
+	// 평면
+	Mesh planeMesh;
+	planeMesh._Vertices = {
+		Vector3(-1.f, 0.f, -1.f),
+		Vector3(-1.f, 0.f, 1.f),
+		Vector3(1.f, 0.f, 1.f),
+		Vector3(1.f, 0.f, -1.f)
+	};
+
+	planeMesh._Indices = {
+		0, 1, 2, 0, 2, 3
+	};
+
+	_Meshes.insert({ GameEngine::PlaneMeshKey, std::move(planeMesh) });
+
 	// 텍스쳐 로딩
 	_MainTexture = Texture(SteveTextureKey);
 	if (!GetMainTexture().IsIntialized())
@@ -135,37 +152,22 @@ bool GameEngine::LoadScene()
 	static float cubeScale = 100.f;
 	GameObject player(GameEngine::PlayerKey);
 	player.SetMesh(GameEngine::CubeMeshKey);
-	player.GetTransform().SetPosition(Vector3::Zero);
+	player.GetTransform().SetPosition(Vector3(0.f, 100.f, 0.f));
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
 	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
 	player.SetColor(LinearColor::Blue);
 	InsertGameObject(std::move(player));
 
-	// 고정 시드로 랜덤하게 생성
-	std::mt19937 generator(0);
-	std::uniform_real_distribution<float> distZ(-3000.f, 3000.f);
-	std::uniform_real_distribution<float> distXY(-3000.f, 3000.f);
-
-	// 100개의 배경 게임 오브젝트 생성
-	for (int i = 0; i < 500; ++i)
-	{
-		char name[64];
-		std::snprintf(name, sizeof(name), "GameObject%d", i);
-		GameObject newGo(name);
-		newGo.GetTransform().SetPosition(Vector3(distXY(generator), distXY(generator), distZ(generator)));
-		newGo.GetTransform().SetScale(Vector3::One * cubeScale);
-		newGo.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
-		newGo.SetMesh(GameEngine::CubeMeshKey);
-		newGo.SetColor(LinearColor::Blue);
-		if (!InsertGameObject(std::move(newGo)))
-		{
-			// 같은 이름 중복이 발생하면 로딩 취소.
-			return false;
-		}
-	}
+	// 평면 설정
+	static float planeScale = 800.f;
+	GameObject plane(GameEngine::PlaneKey);
+	plane.SetMesh(GameEngine::PlaneMeshKey);
+	plane.GetTransform().SetScale(Vector3::One * planeScale);
+	plane.SetColor(LinearColor::LightGray);
+	InsertGameObject(std::move(plane));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 200.f, -500.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -500.f));
 	_MainCamera.SetFarZ(3000.f);
 
 	return true;

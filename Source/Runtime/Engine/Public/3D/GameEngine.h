@@ -39,6 +39,8 @@ public:
 	// 주요 키 값
 	const static std::string CubeMeshKey;
 	const static std::string GizmoArrowMeshKey;
+	const static std::string PlaneMeshKey;
+	const static std::string PlaneKey;
 	const static std::string PlayerKey;
 	const static std::string SteveTextureKey;
 
