@@ -277,8 +277,7 @@ void SoftRenderer::Render3D()
 						if (_ShowDepthBuffer)
 						{
 							// 시각화를 위해 선형화된 흑백 값
-							//float grayScale = (invZ - n) / (f - n);
-							float grayScale = (newDepth + 1.f) * 0.5f;
+							float grayScale = (invZ - nearZ) / (farZ - nearZ);
 
 							// 뎁스 버퍼 그리기
 							_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
