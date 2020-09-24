@@ -1,5 +1,6 @@
 #pragma once
 
+struct Vertex3D;
 class SoftRenderer
 {
 public:
@@ -53,6 +54,10 @@ private:
 	void DrawGizmo3D();
 	void Update3D(float InDeltaSeconds);
 	void Render3D();
+
+	bool ClipLine(CK::Vector4& clip1, CK::Vector4& clip2);
+	void DrawTriangle(Vertex3D tp0, Vertex3D tp1, Vertex3D tp2, const std::vector<Vector4>& vertices, bool DrawTexture, const Texture& InTexture);
+
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);

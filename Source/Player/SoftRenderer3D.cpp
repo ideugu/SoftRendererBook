@@ -29,6 +29,7 @@ namespace CK::DDD
 	}
 
 	LinearColor colorParam;
+	Matrix4x4 pMatrix;
 
 	// 픽셀 변환 코드
 	FORCEINLINE LinearColor FragmentShader3D(LinearColor InColor)
@@ -164,28 +165,6 @@ void SoftRenderer::Render3D()
 		// 정점 변환 진행
 		VertexShader3D(vertices, finalMat);
 
-
-		// 클립 공간에서의 클리핑
-
-
-
-		//// 클립 공간을 화면 공간으로 변환
-		//for (Vertex3D& v : vertices)
-		//{
-		//	// 0이 나오는 것을 방지.
-		//	if (Math::EqualsInTolerance(v.Position.W, 0.f)) { v.Position.W = KINDA_SMALL_NUMBER; }
-
-		//	// NDC 공간으로 변환
-		//	float invW = 1.f / v.Position.W;
-		//	v.Position.X *= invW;
-		//	v.Position.Y *= invW;
-		//	v.Position.Z *= invW;
-
-		//	// 화면 공간으로 확장
-		//	v.Position.X *= (viewportSize.X * 0.5f);
-		//	v.Position.Y *= (viewportSize.Y * 0.5f);
-		//}
-
 		// 삼각형 별로 그리기
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
@@ -193,32 +172,6 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv0 = vertices[indice[bi0]];
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
-
-			// 세 점에 대한 테스트 진행
-			// X축에 벗어났는가?
-			if (frustumVectors[0].Dot(tv0.Position) < 0.f || frustumVectors[1].Dot(tv0.Position) < 0.f)
-			{
-
-			}
-			
-			// 세 점이 모두 밖에 있으면 넘어가기
-			// 두 점이 밖에 있으면 자르고 바로 그리기
-			// 한 점이 밖에 있으면 자른 후 쪼개기
-
-
-			// 한 점이라도 근평면 뒤에 있다면 그리지 않도록 안전장치 마련
-			//if (tv0.Position.W < nearZ || tv1.Position.W < nearZ || tv2.Position.W < nearZ)
-			//{
-			//	continue;
-			//}
-
-			//if (gameObject == "Plane")
-			//{
-			//	_RSI->DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
-			//	_RSI->DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
-			//	_RSI->DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
-			//	continue;
-			//}
 
 			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
 			Vector3 edge1 = (tv1.Position - tv0.Position).ToVector3();
@@ -228,103 +181,84 @@ void SoftRenderer::Render3D()
 				continue;
 			}
 
-			// 삼각형 칠하기
-			// 삼각형의 영역 설정
-			Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
-			Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+			UINT16 clipCount = 0;
+			// 세 라인에 대한 테스트 진행
+			Vector4 clip1 = tv0.Position;
+			Vector4 clip2 = tv1.Position;
+			bool edge0Clipped = ClipLine(clip1, clip2);
 
-			// 무게중심좌표를 위해 점을 벡터로 변환
-			Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
-			Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
+			Vector4 clip3 = tv0.Position;
+			Vector4 clip4 = tv2.Position;
+			bool edge1Clipped = ClipLine(clip3, clip4);
 
-			// 공통 분모 값 ( uu * vv - uv * uv )
-			float udotv = u.Dot(v);
-			float vdotv = v.Dot(v);
-			float udotu = u.Dot(u);
-			float denominator = udotv * udotv - vdotv * udotu;
+			Vector4 clip5 = tv1.Position;
+			Vector4 clip6 = tv2.Position;
+			bool edge2Clipped = ClipLine(clip5, clip6);
 
-			// 퇴화 삼각형의 판정
-			if (Math::EqualsInTolerance(denominator, 0.0f))
+			std::vector<Vector4> newVertices = {
+				tv0.Position, 
+				tv1.Position,
+				tv2.Position
+			};
+
+			if (edge0Clipped)
 			{
-				// 퇴화 삼각형이면 건너뜀.
-				continue;
-			}
-			float invDenominator = 1.f / denominator;
-
-			// 화면상의 점 구하기
-			ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
-			ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
-
-			// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
-			lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
-			lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
-			upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
-			upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
-
-			// 삼각형 영역 내 모든 점을 점검하고 색칠
-			for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
-			{
-				for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
+				clipCount++;
+				if (!clip1.EqualsInTolerance(tv0.Position))
 				{
-					ScreenPoint fragment = ScreenPoint(x, y);
-					Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-					Vector2 w = pointToTest - tv0.Position.ToVector2();
-					float wdotu = w.Dot(u);
-					float wdotv = w.Dot(v);
-
-					float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
-					float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
-					float oneMinusST = 1.f - s - t;
-					if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
-					{
-						// 각 점마다 보존된 뷰 공간의 z값
-						float invZ0 = 1.f / tv0.Position.W;
-						float invZ1 = 1.f / tv1.Position.W;
-						float invZ2 = 1.f / tv2.Position.W;
-
-						// 투영 보정보간에 사용할 공통 분모
-						float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
-						float invZ = 1.f / z;
-
-						// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
-						float newDepth = Math::Clamp(-perspMat[2][2] + perspMat[3][2] * z, 0.f, 1.f);
-						float prevDepth = _RSI->GetDepthBufferValue(fragment);
-						if (newDepth < prevDepth)
-						{
-							_RSI->SetDepthBufferValue(fragment, newDepth);
-						}
-						else
-						{
-							// 이미 앞에 무언가 그려져있으므로 픽셀그리기는 생략
-							continue;
-						}
-
-						if (_ShowDepthBuffer)
-						{
-							// 시각화를 위해 선형화된 흑백 값
-							float grayScale = (invZ - nearZ) / (farZ - nearZ);
-
-							// 뎁스 버퍼 그리기
-							_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
-						}
-						else
-						{
-							if (mesh.HasUV())
-							{
-								// 투영보정보간으로 보간한 해당 픽셀의 UV 값
-								Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
-
-								// 텍스쳐 매핑 진행
-								_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
-							}
-							else
-							{
-								_RSI->DrawPoint(fragment, gameObject.GetColor());
-							}
-						}
-					}
+					newVertices.push_back(clip1);
+				}
+				else
+				{
+					newVertices.push_back(clip2);
 				}
 			}
+
+			if (edge1Clipped)
+			{
+				clipCount++;
+				if (!clip3.EqualsInTolerance(tv0.Position))
+				{
+					newVertices.push_back(clip3);
+				}
+				else
+				{
+					newVertices.push_back(clip4);
+				}
+			}
+
+			if (edge2Clipped)
+			{
+				clipCount++;
+				if (!clip5.EqualsInTolerance(tv1.Position))
+				{
+					newVertices.push_back(clip5);
+				}
+				else
+				{
+					newVertices.push_back(clip6);
+				}
+			}
+
+			if (clipCount > 2)
+			{
+				// 이러한 상황이 발생해서는 안됨.
+			}
+			else
+			{
+				if (newVertices.size() == 3)
+				{
+					
+				}
+				else if (newVertices.size() == 4)
+				{
+					// 삼각형 둘로 쪼개기
+				}
+			}
+
+			pMatrix = perspMat;
+			DrawTriangle(tv0, tv1, tv2, newVertices, true, _GameEngine3.GetMainTexture());
+
 		}
 
 		renderedObjects++;
@@ -333,5 +267,408 @@ void SoftRenderer::Render3D()
 	//_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
 	//_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
 	//_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
+}
+
+void SoftRenderer::DrawTriangle(Vertex3D tv0, Vertex3D tv1, Vertex3D tv2, const std::vector<Vector4>& vertices, bool DrawTexture, const Texture& InTexture)
+{
+
+	// 삼각형 칠하기
+	// 삼각형의 영역 설정
+	Vector2 minPos(Math::Min3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Min3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+	Vector2 maxPos(Math::Max3(tv0.Position.X, tv1.Position.X, tv2.Position.X), Math::Max3(tv0.Position.Y, tv1.Position.Y, tv2.Position.Y));
+
+	// 무게중심좌표를 위해 점을 벡터로 변환
+	Vector2 u = tv1.Position.ToVector2() - tv0.Position.ToVector2();
+	Vector2 v = tv2.Position.ToVector2() - tv0.Position.ToVector2();
+
+	// 공통 분모 값 ( uu * vv - uv * uv )
+	float udotv = u.Dot(v);
+	float vdotv = v.Dot(v);
+	float udotu = u.Dot(u);
+	float denominator = udotv * udotv - vdotv * udotu;
+
+	// 퇴화 삼각형의 판정
+	if (Math::EqualsInTolerance(denominator, 0.0f))
+	{
+		// 퇴화 삼각형이면 건너뜀.
+		return;
+	}
+	float invDenominator = 1.f / denominator;
+
+	// 화면상의 점 구하기
+	ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
+	ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
+
+	// 두 점이 화면 밖을 벗어나는 경우 클리핑 처리
+	lowerLeftPoint.X = Math::Max(0, lowerLeftPoint.X);
+	lowerLeftPoint.Y = Math::Min(_ScreenSize.Y, lowerLeftPoint.Y);
+	upperRightPoint.X = Math::Min(_ScreenSize.X, upperRightPoint.X);
+	upperRightPoint.Y = Math::Max(0, upperRightPoint.Y);
+
+	// 삼각형 영역 내 모든 점을 점검하고 색칠
+	for (int x = lowerLeftPoint.X; x <= upperRightPoint.X; ++x)
+	{
+		for (int y = upperRightPoint.Y; y <= lowerLeftPoint.Y; ++y)
+		{
+			ScreenPoint fragment = ScreenPoint(x, y);
+			Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
+			Vector2 w = pointToTest - tv0.Position.ToVector2();
+			float wdotu = w.Dot(u);
+			float wdotv = w.Dot(v);
+
+			float s = (wdotv * udotv - wdotu * vdotv) * invDenominator;
+			float t = (wdotu * udotv - wdotv * udotu) * invDenominator;
+			float oneMinusST = 1.f - s - t;
+			if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
+			{
+				// 각 점마다 보존된 뷰 공간의 z값
+				float invZ0 = 1.f / tv0.Position.W;
+				float invZ1 = 1.f / tv1.Position.W;
+				float invZ2 = 1.f / tv2.Position.W;
+
+				// 투영 보정보간에 사용할 공통 분모
+				float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
+				float invZ = 1.f / z;
+
+				// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
+				float k = pMatrix[2][2];
+				float l = pMatrix[3][2];
+				float newDepth = invZ * k + l;
+				//float newDepth = Math::Clamp(-perspMat[2][2] + perspMat[3][2] * z, 0.f, 1.f);
+				float prevDepth = _RSI->GetDepthBufferValue(fragment);
+				if (newDepth < prevDepth)
+				{
+					_RSI->SetDepthBufferValue(fragment, newDepth);
+				}
+				else
+				{
+					// 이미 앞에 무언가 그려져있으므로 픽셀그리기는 생략
+					continue;
+				}
+
+				if (_ShowDepthBuffer)
+				{
+					// 시각화를 위해 선형화된 흑백 값
+					// f = l / (k+1)
+					// n = l / (k-1)
+					float f = l / (k + 1.f);
+					float n = l / (k - 1.f);
+					float grayScale = (invZ - n) / (f - n);
+
+					// 뎁스 버퍼 그리기
+					_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
+				}
+				else
+				{
+					if (DrawTexture)
+					{
+						// 투영보정보간으로 보간한 해당 픽셀의 UV 값
+						Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
+
+						// 텍스쳐 매핑 진행
+						_RSI->DrawPoint(fragment, FragmentShader3D(InTexture.GetSample(targetUV)));
+					}
+					else
+					{
+						_RSI->DrawPoint(fragment, LinearColor::Blue);
+					}
+				}
+			}
+		}
+	}
+}
+
+bool SoftRenderer::ClipLine(CK::Vector4& clip1, CK::Vector4& clip2)
+{
+	UINT16 outCount = 0;
+	UINT16 clipCount = 0;
+
+	// w = 0의 평면에 대응하는 선의 방정식
+	if (clip1.W == clip2.W) // 투영 평면에 평행한 경우. 
+	{
+		if (clip1.W < 0)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = clip1.W / (clip1.W - clip2.W);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.W < 0.f)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.W < 0) || (t > 1.f && clip2.W < 0)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	// w = y에 대응하는 상단 평면
+	float d1 = clip1.W - clip1.Y;
+	float d2 = clip2.W - clip2.Y;
+	if (d1 == d2) // 상단 평면에 평행한 경우
+	{
+		if (clip1.Y > clip1.W)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = d1 / (d1 - d2);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.Y > clip1.W)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.Y > clip1.W) || (t > 1.f && clip2.Y > clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	// w = -y에 대응하는 하단 평면
+	d1 = clip1.W + clip1.Y;
+	d2 = clip2.W + clip2.Y;
+	if (d1 == d2) // 상단 평면에 평행한 경우
+	{
+		if (clip1.Y < clip1.W)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = d1 / (d1 - d2);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.Y < clip1.W)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.Y < clip1.W) || (t > 1.f && clip2.Y < clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	// w = x에 대응하는 우측 평면
+	d1 = clip1.W - clip1.X;
+	d2 = clip2.W - clip2.X;
+	if (d1 == d2) // 평면에 평행한 경우
+	{
+		if (clip1.X > clip1.W)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = d1 / (d1 - d2);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.X > clip1.W)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.X > clip1.W) || (t > 1.f && clip2.X > clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	// w = -x에 대응하는 하단 평면
+	d1 = clip1.W + clip1.X;
+	d2 = clip2.W + clip2.X;
+	if (d1 == d2) // 상단 평면에 평행한 경우
+	{
+		if (clip1.X < clip1.W)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = d1 / (d1 - d2);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.X < clip1.W)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.X < clip1.W) || (t > 1.f && clip2.X < clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	// w = -z 에 해당하는 평면
+	d1 = clip1.W - clip1.Z;
+	d2 = clip2.W - clip2.Z;
+	if (d1 == d2) // 평면에 평행한 경우
+	{
+		if (clip1.Z < clip1.W)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = d1 / (d1 - d2);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.Z < clip1.W)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.Z < clip1.W) || (t > 1.f && clip2.X < clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	// w = z에 대응하는 평면
+	d1 = clip1.W + clip1.Z;
+	d2 = clip2.W + clip2.Z;
+	if (d1 == d2) // 상단 평면에 평행한 경우
+	{
+		if (clip1.Z > clip1.W)
+		{
+			// 바깥에 있음.
+			outCount++;
+		}
+		else
+		{
+			// 안쪽에 있음.
+		}
+	}
+	else
+	{
+		float t = d1 / (d1 - d2);
+		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
+		{
+			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
+			if (clip1.Z > clip1.W)
+			{
+				clip1 = clippedPos;
+			}
+			else
+			{
+				clip2 = clippedPos;
+			}
+			clipCount++;
+		}
+		else if ((t < 0.f && clip1.Z > clip1.W) || (t > 1.f && clip2.Z > clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
+		{
+			outCount++;
+		}
+		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
+		{
+
+		}
+	}
+
+	return clipCount > 0 ? true : false;
 }
 
