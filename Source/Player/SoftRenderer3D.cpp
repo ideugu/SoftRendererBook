@@ -253,7 +253,10 @@ void SoftRenderer::Render3D()
 						float invZ = 1.f / z;
 
 						// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
-						float newDepth = Math::Clamp(-perspMat[2][2] + perspMat[3][2] * z, 0.f, 1.f);
+						//float newDepth = Math::Clamp(-perspMat[2][2] + perspMat[3][2] * z, 0.f, 1.f);
+						float k = perspMat[2][2];
+						float l = perspMat[3][2];
+						float newDepth = z * k + l;
 						float prevDepth = _RSI->GetDepthBufferValue(fragment);
 						if (newDepth < prevDepth)
 						{
@@ -268,7 +271,9 @@ void SoftRenderer::Render3D()
 						if (_ShowDepthBuffer)
 						{
 							// 시각화를 위해 선형화된 흑백 값
-							float grayScale = (invZ - nearZ) / (farZ - nearZ);
+							float f = l / (k + 1.f);
+							float n = l / (k - 1.f);
+							float grayScale = (invZ - n) / (f - n);
 
 							// 비선형으로 산출된 뎁스 버퍼 값을 그대로 흑백으로 변환
 							//float grayScale = (newDepth + 1.f) * 0.5f;
