@@ -56,7 +56,7 @@ private:
 	void Render3D();
 
 	bool ClipLine(CK::Vector4& clip1, CK::Vector4& clip2);
-	void DrawTriangle(Vertex3D tp0, Vertex3D tp1, Vertex3D tp2, const std::vector<Vector4>& vertices, bool DrawTexture, const Texture& InTexture);
+	void DrawTriangle(Vertex3D tp0, Vertex3D tp1, Vertex3D tp2, std::vector<Vector4>& vertices, bool DrawTexture, const Texture& InTexture);
 
 
 	float _GizmoUnitLength = 50.f;
