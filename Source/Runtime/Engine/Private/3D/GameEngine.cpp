@@ -134,11 +134,18 @@ bool GameEngine::LoadResources()
 		Vector3(1.f, 0.f, -1.f)
 	};
 
+	planeMesh._UVs = {
+		Vector2(0.125f, 0.75f),
+		Vector2(0.125f, 0.875f),
+		Vector2(0.25f, 0.875f),
+		Vector2(0.25f, 0.75f)
+	};
+
 	planeMesh._Indices = {
 		//1, 2, 0
 
-		0, 2, 1,
-		0, 3, 2
+		0, 1, 2,
+		0, 2, 3
 	};
 
 	_Meshes.insert({ GameEngine::PlaneMeshKey, std::move(planeMesh) });
@@ -159,22 +166,23 @@ bool GameEngine::LoadScene()
 	static float cubeScale = 100.f;
 	GameObject player(GameEngine::PlayerKey);
 	player.SetMesh(GameEngine::CubeMeshKey);
-	player.GetTransform().SetPosition(Vector3(0.f, 100.f, 0.f));
+	player.GetTransform().SetPosition(Vector3(0.f, 300.f, 0.f));
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
 	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
 	player.SetColor(LinearColor::Blue);
-	//InsertGameObject(std::move(player));
+	InsertGameObject(std::move(player));
 
 	// 평면 설정
-	static float planeScale = 800.f;
+	static float planeScale = 300.f;
 	GameObject plane(GameEngine::PlaneKey);
 	plane.SetMesh(GameEngine::PlaneMeshKey);
 	plane.GetTransform().SetScale(Vector3::One * planeScale);
+	plane.GetTransform().SetPosition(Vector3(0.f, 100.f, 0.f));
 	plane.SetColor(LinearColor::LightGray);
 	InsertGameObject(std::move(plane));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 100.f, -700.f));  // 뒤집혀 보이는 삼각형
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));  // 뒤집혀 보이는 삼각형
 	//_MainCamera.GetTransform().SetPosition(Vector3(0.f, 100.f, -900.f));  // 정상 삼각형
 
 	return true;

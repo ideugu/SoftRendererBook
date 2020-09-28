@@ -55,9 +55,8 @@ private:
 	void Update3D(float InDeltaSeconds);
 	void Render3D();
 
-	bool ClipLine(CK::Vector4& clip1, CK::Vector4& clip2);
-	void DrawTriangle(Vertex3D tp0, Vertex3D tp1, Vertex3D tp2, std::vector<Vector4>& vertices, bool DrawTexture, const Texture& InTexture);
-
+	void DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& InTexture);
+	Matrix4x4 _PerspMatrix;
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);

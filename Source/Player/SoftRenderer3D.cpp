@@ -11,6 +11,24 @@ public:
 	Vertex3D(const Vector4& InPosition, const LinearColor& InColor) : Position(InPosition), Color(InColor) { }
 	Vertex3D(const Vector4& InPosition, const LinearColor& InColor, const Vector2& InUV) : Position(InPosition), Color(InColor), UV(InUV) { }
 
+	Vertex3D operator*(float InScalar) const
+	{
+		return Vertex3D(
+			Position * InScalar,
+			Color * InScalar,
+			UV * InScalar
+		);
+	}
+
+	Vertex3D operator+(const Vertex3D& InVector) const
+	{
+		return Vertex3D(
+			Position + InVector.Position,
+			Color + InVector.Color,
+			UV + InVector.UV
+		);
+	}
+
 	Vector4 Position;
 	LinearColor Color;
 	Vector2 UV;
@@ -29,7 +47,6 @@ namespace CK::DDD
 	}
 
 	LinearColor colorParam;
-	Matrix4x4 pMatrix;
 
 	// 픽셀 변환 코드
 	FORCEINLINE LinearColor FragmentShader3D(LinearColor InColor)
@@ -98,6 +115,7 @@ void SoftRenderer::Render3D()
 	const Camera& mainCamera = _GameEngine3.GetMainCamera();
 	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
 	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
+	_PerspMatrix = perspMat;
 	Matrix4x4 pvMat = perspMat * viewMat;
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
 	float nearZ = mainCamera.GetNearZ();
@@ -117,6 +135,8 @@ void SoftRenderer::Render3D()
 		perspMatT[3] + perspMatT[2],
 		perspMatT[3] + perspMatT[2]
 	};
+
+	const Texture& mainTexture = _GameEngine3.GetMainTexture();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
@@ -165,7 +185,6 @@ void SoftRenderer::Render3D()
 		// 정점 변환 진행
 		VertexShader3D(vertices, finalMat);
 
-
 		// 삼각형 별로 그리기
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
@@ -174,10 +193,67 @@ void SoftRenderer::Render3D()
 			Vertex3D& tv1 = vertices[indice[bi1]];
 			Vertex3D& tv2 = vertices[indice[bi2]];
 
-			float k = perspMat[2][2];
-			float l = perspMat[3][2];
-			float f = l / (k + 1.f);
-			float n = l / (k - 1.f);
+			//float k = perspMat[2][2];
+			//float l = perspMat[3][2];
+			//float f = l / (k + 1.f);
+			//float n = l / (k - 1.f);
+
+			//Vector4 v0 = tv0.Position;
+			//Vector4 v1 = tv1.Position;
+			//Vector4 v2 = tv2.Position;
+
+			//if (v0.W == 0.f) v0.W = KINDA_SMALL_NUMBER;
+			//if (v1.W == 0.f) v1.W = KINDA_SMALL_NUMBER;
+			//if (v2.W == 0.f) v2.W = KINDA_SMALL_NUMBER;
+
+			//v0 /= v0.W;
+			//v1 /= v1.W;
+			//v2 /= v2.W;
+
+			//v0.X *= (_ScreenSize.X * 0.5f);
+			//v0.Y *= (_ScreenSize.Y * 0.5f);
+			//v1.X *= (_ScreenSize.X * 0.5f);
+			//v1.Y *= (_ScreenSize.Y * 0.5f);
+			//v2.X *= (_ScreenSize.X * 0.5f);
+			//v2.Y *= (_ScreenSize.Y * 0.5f);
+
+			//Vector3 edge1 = (v1 - v0).ToVector3();
+			//Vector3 edge2 = (v2 - v0).ToVector3();
+			//Vector3 cross = edge1.Cross(edge2);
+
+
+			//Matrix4x4 invPMat(Vector4::UnitX * invPx, Vector4::UnitY * invPy, Vector4::UnitW * invL, Vector4(0.f, 0.f, -1.f, k * invL));
+			//
+
+			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
+			// (x2y3-x3y2)/w2w3 + (x1y2-x2y1)/w1w2 + (x3y1-x1y3)/w1w3
+
+
+
+
+			//float p1 = (tv1.Position.X * tv2.Position.Y - tv1.Position.Y * tv2.Position.X);
+			//float p2 = (tv0.Position.X * tv1.Position.Y - tv0.Position.Y * tv1.Position.X);
+			//float p3 = (tv2.Position.X * tv0.Position.Y - tv2.Position.Y * tv0.Position.X);
+			//float d1 = tv1.Position.W * tv2.Position.W;
+			//float d2 = tv0.Position.W * tv1.Position.W;
+			//float d3 = tv0.Position.W * tv2.Position.W;
+			//if (d1 == 0.f) d1 = KINDA_SMALL_NUMBER;
+			//if (d2 == 0.f) d2 = KINDA_SMALL_NUMBER;
+			//if (d3 == 0.f) d3 = KINDA_SMALL_NUMBER;
+			//float z = p1 / d1 + p2 / d2 + p3 / d3;
+			//if (z <= 0.f)
+			//{
+			//	continue;
+			//}
+
+			//Vector3 edge1 = (vertices[1] - vertices[0]).ToVector3();
+			//Vector3 edge2 = (vertices[2] - vertices[0]).ToVector3();
+			//if (edge1.Cross(edge2).Z > 0.f)
+			//{
+			//	return;
+			//}
+
+
 
 			bool tv0UnderW0 = false;
 			bool tv1UnderW0 = false;
@@ -201,278 +277,110 @@ void SoftRenderer::Render3D()
 
 			if (nCountUnderW0 == 0) // 그대로 그리기
 			{
-				std::vector<Vector4> newVertices;
-				newVertices.push_back(tv0.Position);
-				newVertices.push_back(tv1.Position);
-				newVertices.push_back(tv2.Position);
-				DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
+				std::vector<Vertex3D> newVertices;
+				newVertices.push_back(tv0);
+				newVertices.push_back(tv1);
+				newVertices.push_back(tv2);
+				DrawTriangle(newVertices, mainTexture);
 			}
 			else if (nCountUnderW0 == 1) // 클리핑하기
 			{
-				Vector4 underW0Pos;
-				Vector4 nonClippedPos1;
-				Vector4 nonClippedPos2;
+				Vertex3D underW0Pos;
+				Vertex3D nonClippedPos1;
+				Vertex3D nonClippedPos2;
 				if (tv0UnderW0) // edge0와 edge1를 클리핑하기
 				{
-					underW0Pos = tv0.Position;
-					nonClippedPos1 = tv1.Position;
-					nonClippedPos2 = tv2.Position;
+					underW0Pos = tv0;
+					nonClippedPos1 = tv1;
+					nonClippedPos2 = tv2;
 				}
 				else if (tv1UnderW0) // edge0와 edge2를 클리핑하기
 				{
-					underW0Pos = tv1.Position;
-					nonClippedPos1 = tv2.Position;
-					nonClippedPos2 = tv0.Position;
+					underW0Pos = tv1;
+					nonClippedPos1 = tv2;
+					nonClippedPos2 = tv0;
 				}
 				else if (tv2UnderW0) // edge1와 edge2를 클리핑하기
 				{
-					underW0Pos = tv2.Position;
-					nonClippedPos1 = tv0.Position;
-					nonClippedPos2 = tv1.Position;
+					underW0Pos = tv2;
+					nonClippedPos1 = tv0;
+					nonClippedPos2 = tv1;
 				}
 
 				// W=0까지 클리핑하기
-				float t1 = underW0Pos.W / (underW0Pos.W - nonClippedPos1.W);
-				float t2 = underW0Pos.W / (underW0Pos.W - nonClippedPos2.W);
-				Vector4 clippedPos1 = underW0Pos * (1.f - t1) + nonClippedPos1 * t1;
-				Vector4 clippedPos2 = underW0Pos * (1.f - t2) + nonClippedPos2 * t2;
+				float t1 = underW0Pos.Position.W / (underW0Pos.Position.W - nonClippedPos1.Position.W);
+				float t2 = underW0Pos.Position.W / (underW0Pos.Position.W - nonClippedPos2.Position.W);
+				Vertex3D clippedPos1 = underW0Pos * (1.f - t1) + nonClippedPos1 * t1;
+				Vertex3D clippedPos2 = underW0Pos * (1.f - t2) + nonClippedPos2 * t2;
 
 				// 근평면까지 클리핑하기
-				float p11 = clippedPos1.W + clippedPos1.Z;
-				float p12 = nonClippedPos1.W + nonClippedPos1.Z;
-				float p21 = clippedPos2.W + clippedPos2.Z;
-				float p22 = nonClippedPos2.W + nonClippedPos2.Z;
+				float p11 = clippedPos1.Position.W + clippedPos1.Position.Z;
+				float p12 = nonClippedPos1.Position.W + nonClippedPos1.Position.Z;
+				float p21 = clippedPos2.Position.W + clippedPos2.Position.Z;
+				float p22 = nonClippedPos2.Position.W + nonClippedPos2.Position.Z;
 				t1 = p11 / (p11 - p12);
 				t2 = p21 / (p21 - p22);
 				clippedPos1 = clippedPos1 * (1.f - t1) + nonClippedPos1 * t1;
 				clippedPos2 = clippedPos2 * (1.f - t2) + nonClippedPos2 * t2;
 
-				std::vector<Vector4> newVertices;
+				std::vector<Vertex3D> newVertices;
 				newVertices.push_back(nonClippedPos1);
 				newVertices.push_back(nonClippedPos2);
 				newVertices.push_back(clippedPos1);
-				DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
+				DrawTriangle(newVertices, mainTexture);
 
 				newVertices.clear();
 				newVertices.push_back(nonClippedPos2);
 				newVertices.push_back(clippedPos2);
 				newVertices.push_back(clippedPos1);
-				DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-
+				DrawTriangle(newVertices, mainTexture);
 			}
 			else if (nCountUnderW0 == 2) // 클리핑하기
 			{
-				Vector4 underW0Pos1;
-				Vector4 underW0Pos2;
-				Vector4 nonClippedPos;
+				Vertex3D underW0Pos1;
+				Vertex3D underW0Pos2;
+				Vertex3D nonClippedPos;
 				if (!tv0UnderW0) // edge0와 edge1를 클리핑하기
 				{
-					nonClippedPos = tv0.Position;
-					underW0Pos1 = tv1.Position;
-					underW0Pos2 = tv2.Position;
+					nonClippedPos = tv0;
+					underW0Pos1 = tv1;
+					underW0Pos2 = tv2;
 				}
 				else if (!tv1UnderW0) // edge0와 edge2를 클리핑하기
 				{
-					nonClippedPos = tv1.Position;
-					underW0Pos1 = tv2.Position;
-					underW0Pos2 = tv0.Position;
+					nonClippedPos = tv1;
+					underW0Pos1 = tv2;
+					underW0Pos2 = tv0;
 				}
-				else if (!tv2UnderW0) // edge1와 edge2를 클리핑하기
+				else if (!tv2UnderW0) // edge1과 edge2를 클리핑하기
 				{
-					nonClippedPos = tv2.Position;
-					underW0Pos1 = tv0.Position;
-					underW0Pos2 = tv1.Position;
+					nonClippedPos = tv2;
+					underW0Pos1 = tv0;
+					underW0Pos2 = tv1;
 				}
 
 				// W=0까지 클리핑하기
-				float t1 = underW0Pos1.W / (underW0Pos1.W - nonClippedPos.W);
-				float t2 = underW0Pos2.W / (underW0Pos2.W - nonClippedPos.W);
-				Vector4 clippedPos1 = underW0Pos1 * (1.f - t1) + nonClippedPos * t1;
-				Vector4 clippedPos2 = underW0Pos2 * (1.f - t2) + nonClippedPos * t2;
+				float t1 = underW0Pos1.Position.W / (underW0Pos1.Position.W - nonClippedPos.Position.W);
+				float t2 = underW0Pos2.Position.W / (underW0Pos2.Position.W - nonClippedPos.Position.W);
+				Vertex3D clippedPos1 = underW0Pos1 * (1.f - t1) + nonClippedPos * t1;
+				Vertex3D clippedPos2 = underW0Pos2 * (1.f - t2) + nonClippedPos * t2;
 
-				// 근평면까지 클리핑하기
-				float p11 = clippedPos1.W + clippedPos1.Z;
-				float p12 = nonClippedPos.W + nonClippedPos.Z;
-				float p21 = clippedPos2.W + clippedPos2.Z;
-				float p22 = nonClippedPos.W + nonClippedPos.Z;
+				// W=0에서 근평면까지 클리핑하기
+				float p11 = clippedPos1.Position.W + clippedPos1.Position.Z;
+				float p12 = nonClippedPos.Position.W + nonClippedPos.Position.Z;
+				float p21 = clippedPos2.Position.W + clippedPos2.Position.Z;
+				float p22 = nonClippedPos.Position.W + nonClippedPos.Position.Z;
 				t1 = p11 / (p11 - p12);
 				t2 = p21 / (p21 - p22);
 				clippedPos1 = clippedPos1 * (1.f - t1) + nonClippedPos * t1;
 				clippedPos2 = clippedPos2 * (1.f - t2) + nonClippedPos * t2;
 
-				std::vector<Vector4> newVertices;
+				std::vector<Vertex3D> newVertices;
 				newVertices.push_back(nonClippedPos);
 				newVertices.push_back(clippedPos1);
 				newVertices.push_back(clippedPos2);
-				DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
+				DrawTriangle(newVertices, mainTexture);
 			}
-
-			// 세 점 모두 근평면 뒤에 있을 때는 그릴 필요가 없음.
-			//if (tv0.Position.W <= n && tv1.Position.W <= n && tv2.Position.W <= n)
-			//{
-			//	continue;
-			//}
-
-			//bool isClippingRequired = true;
-			//// 세 점 모두 근평면 앞에 있을 때는 클리핑이 필요 없음.
-			//if (tv0.Position.W >= n && tv1.Position.W >= n && tv2.Position.W >= n)
-			//{
-			//	isClippingRequired = false;
-			//}
-
-			//bool isW0ClippingRequired = false;
-			//if (tv0.Position.W < 0.f || tv1.Position.W < 0.f || tv2.Position.W < 0.f)
-			//{
-			//	isW0ClippingRequired = true;
-			//}
-
-			//bool isTriangleSplitRequired = false;
-
-
-			//std::vector<Vector4> newVertices;
-			//newVertices.push_back(tv0.Position);
-			//newVertices.push_back(tv1.Position);
-			//newVertices.push_back(tv2.Position);
-			//DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-
-			//UINT16 nCount = 0;
-			//if ((tv0.Position.W < 0.f) && (tv1.Position.W >= 0.f) && (tv2.Position.W >= 0.f))
-			//{
-			//	nCount++;
-			//}
-			//else if ((tv0.Position.W >= 0.f) && (tv1.Position.W < 0.f) && (tv2.Position.W >= 0.f))
-			//{
-			//	nCount++;
-			//}
-			//else if ((tv0.Position.W >= 0.f) && (tv1.Position.W >= 0.f) && (tv2.Position.W < 0.f))
-			//{
-			//	nCount++;
-			//}
-
-
-			//// 세 라인에 대한 테스트 진행
-			//Vector4 clip1 = tv0.Position;
-			//Vector4 clip2 = tv1.Position;
-			//bool edge0Clipped = ClipLine(clip1, clip2);
-
-			//Vector4 clip3 = tv0.Position;
-			//Vector4 clip4 = tv2.Position;
-			//bool edge1Clipped = ClipLine(clip3, clip4);
-
-			//Vector4 clip5 = tv1.Position;
-			//Vector4 clip6 = tv2.Position;
-			//bool edge2Clipped = ClipLine(clip5, clip6);
-
-
-			//UINT16 insideCount = 0;
-			//bool tv0inside = false;
-			//bool tv1inside = false;
-			//bool tv2inside = false;
-			//UINT16 triangleCount = 0;
-			//if (clip1.EqualsInTolerance(tv0.Position) && clip3.EqualsInTolerance(tv0.Position))
-			//{
-			//	tv0inside = true;
-			//	insideCount++;
-			//}
-			//if (clip2.EqualsInTolerance(tv1.Position) && clip5.EqualsInTolerance(tv1.Position))
-			//{
-			//	tv1inside = true;
-			//	insideCount++;
-			//}
-			//if (clip4.EqualsInTolerance(tv2.Position) && clip6.EqualsInTolerance(tv2.Position))
-			//{
-			//	tv2inside = true;
-			//	insideCount++;
-			//}
-
-			//pMatrix = perspMat;
-			//if (insideCount == 3) // 세 개 모두 안쪽 ( 그리기 )
-			//{
-			//	triangleCount = 1;
-			//	std::vector<Vector4> newVertices;
-			//	newVertices.push_back(tv0.Position);
-			//	newVertices.push_back(tv1.Position);
-			//	newVertices.push_back(tv2.Position);
-			//	DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//}
-			//else if (insideCount == 2) // 삼각형 분리
-			//{
-			//	std::vector<Vector4> newVertices;
-			//	if (tv0inside)
-			//	{
-			//		if (tv1inside)
-			//		{
-			//			newVertices.push_back(tv0.Position);
-			//			newVertices.push_back(tv1.Position);
-			//			newVertices.push_back(clip4);
-			//			DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-
-			//			newVertices.clear();
-			//			newVertices.push_back(tv1.Position);
-			//			newVertices.push_back(clip6);
-			//			newVertices.push_back(clip4);
-			//			DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//		}
-			//		else
-			//		{
-			//			newVertices.push_back(tv0.Position);
-			//			newVertices.push_back(clip2);
-			//			newVertices.push_back(clip5);
-			//			DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-
-			//			newVertices.clear();
-			//			newVertices.push_back(tv0.Position);
-			//			newVertices.push_back(clip5);
-			//			newVertices.push_back(tv2.Position);
-			//			DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//		}
-			//	}
-			//	else
-			//	{
-			//		newVertices.push_back(tv2.Position);
-			//		newVertices.push_back(clip3);
-			//		newVertices.push_back(clip1);
-			//		DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-
-			//		newVertices.clear();
-			//		newVertices.push_back(tv1.Position);
-			//		newVertices.push_back(tv2.Position);
-			//		newVertices.push_back(clip1);
-			//		DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//	}
-
-			//	triangleCount = 2;
-			//}
-			//else if (insideCount == 1) // 자른 삼각형
-			//{
-			//	std::vector<Vector4> newVertices;
-			//	if (tv0inside)
-			//	{
-			//		newVertices.push_back(tv0.Position);
-			//		newVertices.push_back(clip2);
-			//		newVertices.push_back(clip4);
-			//		DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//	}
-			//	else if (tv1inside)
-			//	{
-			//		newVertices.push_back(clip1);
-			//		newVertices.push_back(tv1.Position);
-			//		newVertices.push_back(clip6);
-			//		DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//	}
-			//	else if (tv2inside)
-			//	{
-			//		newVertices.push_back(tv2.Position);
-			//		newVertices.push_back(clip3);
-			//		newVertices.push_back(clip5);
-			//		DrawTriangle(tv0, tv1, tv2, newVertices, false, _GameEngine3.GetMainTexture());
-			//	}
-			//	triangleCount = 1;
-			//}
-			//else // 건너뛰기
-			//{
-			//	triangleCount = 0;
-			//}
 		}
 
 		renderedObjects++;
@@ -483,36 +391,40 @@ void SoftRenderer::Render3D()
 	//_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 
-void SoftRenderer::DrawTriangle(Vertex3D tv0, Vertex3D tv1, Vertex3D tv2, std::vector<Vector4>& vertices, bool DrawTexture, const Texture& InTexture)
+void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& InTexture)
 {
 	for (auto& v : vertices)
 	{
-		float invW = 1.f / v.W;
-		v.X *= invW;
-		v.Y *= invW;
-		v.Z *= invW;
+		// 무한 원점인 경우, 약간 보정해준다.
+		if (v.Position.W == 0.f) v.Position.W = SMALL_NUMBER;
+
+		float invW = 1.f / v.Position.W;
+		v.Position.X *= invW;
+		v.Position.Y *= invW;
+		v.Position.Z *= invW;
 
 		// 화면 공간으로 확장
-		v.X *= (_ScreenSize.X * 0.5f);
-		v.Y *= (_ScreenSize.Y * 0.5f);
+		v.Position.X *= (_ScreenSize.X * 0.5f);
+		v.Position.Y *= (_ScreenSize.Y * 0.5f);
 	}
 
 	// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
-	//Vector3 edge1 = (vertices[1] - vertices[0]).ToVector3();
-	//Vector3 edge2 = (vertices[2] - vertices[0]).ToVector3();
-	//if (edge1.Cross(edge2).Z > 0.f)
-	//{
-	//	return;
-	//}
+	Vector3 edge1 = (vertices[1].Position - vertices[0].Position).ToVector3();
+	Vector3 edge2 = (vertices[2].Position - vertices[0].Position).ToVector3();
+	float z = edge1.Cross(edge2).Z;
+	if (z <= 0.f)
+	{
+		return;
+	}
 
 	// 삼각형 칠하기
 	// 삼각형의 영역 설정
-	Vector2 minPos(Math::Min3(vertices[0].X, vertices[1].X, vertices[2].X), Math::Min3(vertices[0].Y, vertices[1].Y, vertices[2].Y));
-	Vector2 maxPos(Math::Max3(vertices[0].X, vertices[1].X, vertices[2].X), Math::Max3(vertices[0].Y, vertices[1].Y, vertices[2].Y));
+	Vector2 minPos(Math::Min3(vertices[0].Position.X, vertices[1].Position.X, vertices[2].Position.X), Math::Min3(vertices[0].Position.Y, vertices[1].Position.Y, vertices[2].Position.Y));
+	Vector2 maxPos(Math::Max3(vertices[0].Position.X, vertices[1].Position.X, vertices[2].Position.X), Math::Max3(vertices[0].Position.Y, vertices[1].Position.Y, vertices[2].Position.Y));
 
 	// 무게중심좌표를 위해 점을 벡터로 변환
-	Vector2 u = vertices[1].ToVector2() - vertices[0].ToVector2();
-	Vector2 v = vertices[2].ToVector2() - vertices[0].ToVector2();
+	Vector2 u = vertices[1].Position.ToVector2() - vertices[0].Position.ToVector2();
+	Vector2 v = vertices[2].Position.ToVector2() - vertices[0].Position.ToVector2();
 
 	// 공통 분모 값 ( uu * vv - uv * uv )
 	float udotv = u.Dot(v);
@@ -545,7 +457,7 @@ void SoftRenderer::DrawTriangle(Vertex3D tv0, Vertex3D tv1, Vertex3D tv2, std::v
 		{
 			ScreenPoint fragment = ScreenPoint(x, y);
 			Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
-			Vector2 w = pointToTest - vertices[0].ToVector2();
+			Vector2 w = pointToTest - vertices[0].Position.ToVector2();
 			float wdotu = w.Dot(u);
 			float wdotv = w.Dot(v);
 
@@ -554,356 +466,55 @@ void SoftRenderer::DrawTriangle(Vertex3D tv0, Vertex3D tv1, Vertex3D tv2, std::v
 			float oneMinusST = 1.f - s - t;
 			if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 			{
-				_RSI->DrawPoint(fragment, LinearColor::DimGray);
-				//// 각 점마다 보존된 뷰 공간의 z값
-				//float invZ0 = 1.f / tv0.Position.W;
-				//float invZ1 = 1.f / tv1.Position.W;
-				//float invZ2 = 1.f / tv2.Position.W;
+				// 각 점마다 보존된 뷰 공간의 z값
+				float invZ0 = 1.f / vertices[0].Position.W;
+				float invZ1 = 1.f / vertices[1].Position.W;
+				float invZ2 = 1.f / vertices[2].Position.W;
 
-				//// 투영 보정보간에 사용할 공통 분모
-				//float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
-				//float invZ = 1.f / z;
+				// 투영 보정보간에 사용할 공통 분모
+				float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
+				float invZ = 1.f / z;
 
-				//// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
-				//float k = pMatrix[2][2];
-				//float l = pMatrix[3][2];
+				// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
+				float k = _PerspMatrix[2][2];
+				float l = _PerspMatrix[3][2];
+				float f = l / (k + 1.f);
+				float n = l / (k - 1.f);
+
 				//float newDepth = invZ * k + l;
-				////float newDepth = Math::Clamp(-perspMat[2][2] + perspMat[3][2] * z, 0.f, 1.f);
-				//float prevDepth = _RSI->GetDepthBufferValue(fragment);
-				//if (newDepth < prevDepth)
-				//{
-				//	_RSI->SetDepthBufferValue(fragment, newDepth);
-				//}
-				//else
-				//{
-				//	// 이미 앞에 무언가 그려져있으므로 픽셀그리기는 생략
-				//	continue;
-				//}
+				//float newDepth = (invZ - n) / (f - n);
+				float newDepth = (vertices[0].Position.Z * oneMinusST * invZ0 + vertices[1].Position.Z * s * invZ1 + vertices[2].Position.Z * t * invZ2) * invZ;
+				float prevDepth = _RSI->GetDepthBufferValue(fragment);
+				if (newDepth < prevDepth)
+				{
+					_RSI->SetDepthBufferValue(fragment, newDepth);
+				}
+				else
+				{
+					// 이미 앞에 무언가 그려져있으므로 픽셀그리기는 생략
+					continue;
+				}
 
-				//if (_ShowDepthBuffer)
-				//{
-				//	// 시각화를 위해 선형화된 흑백 값
-				//	// f = l / (k+1)
-				//	// n = l / (k-1)
-				//	float f = l / (k + 1.f);
-				//	float n = l / (k - 1.f);
-				//	float grayScale = (invZ - n) / (f - n);
+				if (_ShowDepthBuffer)
+				{
+					// 시각화를 위해 선형화된 흑백 값
+					// f = l / (k+1)
+					// n = l / (k-1)
+					float grayScale = (invZ - n) / (f - n);
 
-				//	// 뎁스 버퍼 그리기
-				//	_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
-				//}
-				//else
-				//{
-				//	if (DrawTexture)
-				//	{
-				//		// 투영보정보간으로 보간한 해당 픽셀의 UV 값
-				//		Vector2 targetUV = (tv0.UV * oneMinusST * invZ0 + tv1.UV * s * invZ1 + tv2.UV * t * invZ2) * invZ;
+					// 뎁스 버퍼 그리기
+					_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
+				}
+				else
+				{
+					// 투영보정보간으로 보간한 해당 픽셀의 UV 값
+					Vector2 targetUV = (vertices[0].UV * oneMinusST * invZ0 + vertices[1].UV * s * invZ1 + vertices[2].UV * t * invZ2) * invZ;
 
-				//		// 텍스쳐 매핑 진행
-				//		_RSI->DrawPoint(fragment, FragmentShader3D(InTexture.GetSample(targetUV)));
-				//	}
-				//	else
-				//	{
-				//		_RSI->DrawPoint(fragment, LinearColor::Blue);
-				//	}
-				//}
+					// 텍스쳐 매핑 진행
+					_RSI->DrawPoint(fragment, FragmentShader3D(InTexture.GetSample(targetUV)));
+				}
 			}
 		}
 	}
-}
-
-bool SoftRenderer::ClipLine(CK::Vector4& clip1, CK::Vector4& clip2)
-{
-	UINT16 outCount = 0;
-	UINT16 clipCount = 0;
-
-	// w = 0의 평면에 대응하는 선의 방정식
-	if (clip1.W == clip2.W) // 투영 평면에 평행한 경우. 
-	{
-		if (clip1.W < 0)
-		{
-			// 바깥에 있음.
-			outCount++;
-			return false;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = clip1.W / (clip1.W - clip2.W);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.W < 0.f)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-
-			clipCount++;
-		}
-		else if ((t < 0.f && clip1.W < 0) || (t > 1.f && clip2.W < 0)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	// w = y에 대응하는 상단 평면
-	float d1 = clip1.W - clip1.Y;
-	float d2 = clip2.W - clip2.Y;
-	if (d1 == d2) // 상단 평면에 평행한 경우
-	{
-		if (clip1.Y > clip1.W)
-		{
-			// 바깥에 있음.
-			outCount++;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = d1 / (d1 - d2);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.Y > clip1.W)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-			clipCount++;
-		}
-		else if ((t < 0.f && clip1.Y > clip1.W) || (t > 1.f && clip2.Y > clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	// w = -y에 대응하는 하단 평면
-	d1 = clip1.W + clip1.Y;
-	d2 = clip2.W + clip2.Y;
-	if (d1 == d2) // 상단 평면에 평행한 경우
-	{
-		if (clip1.Y < clip1.W)
-		{
-			// 바깥에 있음.
-			outCount++;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = d1 / (d1 - d2);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.Y < clip1.W)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-			clipCount++;
-		}
-		else if ((t < 0.f && clip1.Y < -clip1.W) || (t > 1.f && clip2.Y < -clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	// w = x에 대응하는 우측 평면
-	d1 = clip1.W - clip1.X;
-	d2 = clip2.W - clip2.X;
-	if (d1 == d2) // 평면에 평행한 경우
-	{
-		if (clip1.X > clip1.W)
-		{
-			// 바깥에 있음.
-			outCount++;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = d1 / (d1 - d2);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.X > clip1.W)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-			clipCount++;
-		}
-		else if ((t < 0.f && clip1.X > clip1.W) || (t > 1.f && clip2.X > clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	// w = -x에 대응하는 하단 평면
-	d1 = clip1.W + clip1.X;
-	d2 = clip2.W + clip2.X;
-	if (d1 == d2) // 상단 평면에 평행한 경우
-	{
-		if (clip1.X < clip1.W)
-		{
-			// 바깥에 있음.
-			outCount++;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = d1 / (d1 - d2);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.X < clip1.W)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-			clipCount++;
-		}
-		else if ((t < 0.f && (clip1.X + clip1.W) < 0.f) || (t > 1.f && (clip2.X + clip2.W) < 0.f)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	// w = -z 에 해당하는 평면
-	d1 = clip1.W - clip1.Z;
-	d2 = clip2.W - clip2.Z;
-	if (d1 == d2) // 평면에 평행한 경우
-	{
-		if (clip1.Z < clip1.W)
-		{
-			// 바깥에 있음.
-			outCount++;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = d1 / (d1 - d2);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.Z < clip1.W)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-			clipCount++;
-		}
-		else if ((t < 0.f && clip1.Z < -clip1.W) || (t > 1.f && clip2.X < -clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	// w = z에 대응하는 평면
-	d1 = clip1.W + clip1.Z;
-	d2 = clip2.W + clip2.Z;
-	if (d1 == d2) // 상단 평면에 평행한 경우
-	{
-		if (clip1.Z > clip1.W)
-		{
-			// 바깥에 있음.
-			outCount++;
-		}
-		else
-		{
-			// 안쪽에 있음.
-		}
-	}
-	else
-	{
-		float t = d1 / (d1 - d2);
-		if (t > 0.f && t < 1.f) // 하나만 밖에 있음 클리핑이 필요함.
-		{
-			Vector4 clippedPos = clip1 * (1.f - t) + clip2 * t;
-			if (clip1.Z > clip1.W)
-			{
-				clip1 = clippedPos;
-			}
-			else
-			{
-				clip2 = clippedPos;
-			}
-			clipCount++;
-		}
-		else if ((t < 0.f && clip1.Z > clip1.W) || (t > 1.f && clip2.Z > clip2.W)) // 두 점 모두 바깥에 있음. 클리핑 필요 없음.
-		{
-			outCount++;
-		}
-		else // 두 점 모두 안쪽에 있음. 클리핑 필요 없음.
-		{
-
-		}
-	}
-
-	return clipCount > 0 ? true : false;
 }
 
