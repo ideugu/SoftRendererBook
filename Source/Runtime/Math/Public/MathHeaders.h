@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <iterator>
 
 #include "MathUtil.h"

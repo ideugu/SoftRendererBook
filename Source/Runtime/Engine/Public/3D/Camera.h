@@ -38,7 +38,7 @@ public:
 private:
 	Transform _Transform;
 
-	float _FOV = 60.f;
+	float _FOV = 90.f;
 	float _NearZ = 5.5f;
 	float _FarZ = 1500.f;
 	ScreenPoint _ViewportSize;

@@ -179,7 +179,7 @@ void WindowsGDI::ClearDepthBuffer()
 	if (_DepthBuffer != nullptr)
 	{
 		float* dest = _DepthBuffer;
-		static float defValue = 1.01f;
+		static float defValue = INFINITY;
 		UINT32 totalCount = _ScreenSize.X * _ScreenSize.Y;
 		CopyBuffer<float>(_DepthBuffer, &defValue, totalCount);
 	}

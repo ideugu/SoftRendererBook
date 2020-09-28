@@ -55,8 +55,9 @@ private:
 	void Update3D(float InDeltaSeconds);
 	void Render3D();
 
-	void DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& InTexture);
-	Matrix4x4 _PerspMatrix;
+	void DrawTriangle(std::vector<Vertex3D>& vertices);
+	float _Near;
+	float _Far;
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);

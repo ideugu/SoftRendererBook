@@ -1,6 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
+#include <algorithm>
 using namespace CK::DDD;
 
 struct Vertex3D
@@ -36,6 +37,189 @@ public:
 
 namespace CK::DDD
 {
+	struct PerspectiveTest
+	{
+		std::function<bool(const Vertex3D& v)> testFn1;
+		std::function<Vertex3D(const Vertex3D& vStart, const Vertex3D& vEnd)> testFn2;
+		std::array<bool, 3> test1Result;
+
+		void clipTriangles(std::vector<Vertex3D>& tvs)
+		{
+			size_t nTriangles = tvs.size() / 3;
+			for (size_t ti = 0; ti < nTriangles; ++ti)
+			{
+				size_t si = ti * 3;
+				size_t testNotPassedCount = 0;
+
+				std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);
+				// 테스트에 실패한 점 정보 얻기
+				for (size_t ix = 0; ix < 3; ++ix)
+				{
+					bool testResult = testFn1(sub[ix]);
+					test1Result[ix] = testResult;
+					if (testResult) testNotPassedCount++;
+				}
+
+				getNewVertices(sub, testNotPassedCount);
+
+				if (testNotPassedCount == 0)
+				{
+					continue;
+				}
+				else if (testNotPassedCount == 1)  // 삼각형 추가
+				{
+					tvs[si] = sub[0];
+					tvs[si + 1] = sub[1];
+					tvs[si + 2] = sub[2];
+					tvs.push_back(sub[3]);
+					tvs.push_back(sub[4]);
+					tvs.push_back(sub[5]);
+				}
+				else if (testNotPassedCount == 2) // 삼각형 정보 변경
+				{
+					tvs[si] = sub[0];
+					tvs[si + 1] = sub[1];
+					tvs[si + 2] = sub[2];
+				}
+				else // 삼각형을 목록에서 제거
+				{
+					tvs.erase(tvs.begin() + si, tvs.begin() + si + 3);
+					nTriangles--;
+					ti--;
+				}
+			}
+		}
+
+		// 패스하면 false, 사용할거면 true
+		bool getNewVertices(std::vector<Vertex3D>& vertices, size_t testNotPassedCount)
+		{
+			if (testNotPassedCount == 0) // 그대로 통과
+			{
+				return true;
+			}
+			else if (testNotPassedCount == 1)
+			{
+				// Edge를 만든 후 클리핑 진행. 점이 두 개가 추가되고 삼각형이 2개로 쪼개짐
+				UINT16 index = 0; // 테스트에 걸린 점의 인덱스
+				if (!test1Result[0])
+				{
+					index = test1Result[1] ? 1 : 2;
+				}
+				Vertex3D v1 = vertices[(index + 1) % 3];
+				Vertex3D v2 = vertices[(index + 2) % 3];
+				Vertex3D clipped1 = testFn2(vertices[index], v1);
+				Vertex3D clipped2 = testFn2(vertices[index], v2);
+				vertices[0] = clipped1;
+				vertices[1] = v1;
+				vertices[2] = v2;
+				vertices.push_back(clipped1);
+				vertices.push_back(v2);
+				vertices.push_back(clipped2);
+				return true;
+			}
+			else if (testNotPassedCount == 2)
+			{
+				// Edge를 만든 후 클리핑 진행. 점이 두 개가 변경되고 삼각형은 그대로.
+				UINT16 index = 0;  // 테스트에 걸리지 않은 점의 인덱스
+				if (test1Result[0])
+				{
+					index = !test1Result[1] ? 1 : 2;
+				}
+
+				Vertex3D v1 = vertices[(index + 1) % 3];
+				Vertex3D v2 = vertices[(index + 2) % 3];
+				Vertex3D clipped1 = testFn2(vertices[index], v1);
+				Vertex3D clipped2 = testFn2(vertices[index], v2);
+				vertices[0] = vertices[index];
+				vertices[1] = clipped1;
+				vertices[2] = clipped2;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	};
+
+	auto testW0 = [](const Vertex3D& v) {
+		return v.Position.W < 0.f;
+	};
+
+	auto edgeW0 = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W;
+		float p2 = vEnd.Position.W;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+	auto testNY = [](const Vertex3D& v) {
+		return v.Position.Y < -v.Position.W;
+	};
+
+	auto edgeNY = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W + vStart.Position.Y;
+		float p2 = vEnd.Position.W + vEnd.Position.Y;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+	auto testPY = [](const Vertex3D& v) {
+		return v.Position.Y > v.Position.W;
+	};
+
+	auto edgePY = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W - vStart.Position.Y;
+		float p2 = vEnd.Position.W - vEnd.Position.Y;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+	auto testNX = [](const Vertex3D& v) {
+		return v.Position.X < -v.Position.W;
+	};
+
+	auto edgeNX = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W + vStart.Position.X;
+		float p2 = vEnd.Position.W + vEnd.Position.X;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+	auto testPX = [](const Vertex3D& v) {
+		return v.Position.X > v.Position.W;
+	};
+
+	auto edgePX = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W - vStart.Position.X;
+		float p2 = vEnd.Position.W - vEnd.Position.X;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+	auto testF = [](const Vertex3D& v) {
+		return v.Position.Z > v.Position.W;
+	};
+
+	auto edgeF = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W - vStart.Position.Z;
+		float p2 = vEnd.Position.W - vEnd.Position.Z;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+	auto testN = [](const Vertex3D& v) {
+		return v.Position.Z < -v.Position.W;
+	};
+
+	auto edgeN = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
+		float p1 = vStart.Position.W + vStart.Position.Z;
+		float p2 = vEnd.Position.W + vEnd.Position.Z;
+		float t = p1 / (p1 - p2);
+		return vStart * (1.f - t) + vEnd * t;
+	};
+
+
 	// 정점 변환 코드
 	FORCEINLINE void VertexShader3D(std::vector<Vertex3D>& InVertices, Matrix4x4 InMatrix)
 	{
@@ -115,7 +299,6 @@ void SoftRenderer::Render3D()
 	const Camera& mainCamera = _GameEngine3.GetMainCamera();
 	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
 	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
-	_PerspMatrix = perspMat;
 	Matrix4x4 pvMat = perspMat * viewMat;
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
 	float nearZ = mainCamera.GetNearZ();
@@ -189,197 +372,31 @@ void SoftRenderer::Render3D()
 		for (int ti = 0; ti < triangleCount; ++ti)
 		{
 			int bi0 = ti * 3, bi1 = ti * 3 + 1, bi2 = ti * 3 + 2;
-			Vertex3D& tv0 = vertices[indice[bi0]];
-			Vertex3D& tv1 = vertices[indice[bi1]];
-			Vertex3D& tv2 = vertices[indice[bi2]];
+			std::vector<Vertex3D> tvs = { vertices[indice[bi0]] , vertices[indice[bi1]] , vertices[indice[bi2]] };
 
-			//float k = perspMat[2][2];
-			//float l = perspMat[3][2];
-			//float f = l / (k + 1.f);
-			//float n = l / (k - 1.f);
+			// 동차좌표계에서 클리핑을 위한 설정
+			std::vector<PerspectiveTest> testVectors = {
+				{ testW0, edgeW0 },
+				{ testNY, edgeNY },
+				{ testPY, edgePY },
+				{ testNX, edgeNX },
+				{ testPX, edgePX },
+				{ testF, edgeF },
+				{ testN, edgeN }
+			};
 
-			//Vector4 v0 = tv0.Position;
-			//Vector4 v1 = tv1.Position;
-			//Vector4 v2 = tv2.Position;
-
-			//if (v0.W == 0.f) v0.W = KINDA_SMALL_NUMBER;
-			//if (v1.W == 0.f) v1.W = KINDA_SMALL_NUMBER;
-			//if (v2.W == 0.f) v2.W = KINDA_SMALL_NUMBER;
-
-			//v0 /= v0.W;
-			//v1 /= v1.W;
-			//v2 /= v2.W;
-
-			//v0.X *= (_ScreenSize.X * 0.5f);
-			//v0.Y *= (_ScreenSize.Y * 0.5f);
-			//v1.X *= (_ScreenSize.X * 0.5f);
-			//v1.Y *= (_ScreenSize.Y * 0.5f);
-			//v2.X *= (_ScreenSize.X * 0.5f);
-			//v2.Y *= (_ScreenSize.Y * 0.5f);
-
-			//Vector3 edge1 = (v1 - v0).ToVector3();
-			//Vector3 edge2 = (v2 - v0).ToVector3();
-			//Vector3 cross = edge1.Cross(edge2);
-
-
-			//Matrix4x4 invPMat(Vector4::UnitX * invPx, Vector4::UnitY * invPy, Vector4::UnitW * invL, Vector4(0.f, 0.f, -1.f, k * invL));
-			//
-
-			// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
-			// (x2y3-x3y2)/w2w3 + (x1y2-x2y1)/w1w2 + (x3y1-x1y3)/w1w3
-
-
-
-
-			//float p1 = (tv1.Position.X * tv2.Position.Y - tv1.Position.Y * tv2.Position.X);
-			//float p2 = (tv0.Position.X * tv1.Position.Y - tv0.Position.Y * tv1.Position.X);
-			//float p3 = (tv2.Position.X * tv0.Position.Y - tv2.Position.Y * tv0.Position.X);
-			//float d1 = tv1.Position.W * tv2.Position.W;
-			//float d2 = tv0.Position.W * tv1.Position.W;
-			//float d3 = tv0.Position.W * tv2.Position.W;
-			//if (d1 == 0.f) d1 = KINDA_SMALL_NUMBER;
-			//if (d2 == 0.f) d2 = KINDA_SMALL_NUMBER;
-			//if (d3 == 0.f) d3 = KINDA_SMALL_NUMBER;
-			//float z = p1 / d1 + p2 / d2 + p3 / d3;
-			//if (z <= 0.f)
-			//{
-			//	continue;
-			//}
-
-			//Vector3 edge1 = (vertices[1] - vertices[0]).ToVector3();
-			//Vector3 edge2 = (vertices[2] - vertices[0]).ToVector3();
-			//if (edge1.Cross(edge2).Z > 0.f)
-			//{
-			//	return;
-			//}
-
-
-
-			bool tv0UnderW0 = false;
-			bool tv1UnderW0 = false;
-			bool tv2UnderW0 = false;
-			UINT16 nCountUnderW0 = 0;
-			if (tv0.Position.W < 0.f)
+			// 동차좌표계에서 클리핑 진행
+			for (auto& p : testVectors)
 			{
-				nCountUnderW0++;
-				tv0UnderW0 = true;
-			}
-			if (tv1.Position.W < 0.f)
-			{
-				nCountUnderW0++;
-				tv1UnderW0 = true;
-			}
-			if (tv2.Position.W < 0.f)
-			{
-				nCountUnderW0++;
-				tv2UnderW0 = true;
+				p.clipTriangles(tvs);
 			}
 
-			if (nCountUnderW0 == 0) // 그대로 그리기
+			size_t nTriangles = tvs.size() / 3;
+			for (size_t ti = 0; ti < nTriangles; ++ti)
 			{
-				std::vector<Vertex3D> newVertices;
-				newVertices.push_back(tv0);
-				newVertices.push_back(tv1);
-				newVertices.push_back(tv2);
-				DrawTriangle(newVertices, mainTexture);
-			}
-			else if (nCountUnderW0 == 1) // 클리핑하기
-			{
-				Vertex3D underW0Pos;
-				Vertex3D nonClippedPos1;
-				Vertex3D nonClippedPos2;
-				if (tv0UnderW0) // edge0와 edge1를 클리핑하기
-				{
-					underW0Pos = tv0;
-					nonClippedPos1 = tv1;
-					nonClippedPos2 = tv2;
-				}
-				else if (tv1UnderW0) // edge0와 edge2를 클리핑하기
-				{
-					underW0Pos = tv1;
-					nonClippedPos1 = tv2;
-					nonClippedPos2 = tv0;
-				}
-				else if (tv2UnderW0) // edge1와 edge2를 클리핑하기
-				{
-					underW0Pos = tv2;
-					nonClippedPos1 = tv0;
-					nonClippedPos2 = tv1;
-				}
-
-				// W=0까지 클리핑하기
-				float t1 = underW0Pos.Position.W / (underW0Pos.Position.W - nonClippedPos1.Position.W);
-				float t2 = underW0Pos.Position.W / (underW0Pos.Position.W - nonClippedPos2.Position.W);
-				Vertex3D clippedPos1 = underW0Pos * (1.f - t1) + nonClippedPos1 * t1;
-				Vertex3D clippedPos2 = underW0Pos * (1.f - t2) + nonClippedPos2 * t2;
-
-				// 근평면까지 클리핑하기
-				float p11 = clippedPos1.Position.W + clippedPos1.Position.Z;
-				float p12 = nonClippedPos1.Position.W + nonClippedPos1.Position.Z;
-				float p21 = clippedPos2.Position.W + clippedPos2.Position.Z;
-				float p22 = nonClippedPos2.Position.W + nonClippedPos2.Position.Z;
-				t1 = p11 / (p11 - p12);
-				t2 = p21 / (p21 - p22);
-				clippedPos1 = clippedPos1 * (1.f - t1) + nonClippedPos1 * t1;
-				clippedPos2 = clippedPos2 * (1.f - t2) + nonClippedPos2 * t2;
-
-				std::vector<Vertex3D> newVertices;
-				newVertices.push_back(nonClippedPos1);
-				newVertices.push_back(nonClippedPos2);
-				newVertices.push_back(clippedPos1);
-				DrawTriangle(newVertices, mainTexture);
-
-				newVertices.clear();
-				newVertices.push_back(nonClippedPos2);
-				newVertices.push_back(clippedPos2);
-				newVertices.push_back(clippedPos1);
-				DrawTriangle(newVertices, mainTexture);
-			}
-			else if (nCountUnderW0 == 2) // 클리핑하기
-			{
-				Vertex3D underW0Pos1;
-				Vertex3D underW0Pos2;
-				Vertex3D nonClippedPos;
-				if (!tv0UnderW0) // edge0와 edge1를 클리핑하기
-				{
-					nonClippedPos = tv0;
-					underW0Pos1 = tv1;
-					underW0Pos2 = tv2;
-				}
-				else if (!tv1UnderW0) // edge0와 edge2를 클리핑하기
-				{
-					nonClippedPos = tv1;
-					underW0Pos1 = tv2;
-					underW0Pos2 = tv0;
-				}
-				else if (!tv2UnderW0) // edge1과 edge2를 클리핑하기
-				{
-					nonClippedPos = tv2;
-					underW0Pos1 = tv0;
-					underW0Pos2 = tv1;
-				}
-
-				// W=0까지 클리핑하기
-				float t1 = underW0Pos1.Position.W / (underW0Pos1.Position.W - nonClippedPos.Position.W);
-				float t2 = underW0Pos2.Position.W / (underW0Pos2.Position.W - nonClippedPos.Position.W);
-				Vertex3D clippedPos1 = underW0Pos1 * (1.f - t1) + nonClippedPos * t1;
-				Vertex3D clippedPos2 = underW0Pos2 * (1.f - t2) + nonClippedPos * t2;
-
-				// W=0에서 근평면까지 클리핑하기
-				float p11 = clippedPos1.Position.W + clippedPos1.Position.Z;
-				float p12 = nonClippedPos.Position.W + nonClippedPos.Position.Z;
-				float p21 = clippedPos2.Position.W + clippedPos2.Position.Z;
-				float p22 = nonClippedPos.Position.W + nonClippedPos.Position.Z;
-				t1 = p11 / (p11 - p12);
-				t2 = p21 / (p21 - p22);
-				clippedPos1 = clippedPos1 * (1.f - t1) + nonClippedPos * t1;
-				clippedPos2 = clippedPos2 * (1.f - t2) + nonClippedPos * t2;
-
-				std::vector<Vertex3D> newVertices;
-				newVertices.push_back(nonClippedPos);
-				newVertices.push_back(clippedPos1);
-				newVertices.push_back(clippedPos2);
-				DrawTriangle(newVertices, mainTexture);
+				size_t si = ti * 3;
+				std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);
+				DrawTriangle(sub);
 			}
 		}
 
@@ -391,7 +408,7 @@ void SoftRenderer::Render3D()
 	//_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 
-void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& InTexture)
+void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)
 {
 	for (auto& v : vertices)
 	{
@@ -402,10 +419,6 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& 
 		v.Position.X *= invW;
 		v.Position.Y *= invW;
 		v.Position.Z *= invW;
-
-		// 화면 공간으로 확장
-		v.Position.X *= (_ScreenSize.X * 0.5f);
-		v.Position.Y *= (_ScreenSize.Y * 0.5f);
 	}
 
 	// 백페이스 컬링 ( 뒷면이면 그리기 생략 )
@@ -432,15 +445,20 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& 
 	float udotu = u.Dot(u);
 	float denominator = udotv * udotv - vdotv * udotu;
 
-	// 퇴화 삼각형의 판정
-	if (Math::EqualsInTolerance(denominator, 0.0f))
+	if (denominator == 0.f)
 	{
 		// 퇴화 삼각형이면 건너뜀.
 		return;
 	}
+
 	float invDenominator = 1.f / denominator;
 
 	// 화면상의 점 구하기
+	minPos.X *= _ScreenSize.X * 0.5f;
+	minPos.Y *= _ScreenSize.Y * 0.5f;
+	maxPos.X *= _ScreenSize.X * 0.5f;
+	maxPos.Y *= _ScreenSize.Y * 0.5f;
+
 	ScreenPoint lowerLeftPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, minPos);
 	ScreenPoint upperRightPoint = ScreenPoint::ToScreenCoordinate(_ScreenSize, maxPos);
 
@@ -457,6 +475,8 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& 
 		{
 			ScreenPoint fragment = ScreenPoint(x, y);
 			Vector2 pointToTest = fragment.ToCartesianCoordinate(_ScreenSize);
+			pointToTest.X *= (2.f / _ScreenSize.X);
+			pointToTest.Y *= (2.f / _ScreenSize.Y);
 			Vector2 w = pointToTest - vertices[0].Position.ToVector2();
 			float wdotu = w.Dot(u);
 			float wdotv = w.Dot(v);
@@ -475,13 +495,8 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& 
 				float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
 				float invZ = 1.f / z;
 
-				// 뎁스 계산에 사용할 값 ( 열기반행렬이므로 열->행의 순으로 배열이 진행 )
-				float k = _PerspMatrix[2][2];
-				float l = _PerspMatrix[3][2];
-				float f = l / (k + 1.f);
-				float n = l / (k - 1.f);
-
-				//float newDepth = invZ * k + l;
+				float n = _GameEngine3.GetMainCamera().GetNearZ();
+				float f = _GameEngine3.GetMainCamera().GetFarZ();
 				//float newDepth = (invZ - n) / (f - n);
 				float newDepth = (vertices[0].Position.Z * oneMinusST * invZ0 + vertices[1].Position.Z * s * invZ1 + vertices[2].Position.Z * t * invZ2) * invZ;
 				float prevDepth = _RSI->GetDepthBufferValue(fragment);
@@ -498,8 +513,6 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& 
 				if (_ShowDepthBuffer)
 				{
 					// 시각화를 위해 선형화된 흑백 값
-					// f = l / (k+1)
-					// n = l / (k-1)
 					float grayScale = (invZ - n) / (f - n);
 
 					// 뎁스 버퍼 그리기
@@ -511,7 +524,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const Texture& 
 					Vector2 targetUV = (vertices[0].UV * oneMinusST * invZ0 + vertices[1].UV * s * invZ1 + vertices[2].UV * t * invZ2) * invZ;
 
 					// 텍스쳐 매핑 진행
-					_RSI->DrawPoint(fragment, FragmentShader3D(InTexture.GetSample(targetUV)));
+					_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
 				}
 			}
 		}

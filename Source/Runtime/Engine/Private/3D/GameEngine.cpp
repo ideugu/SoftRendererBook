@@ -173,17 +173,19 @@ bool GameEngine::LoadScene()
 	InsertGameObject(std::move(player));
 
 	// 평면 설정
-	static float planeScale = 300.f;
+	static float planeScale = 800.f;
 	GameObject plane(GameEngine::PlaneKey);
 	plane.SetMesh(GameEngine::PlaneMeshKey);
 	plane.GetTransform().SetScale(Vector3::One * planeScale);
-	plane.GetTransform().SetPosition(Vector3(0.f, 100.f, 0.f));
+	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, -700.f));
+	plane.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
 	plane.SetColor(LinearColor::LightGray);
 	InsertGameObject(std::move(plane));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));  // 뒤집혀 보이는 삼각형
-	//_MainCamera.GetTransform().SetPosition(Vector3(0.f, 100.f, -900.f));  // 정상 삼각형
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));
+	_MainCamera.SetLookAtRotation(Vector3(0.f, 300.f, 0.f));
+	_MainCamera.SetFarZ(3000.f);
 
 	return true;
 }
