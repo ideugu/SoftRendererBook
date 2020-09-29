@@ -25,7 +25,7 @@ bool GameEngine::Init()
 		return false;
 	}
 
-	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed)
+	if (!_InputManager.IsInputSystemReady())
 	{
 		return false;
 	}

@@ -99,19 +99,17 @@ namespace WindowsUtil
 		return 0.f;
 	}
 
-	#define ISPRESSED(KeyCode) (::GetKeyState(KeyCode) & 0x8000) != 0
-
-	bool SpacePressedInput()
-	{
-		return ISPRESSED(VK_SPACE);
-	}
+	#define ISPRESSED(KeyCode) return (::GetKeyState(KeyCode) & 0x8000) != 0
 
 	void BindInput(InputManager& InInputManager)
 	{
-		InInputManager.GetXAxis = WindowsUtil::GetXAxisInput;
-		InInputManager.GetYAxis = WindowsUtil::GetYAxisInput;
-		InInputManager.GetZAxis = WindowsUtil::GetZAxisInput;
-		InInputManager.GetWAxis = WindowsUtil::GetWAxisInput;
-		InInputManager.SpacePressed = WindowsUtil::SpacePressedInput;
+		InInputManager.SetInputAxis(InputAxis::XAxis, GetXAxisInput);
+		InInputManager.SetInputAxis(InputAxis::YAxis, GetYAxisInput);
+		InInputManager.SetInputAxis(InputAxis::ZAxis, GetZAxisInput);
+		InInputManager.SetInputAxis(InputAxis::WAxis, GetWAxisInput);
+		InInputManager.SetInputButton(InputButton::Space, []() { ISPRESSED(VK_SPACE); });
+		InInputManager.SetInputButton(InputButton::F1, []() { ISPRESSED(VK_F1); });
+		InInputManager.SetInputButton(InputButton::F2, []() { ISPRESSED(VK_F2); });
+		InInputManager.SetInputButton(InputButton::F3, []() { ISPRESSED(VK_F3); });
 	}
 }

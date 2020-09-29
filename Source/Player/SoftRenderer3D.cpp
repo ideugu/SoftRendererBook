@@ -270,24 +270,27 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	static float moveSpeed = 500.f;
 	static float fovSpeed = 100.f;
 
-	InputManager input = _GameEngine3.GetInputManager();
+	InputManager& input = _GameEngine3.GetInputManager();
 
 	// 플레이어 게임 오브젝트 트랜스폼의 변경
 	GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector3(input.GetXAxis(), input.GetWAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
+		playerTransform.AddPosition(Vector3(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::WAxis), input.GetAxis(InputAxis::YAxis)) * moveSpeed * InDeltaSeconds);
 		_GameEngine3.GetMainCamera().SetLookAtRotation(player.GetTransform().GetPosition());
 	}
 
 	// 카메라 FOV 조절
 	Camera& camera = _GameEngine3.GetMainCamera();
-	float newFOV = Math::Clamp(camera.GetFOV() + input.GetZAxis() * fovSpeed * InDeltaSeconds, 5.f, 179.f);
+	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
 
 	// 버퍼 시각화 토글
-	if (input.SpacePressed()) { _ShowDepthBuffer = !_ShowDepthBuffer; }
+
+	if (input.IsReleased(InputButton::F1)) { _CurrentShowMode = ShowMode::Normal; }
+	if (input.IsReleased(InputButton::F2)) { _CurrentShowMode = ShowMode::Wireframe; }
+	if (input.IsReleased(InputButton::F3)) { _CurrentShowMode = ShowMode::DepthBuffer; }
 }
 
 // 렌더링 로직
@@ -430,6 +433,20 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)
 		return;
 	}
 
+	if (_CurrentShowMode == ShowMode::Wireframe)
+	{
+		for (auto& v : vertices)
+		{
+			v.Position.X *= _ScreenSize.X * 0.5f;
+			v.Position.Y *= _ScreenSize.Y * 0.5f;
+		}
+
+		_RSI->DrawLine(vertices[0].Position, vertices[1].Position, LinearColor::DimGray);
+		_RSI->DrawLine(vertices[0].Position, vertices[2].Position, LinearColor::DimGray);
+		_RSI->DrawLine(vertices[1].Position, vertices[2].Position, LinearColor::DimGray);
+		return;
+	}
+
 	// 삼각형 칠하기
 	// 삼각형의 영역 설정
 	Vector2 minPos(Math::Min3(vertices[0].Position.X, vertices[1].Position.X, vertices[2].Position.X), Math::Min3(vertices[0].Position.Y, vertices[1].Position.Y, vertices[2].Position.Y));
@@ -510,7 +527,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)
 					continue;
 				}
 
-				if (_ShowDepthBuffer)
+				if (_CurrentShowMode == ShowMode::DepthBuffer)
 				{
 					// 시각화를 위해 선형화된 흑백 값
 					float grayScale = (invZ - n) / (f - n);
