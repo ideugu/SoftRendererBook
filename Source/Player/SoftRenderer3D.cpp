@@ -314,12 +314,36 @@ void SoftRenderer::Render3D()
 	// 절두체 컬링을 위한 준비 작업. 행 벡터를 쉽게 구할 수 있게 전치시켜 둔다.
 	Matrix4x4 perspMatT = perspMat.Tranpose();
 	std::vector<Vector4> frustumVectors = {
-		perspMatT[3] + perspMatT[0],
-		perspMatT[3] - perspMatT[0],
-		perspMatT[3] + perspMatT[1],
-		perspMatT[3] - perspMatT[1],
-		perspMatT[3] + perspMatT[2],
-		perspMatT[3] + perspMatT[2]
+		perspMatT[3] + perspMatT[0], // left 
+		perspMatT[3] - perspMatT[0], // right
+		perspMatT[3] + perspMatT[1], // bottom
+		perspMatT[3] - perspMatT[1], // up
+		perspMatT[3] + perspMatT[2], // near
+		perspMatT[3] - perspMatT[2]  // far
+	};
+
+	std::vector<Plane> frustumPlanes = {
+		Plane(frustumVectors[0].ToVector3(), frustumVectors[0].W),
+		Plane(frustumVectors[1].ToVector3(), frustumVectors[1].W),
+		Plane(frustumVectors[2].ToVector3(), frustumVectors[2].W),
+		Plane(frustumVectors[3].ToVector3(), frustumVectors[3].W),
+		Plane(frustumVectors[4].ToVector3(), frustumVectors[4].W),
+		Plane(frustumVectors[5].ToVector3(), frustumVectors[5].W),
+	};
+
+	// 절두체 컬링을 수행하기 위한 기본 설정 값
+	float halfFOV = mainCamera.GetFOV() * 0.5f;
+	float pSin, pCos;
+	Math::GetSinCos(pSin, pCos, halfFOV);
+
+	// 절두체 평면의 방정식
+	static std::vector<Plane> frustumPlanes2 = {
+		Plane(Vector3(pCos, 0.f, pSin), 0.f),
+		Plane(Vector3(-pCos, 0.f, pSin), 0.f),
+		Plane(Vector3(0.f, pCos, pSin), 0.f),
+		Plane(Vector3(0.f, -pCos, pSin), 0.f),
+		Plane(Vector3::UnitZ, nearZ),
+		Plane(-Vector3::UnitZ, -farZ)
 	};
 
 	const Texture& mainTexture = _GameEngine3.GetMainTexture();
@@ -331,16 +355,65 @@ void SoftRenderer::Render3D()
 
 		// 동차좌표계를 사용해 절두체 컬링을 수행
 		Vector4 viewPos = viewMat * Vector4(transform.GetPosition());
+		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
+
+		//Vector4 perspPos = perspMat * viewPos;
+		//perspPos /= perspPos.W;
+		// 바운딩 영역의 크기도 트랜스폼에 맞게 조정
+		Sphere sphereBound = mesh.GetSphereBound();
+		sphereBound.Radius *= transform.GetScale().Max();
+		sphereBound.Center += viewPos.ToVector3();
 
 		bool isOutside = false;
-		for(const auto& v : frustumVectors)
+		//for (const auto& v : frustumVectors)
+		//{
+		//	if (v.Dot(viewPos) < 0.f)
+		//	{
+		//		isOutside = true;
+		//		break;
+		//	}
+		//}
+
+		// 정규화된 평면을 사용한 컬링
+		for (const auto& p : frustumPlanes)
 		{
-			if (v.Dot(viewPos) < 0.f)
+			float distance = p.Distance(sphereBound.Center);
+			if (distance < -sphereBound.Radius)
 			{
 				isOutside = true;
 				break;
 			}
+			//if (p.Distance(viewPos.ToVector3()) < 0.f)
+			//{
+			//	isOutside = true;
+			//	break;
+			//}
 		}
+
+
+		// 정규화된 평면을 사용한 컬링
+		//for (const auto& p : frustumPlanes)
+		//{
+		//	// 구의 중점과 평면 사이의 거리. 0보다 크면 구가 평면의 밖에 위치함.
+		//	float distanceToCenter = p.Normal.Dot(sphereBounds.Center);
+		//	float distanceToPlane = p.Normal.Dot(sphereBounds.Center) - p.Distance;
+
+		//	// 거리가 구의 반지름보다 더 크면 바깥에 위치하는 것으로 판정
+		//	if (distanceToPlane > sphereBounds.Radius)
+		//	{
+		//		isOutside = true;
+		//		break;
+		//	}
+		//}
+
+		//for (const auto& p : frustumPlanes2)
+		//{
+		//	if (p.Distance(viewPos.ToVector3()) > 0.f)
+		//	{
+		//		isOutside = true;
+		//		break;
+		//	}
+		//}
 
 		if (isOutside)
 		{
@@ -348,7 +421,6 @@ void SoftRenderer::Render3D()
 			continue;
 		}
 
-		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 		Matrix4x4 finalMat = pvMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
@@ -406,9 +478,9 @@ void SoftRenderer::Render3D()
 		renderedObjects++;
 	}
 
-	//_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
-	//_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
-	//_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
+	_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
+	_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
+	_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 
 void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)

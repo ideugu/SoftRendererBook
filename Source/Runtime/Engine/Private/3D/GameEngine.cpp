@@ -88,6 +88,8 @@ bool GameEngine::LoadResources()
 		Vector2(16.f, 64.f) / 64.f, Vector2(24.f, 64.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f
 	};
 
+	cubeMesh.CalculateBounds();
+
 	_Meshes.insert({ GameEngine::CubeMeshKey , std::move(cubeMesh) });
 
 	// 기즈모 화살표
@@ -119,6 +121,8 @@ bool GameEngine::LoadResources()
 		24, 28, 27, 24, 25, 28, 25, 26, 28, 26, 27, 28
 	};
 
+	gizmoArrow.CalculateBounds();
+
 	_Meshes.insert({ GameEngine::GizmoArrowMeshKey , std::move(gizmoArrow) });
 
 	// 평면
@@ -148,6 +152,8 @@ bool GameEngine::LoadResources()
 		0, 2, 3
 	};
 
+	planeMesh.CalculateBounds();
+
 	_Meshes.insert({ GameEngine::PlaneMeshKey, std::move(planeMesh) });
 
 	// 텍스쳐 로딩
@@ -172,20 +178,46 @@ bool GameEngine::LoadScene()
 	player.SetColor(LinearColor::Blue);
 	InsertGameObject(std::move(player));
 
+	// 고정 시드로 랜덤하게 생성
+	std::mt19937 generator(0);
+	std::uniform_real_distribution<float> distZ(-3000.f, 3000.f);
+	std::uniform_real_distribution<float> distXY(-3000.f, 3000.f);
+
+	// 500개의 배경 게임 오브젝트 생성
+	for (int i = 0; i < 500; ++i)
+	{
+		char name[64];
+		std::snprintf(name, sizeof(name), "GameObject%d", i);
+		GameObject newGo(name);
+		newGo.GetTransform().SetPosition(Vector3(distXY(generator), distXY(generator), distZ(generator)));
+		newGo.GetTransform().SetScale(Vector3::One * cubeScale);
+		newGo.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
+		newGo.SetMesh(GameEngine::CubeMeshKey);
+		newGo.SetColor(LinearColor::Blue);
+		if (!InsertGameObject(std::move(newGo)))
+		{
+			// 같은 이름 중복이 발생하면 로딩 취소.
+			return false;
+		}
+	}
+
+	// 카메라 설정
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -500.f));
+	_MainCamera.SetFarZ(5000.f);
+
 	// 평면 설정
 	static float planeScale = 800.f;
 	GameObject plane(GameEngine::PlaneKey);
 	plane.SetMesh(GameEngine::PlaneMeshKey);
 	plane.GetTransform().SetScale(Vector3::One * planeScale);
-	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, -700.f));
+	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, 0.f));
 	plane.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
 	plane.SetColor(LinearColor::LightGray);
-	InsertGameObject(std::move(plane));
+	//InsertGameObject(std::move(plane));
 
 	// 카메라 설정
 	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));
-	_MainCamera.SetLookAtRotation(Vector3(0.f, 300.f, 0.f));
-	_MainCamera.SetFarZ(3000.f);
+	//_MainCamera.SetLookAtRotation(Vector3(0.f, 300.f, 0.f));
 
 	return true;
 }

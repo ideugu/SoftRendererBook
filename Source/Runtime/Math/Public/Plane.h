@@ -7,11 +7,11 @@ struct Plane
 {
 public:
 	Plane() = default;
-	Plane(const Vector3& InNormal, float InDistance) : Normal(InNormal), Distance(InDistance)  { Normalize(); }
+	Plane(const Vector3& InNormal, float InDistance) : Normal(InNormal), D(InDistance)  { Normalize(); }
 	Plane(const Vector3& InNormal, Vector3 InPlanePoint) : Normal(InNormal) 
 	{ 
 		Normal.Normalize();
-		Distance = -Normal.Dot(InPlanePoint);
+		D = -Normal.Dot(InPlanePoint);
 	}
 	Plane(const Vector3& InPoint1, const Vector3& InPoint2, const Vector3& InPoint3)
 	{
@@ -19,14 +19,15 @@ public:
 		Vector3 v2 = InPoint3 - InPoint1;
 
 		Normal = v1.Cross(v2).Normalize();
-		Distance = -Normal.Dot(InPoint1);
+		D = -Normal.Dot(InPoint1);
 	}
 
+	float Distance(const Vector3& InPoint) const;
 	void Normalize();
 
 public:
 	Vector3 Normal = Vector3::UnitY;
-	float Distance = 0.f;
+	float D = 0.f;
 };
 
 }
