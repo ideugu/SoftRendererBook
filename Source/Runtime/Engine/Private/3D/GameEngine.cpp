@@ -170,21 +170,21 @@ bool GameEngine::LoadScene()
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
 	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
 	player.SetColor(LinearColor::Blue);
-	InsertGameObject(std::move(player));
+	//InsertGameObject(std::move(player));
 
 	// 평면 설정
-	static float planeScale = 800.f;
+	static float planeScale = 1000.f;
 	GameObject plane(GameEngine::PlaneKey);
 	plane.SetMesh(GameEngine::PlaneMeshKey);
 	plane.GetTransform().SetScale(Vector3::One * planeScale);
-	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, -700.f));
+	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, -500.f));
 	plane.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
 	plane.SetColor(LinearColor::LightGray);
 	InsertGameObject(std::move(plane));
 
 	// 카메라 설정
 	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));
-	_MainCamera.SetLookAtRotation(Vector3(0.f, 300.f, 0.f));
+	_MainCamera.SetLookAtRotation(Vector3(0.f, 0.f, 0.f));
 	_MainCamera.SetFarZ(3000.f);
 
 	return true;
