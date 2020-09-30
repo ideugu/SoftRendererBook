@@ -5,6 +5,8 @@ using namespace CK::DDD;
 
 const std::string GameEngine::CubeMeshKey("SM_Cube");
 const std::string GameEngine::GizmoArrowMeshKey("SM_Arrow");
+const std::string GameEngine::PlaneMeshKey("SM_Plane");
+const std::string GameEngine::PlaneKey("Plane");
 const std::string GameEngine::PlayerKey("Player");
 const std::string GameEngine::SteveTextureKey("Steve.png");
 
@@ -23,7 +25,7 @@ bool GameEngine::Init()
 		return false;
 	}
 
-	if (!_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed)
+	if (!_InputManager.IsInputSystemReady())
 	{
 		return false;
 	}
@@ -86,6 +88,8 @@ bool GameEngine::LoadResources()
 		Vector2(16.f, 64.f) / 64.f, Vector2(24.f, 64.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f
 	};
 
+	cubeMesh.CalculateBounds();
+
 	_Meshes.insert({ GameEngine::CubeMeshKey , std::move(cubeMesh) });
 
 	// 기즈모 화살표
@@ -117,7 +121,40 @@ bool GameEngine::LoadResources()
 		24, 28, 27, 24, 25, 28, 25, 26, 28, 26, 27, 28
 	};
 
+	gizmoArrow.CalculateBounds();
+
 	_Meshes.insert({ GameEngine::GizmoArrowMeshKey , std::move(gizmoArrow) });
+
+	// 평면
+	Mesh planeMesh;
+	planeMesh._Vertices = {
+		//Vector3(-1.f, 0.f, -1.f),
+		//Vector3(0.f, 0.f, 1.f),
+		//Vector3(1.f, 0.f, -1.f)
+
+		Vector3(-1.f, 0.f, -1.f),
+		Vector3(-1.f, 0.f, 1.f),
+		Vector3(1.f, 0.f, 1.f),
+		Vector3(1.f, 0.f, -1.f)
+	};
+
+	planeMesh._UVs = {
+		Vector2(0.125f, 0.75f),
+		Vector2(0.125f, 0.875f),
+		Vector2(0.25f, 0.875f),
+		Vector2(0.25f, 0.75f)
+	};
+
+	planeMesh._Indices = {
+		//1, 2, 0
+
+		0, 1, 2,
+		0, 2, 3
+	};
+
+	planeMesh.CalculateBounds();
+
+	_Meshes.insert({ GameEngine::PlaneMeshKey, std::move(planeMesh) });
 
 	// 텍스쳐 로딩
 	_MainTexture = Texture(SteveTextureKey);
@@ -135,7 +172,7 @@ bool GameEngine::LoadScene()
 	static float cubeScale = 100.f;
 	GameObject player(GameEngine::PlayerKey);
 	player.SetMesh(GameEngine::CubeMeshKey);
-	player.GetTransform().SetPosition(Vector3::Zero);
+	player.GetTransform().SetPosition(Vector3(0.f, 300.f, 0.f));
 	player.GetTransform().SetScale(Vector3::One * cubeScale);
 	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
 	player.SetColor(LinearColor::Blue);
@@ -146,7 +183,7 @@ bool GameEngine::LoadScene()
 	std::uniform_real_distribution<float> distZ(-3000.f, 3000.f);
 	std::uniform_real_distribution<float> distXY(-3000.f, 3000.f);
 
-	// 100개의 배경 게임 오브젝트 생성
+	// 500개의 배경 게임 오브젝트 생성
 	for (int i = 0; i < 500; ++i)
 	{
 		char name[64];
@@ -165,8 +202,22 @@ bool GameEngine::LoadScene()
 	}
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 200.f, -500.f));
-	_MainCamera.SetFarZ(3000.f);
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -500.f));
+	_MainCamera.SetFarZ(5000.f);
+
+	// 평면 설정
+	static float planeScale = 800.f;
+	GameObject plane(GameEngine::PlaneKey);
+	plane.SetMesh(GameEngine::PlaneMeshKey);
+	plane.GetTransform().SetScale(Vector3::One * planeScale);
+	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, 0.f));
+	plane.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
+	plane.SetColor(LinearColor::LightGray);
+	//InsertGameObject(std::move(plane));
+
+	// 카메라 설정
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));
+	//_MainCamera.SetLookAtRotation(Vector3(0.f, 300.f, 0.f));
 
 	return true;
 }

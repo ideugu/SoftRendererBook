@@ -19,29 +19,27 @@ public:
 	float GetElapsedTime() const { return _ElapsedTime; }
 
 public:
-	// 성능 측정을 위한 함수
-	std::function<float()> PerformanceInitFunc;
-	std::function<INT64()> PerformanceMeasureFunc;
+	// 성능 측정을 위한 함수  ( 외부 연동용 ) 
+	std::function<float()> _PerformanceInitFunc;
+	std::function<INT64()> _PerformanceMeasureFunc;
 
-	// 틱 처리를 위한 함수
-	std::function<void()> RenderFrameFunc;
-	std::function<void(float DeltaSeconds)> UpdateFunc;
-
-	// 게임 엔진 레퍼런스
+	// 게임 엔진 레퍼런스 ( 외부 연동 및 공용 로직 ) 
 	DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
 
 private:
 	// 기본 루프 함수
 	void PreUpdate();
 	void PostUpdate();
-	void Update();
-	void RenderFrame();
 
 private:
-	// 실습을 위한 주요 함수 연동
-	void BindTickFunctions();
 
-private:
+	enum class ShowMode : UINT32
+	{
+		Normal = 0,
+		Wireframe,
+		DepthBuffer
+	};
+
 	// 2D 구현 함수
 	void Update2D(float InDeltaSeconds);
 	void Render2D();
@@ -54,16 +52,19 @@ private:
 	void Update3D(float InDeltaSeconds);
 	void Render3D();
 
+	void DrawTriangle(std::vector<struct Vertex3D>& vertices);
+
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);
-	bool _ShowDepthBuffer = false;
+
+	ShowMode _CurrentShowMode = ShowMode::Normal;
 
 private:
 	// 초기화 점검 변수
 	bool _PerformanceCheckInitialized = false;
 	bool _RendererInitialized = false;
 	bool _GameEngineInitialized = false;
-	bool _TickFunctionBound = false;
+	bool _TickEnabled = false;
 	bool _AllInitialized = false;
 
 	// 화면 크기

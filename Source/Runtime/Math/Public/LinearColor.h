@@ -22,6 +22,11 @@ public:
 	FORCEINLINE LinearColor operator-(const LinearColor& InColor) const;
 	FORCEINLINE LinearColor operator*(const LinearColor& InColor) const;
 	FORCEINLINE LinearColor operator*(float InScalar) const;
+	FORCEINLINE LinearColor& operator*=(float InScale);
+	FORCEINLINE LinearColor& operator/=(float InScale);
+	FORCEINLINE LinearColor& operator+=(const LinearColor& InColor);
+	FORCEINLINE LinearColor& operator-=(const LinearColor& InColor);
+
 	FORCEINLINE bool operator==(const LinearColor& InColor) const;
 	FORCEINLINE bool operator!=(const LinearColor& InColor) const;
 
@@ -102,6 +107,38 @@ FORCEINLINE LinearColor LinearColor::operator*(float InScalar) const
 		B * InScalar,
 		A * InScalar
 	);
+}
+
+FORCEINLINE LinearColor& LinearColor::operator*=(float InScale)
+{
+	R *= InScale;
+	G *= InScale;
+	B *= InScale;
+	A *= InScale;
+}
+
+FORCEINLINE LinearColor& LinearColor::operator/=(float InScale)
+{
+	R /= InScale;
+	G /= InScale;
+	B /= InScale;
+	A /= InScale;
+}
+
+FORCEINLINE LinearColor& LinearColor::operator+=(const LinearColor& InColor)
+{
+	R += InColor.R;
+	G += InColor.G;
+	B += InColor.B;
+	A += InColor.A;
+}
+
+FORCEINLINE LinearColor& LinearColor::operator-=(const LinearColor& InColor)
+{
+	R -= InColor.R;
+	G -= InColor.G;
+	B -= InColor.B;
+	A -= InColor.A;
 }
 
 FORCEINLINE bool LinearColor::operator==(const LinearColor& InColor) const

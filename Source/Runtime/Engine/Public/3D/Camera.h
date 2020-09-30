@@ -40,7 +40,7 @@ private:
 
 	float _FOV = 60.f;
 	float _NearZ = 5.5f;
-	float _FarZ = 1500.f;
+	float _FarZ = 3000.f;
 	ScreenPoint _ViewportSize;
 };
 

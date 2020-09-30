@@ -54,7 +54,8 @@ private:
 
 FORCEINLINE bool GameEngine::CheckInputSystem()
 {
-	return (_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed);
+	return _InputManager.IsInputSystemReady();
+	//return (_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed);
 }
 
 }

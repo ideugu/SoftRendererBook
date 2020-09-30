@@ -9,7 +9,9 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <iterator>
+#include <algorithm>
 
 #include "MathUtil.h"
 #include "Vector2.h"
@@ -29,5 +31,12 @@
 #include "Rotator.h"
 
 #include "Plane.h"
+
+#include "Circle.h"
+#include "Rectangle.h"
+#include "Sphere.h"
+#include "Box.h"
+
+#include "Frustum.h"
 
 using namespace CK;
