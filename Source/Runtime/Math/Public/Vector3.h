@@ -78,7 +78,7 @@ FORCEINLINE Vector3 Vector3::Normalize() const
 		return Vector3::Zero;
 	}
 
-	float invLength = 1 / sqrtf(squareSum);
+	float invLength = Math::InvSqrt(squareSum);
 	return Vector3(X * invLength, Y * invLength, Z * invLength);
 }
 

@@ -87,7 +87,7 @@ FORCEINLINE Vector4 Vector4::Normalize() const
 		return Vector4::Zero;
 	}
 
-	float invLength = 1 / sqrtf(squareSum);
+	float invLength = Math::InvSqrt(squareSum);
 	return Vector4(X * invLength, Y * invLength, Z * invLength, W * invLength);
 }
 
