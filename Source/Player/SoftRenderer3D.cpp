@@ -311,6 +311,23 @@ void SoftRenderer::Render3D()
 	size_t culledObjects = 0;
 	size_t renderedObjects = 0;
 
+	// 절두체 컬링을 수행하기 위한 기본 설정 값
+	float halfFOV = mainCamera.GetFOV() * 0.5f;
+	float pSin, pCos;
+	Math::GetSinCos(pSin, pCos, halfFOV);
+
+	// 절두체 평면의 방정식
+	static std::array<Plane, 6> frustumPlanes2 = {
+		Plane(Vector3(pCos, 0.f, pSin), 0.f),
+		Plane(Vector3(-pCos, 0.f, pSin), 0.f),
+		Plane(Vector3(0.f, pCos, pSin), 0.f),
+		Plane(Vector3(0.f, -pCos, pSin), 0.f),
+		Plane(Vector3::UnitZ, nearZ),
+		Plane(-Vector3::UnitZ, -farZ)
+	};
+
+	Frustum f(frustumPlanes2);
+
 	// 절두체 컬링을 위한 준비 작업. 행 벡터를 쉽게 구할 수 있게 전치시켜 둔다.
 	Matrix4x4 perspMatT = perspMat.Tranpose();
 	std::vector<Vector4> frustumVectors = {
@@ -331,21 +348,6 @@ void SoftRenderer::Render3D()
 		Plane(frustumVectors[5].ToVector3(), frustumVectors[5].W),
 	};
 
-	// 절두체 컬링을 수행하기 위한 기본 설정 값
-	float halfFOV = mainCamera.GetFOV() * 0.5f;
-	float pSin, pCos;
-	Math::GetSinCos(pSin, pCos, halfFOV);
-
-	// 절두체 평면의 방정식
-	static std::vector<Plane> frustumPlanes2 = {
-		Plane(Vector3(pCos, 0.f, pSin), 0.f),
-		Plane(Vector3(-pCos, 0.f, pSin), 0.f),
-		Plane(Vector3(0.f, pCos, pSin), 0.f),
-		Plane(Vector3(0.f, -pCos, pSin), 0.f),
-		Plane(Vector3::UnitZ, nearZ),
-		Plane(-Vector3::UnitZ, -farZ)
-	};
-
 	const Texture& mainTexture = _GameEngine3.GetMainTexture();
 
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
@@ -364,7 +366,7 @@ void SoftRenderer::Render3D()
 		sphereBound.Radius *= transform.GetScale().Max();
 		sphereBound.Center += viewPos.ToVector3();
 
-		bool isOutside = false;
+		//bool isOutside = false;
 		//for (const auto& v : frustumVectors)
 		//{
 		//	if (v.Dot(viewPos) < 0.f)
@@ -375,20 +377,20 @@ void SoftRenderer::Render3D()
 		//}
 
 		// 정규화된 평면을 사용한 컬링
-		for (const auto& p : frustumPlanes)
-		{
-			float distance = p.Distance(sphereBound.Center);
-			if (distance < -sphereBound.Radius)
-			{
-				isOutside = true;
-				break;
-			}
-			//if (p.Distance(viewPos.ToVector3()) < 0.f)
-			//{
-			//	isOutside = true;
-			//	break;
-			//}
-		}
+		//for (const auto& p : frustumPlanes)
+		//{
+		//	float distance = p.Distance(sphereBound.Center);
+		//	if (distance < -sphereBound.Radius)
+		//	{
+		//		isOutside = true;
+		//		break;
+		//	}
+		//	//if (p.Distance(viewPos.ToVector3()) < 0.f)
+		//	//{
+		//	//	isOutside = true;
+		//	//	break;
+		//	//}
+		//}
 
 
 		// 정규화된 평면을 사용한 컬링
@@ -415,7 +417,7 @@ void SoftRenderer::Render3D()
 		//	}
 		//}
 
-		if (isOutside)
+		if (f.IsOutside(viewPos.ToVector3()))
 		{
 			culledObjects++;
 			continue;

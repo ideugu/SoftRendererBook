@@ -37,4 +37,6 @@
 #include "Sphere.h"
 #include "Box.h"
 
+#include "Frustum.h"
+
 using namespace CK;
