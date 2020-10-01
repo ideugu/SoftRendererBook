@@ -11,9 +11,9 @@ void SoftRenderer::OnTick()
 	if (!_AllInitialized)
 	{
 		// 퍼포먼스 카운터 초기화.
-		if(PerformanceInitFunc && PerformanceMeasureFunc)
+		if(_PerformanceInitFunc && _PerformanceMeasureFunc)
 		{
-			_CyclesPerMilliSeconds = PerformanceInitFunc();
+			_CyclesPerMilliSeconds = _PerformanceInitFunc();
 			_PerformanceCheckInitialized = true;
 		}
 		else
@@ -36,8 +36,8 @@ void SoftRenderer::OnTick()
 		_RendererInitialized = true;
 
 		// 게임 엔진 초기화
-		_GameEngine3.OnScreenResize(_ScreenSize);
-		if (!_GameEngine3.Init())
+		GetGameEngine().OnScreenResize(_ScreenSize);
+		if (!GetGameEngine().Init())
 		{
 			return;
 		}
@@ -47,16 +47,25 @@ void SoftRenderer::OnTick()
 		_AllInitialized = _RendererInitialized && _PerformanceCheckInitialized && _GameEngineInitialized;
 		if (_AllInitialized)
 		{
-			BindTickFunctions();
+			_TickEnabled = true;
 		}
 	}
 	else
 	{
 		assert(_RSI != nullptr && _RSI->IsInitialized() && !_ScreenSize.HasZero());
 
-		PreUpdate();
-		Update();
-		PostUpdate();
+		if (_TickEnabled)
+		{
+			PreUpdate();
+
+			// 게임 로직 수행.
+			Update3D(_FrameTime / 1000.f);
+
+			// 렌더링 로직 수행.
+			Render3D();
+
+			PostUpdate();
+		}
 	}
 }
 
@@ -72,9 +81,8 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 
 	if (_GameEngineInitialized)
 	{
-		_GameEngine3.OnScreenResize(_ScreenSize);
-	}
-	
+		GetGameEngine().OnScreenResize(_ScreenSize);
+	}	
 }
 
 void SoftRenderer::OnShutdown()
@@ -85,7 +93,7 @@ void SoftRenderer::OnShutdown()
 void SoftRenderer::PreUpdate()
 {
 	// 성능 측정 시작.
-	_FrameTimeStamp = PerformanceMeasureFunc();
+	_FrameTimeStamp = _PerformanceMeasureFunc();
 	if (_FrameCount == 0)
 	{
 		_StartTimeStamp = _FrameTimeStamp;
@@ -97,45 +105,21 @@ void SoftRenderer::PreUpdate()
 
 void SoftRenderer::PostUpdate()
 {
-	// 렌더링 로직 수행.
-	RenderFrame();
-
 	// 렌더링 마무리.
 	_RSI->EndFrame();
 
+	// 입력 상태 업데이트
+	GetGameEngine().GetInputManager().UpdateInput();
+
 	// 성능 측정 마무리.
 	_FrameCount++;
-	INT64 currentTimeStamp = PerformanceMeasureFunc();
+	INT64 currentTimeStamp = _PerformanceMeasureFunc();
 	INT64 frameCycles = currentTimeStamp - _FrameTimeStamp;
 	INT64 elapsedCycles = currentTimeStamp - _StartTimeStamp;
 	_FrameTime = frameCycles / _CyclesPerMilliSeconds;
 	_ElapsedTime = elapsedCycles / _CyclesPerMilliSeconds;
 	_FrameFPS = _FrameTime == 0.f ? 0.f : 1000.f / _FrameTime;
 	_AverageFPS = _ElapsedTime == 0.f ? 0.f : 1000.f / _ElapsedTime * _FrameCount;
-}
-
-void SoftRenderer::RenderFrame()
-{
-	if (_TickFunctionBound)
-	{
-		RenderFrameFunc();
-	}
-}
-
-void SoftRenderer::Update()
-{
-	if (_TickFunctionBound)
-	{
-		UpdateFunc(_FrameTime / 1000.f);
-	}
-}
-
-void SoftRenderer::BindTickFunctions()
-{
-	using namespace std::placeholders;
-	RenderFrameFunc = std::bind(&SoftRenderer::Render3D, this);
-	UpdateFunc = std::bind(&SoftRenderer::Update3D, this, _1);
-	_TickFunctionBound = true;
 }
 
 

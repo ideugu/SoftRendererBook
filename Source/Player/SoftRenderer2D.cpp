@@ -78,16 +78,16 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	static float rotateSpeed = 180.f;
 	static float scaleSpeed = 180.f;
 
-	InputManager input = _GameEngine2.GetInputManager();
+	InputManager& input = _GameEngine2.GetInputManager();
 
 	// 플레이어 게임 오브젝트 트랜스폼의 변경
 	GameObject& player = _GameEngine2.FindGameObject(GameEngine::PlayerKey);
 	if (!player.IsNotFound())
 	{
 		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector2(input.GetXAxis(), input.GetYAxis()) * moveSpeed * InDeltaSeconds);
-		playerTransform.AddRotation(input.GetWAxis() * rotateSpeed * InDeltaSeconds);
-		float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetZAxis() * InDeltaSeconds, 15.f, 30.f);
+		playerTransform.AddPosition(Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)) * moveSpeed * InDeltaSeconds);
+		playerTransform.AddRotation(input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds);
+		float newScale = Math::Clamp(playerTransform.GetScale().X + scaleSpeed * input.GetAxis(InputAxis::ZAxis) * InDeltaSeconds, 15.f, 30.f);
 		playerTransform.SetScale(Vector2::One * newScale);
 
 		// 플레이어를 따라다니는 카메라의 트랜스폼
