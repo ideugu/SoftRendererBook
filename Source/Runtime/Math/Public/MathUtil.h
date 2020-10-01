@@ -32,7 +32,7 @@ struct Math
 		return TruncToInt(ceilf(InFloat));
 	}
 
-	static FORCEINLINE bool EqualsInTolerance(float InFloat1, float InFloat2, float InTolerance = KINDA_SMALL_NUMBER)
+	static FORCEINLINE bool EqualsInTolerance(float InFloat1, float InFloat2, float InTolerance = SMALL_NUMBER)
 	{
 		return Math::Abs(InFloat1 - InFloat2) <= InTolerance;
 	}
@@ -218,6 +218,7 @@ struct Math
 		_mm_store_ss(&temp, X2);
 		return temp;
 	}
+
 };
 
 }

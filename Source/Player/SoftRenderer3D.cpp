@@ -330,23 +330,14 @@ void SoftRenderer::Render3D()
 	Frustum f1(frustumPlanesManual);
 
 	// 절두체 컬링을 위한 준비 작업. 행 벡터를 쉽게 구할 수 있게 전치시켜 둔다.
-	//Matrix4x4 perspMatT = perspMat.Tranpose();
-	//std::array<Plane, 6> frustumPlanesFromMatrix = {
-	//	-(perspMatT[3] - perspMatT[1]), // up
-	//	-(perspMatT[3] + perspMatT[1]), // bottom
-	//	-(perspMatT[3] - perspMatT[0]), // right
-	//	-(perspMatT[3] + perspMatT[0]), // left 
-	//	-(perspMatT[3] - perspMatT[2]),  // far
-	//	-(perspMatT[3] + perspMatT[2]), // near
-	//};
 	Matrix4x4 pvMatT = pvMat.Tranpose();
 	std::array<Plane, 6> frustumPlanesFromMatrix = {
-		-(pvMatT[3] - pvMatT[1]), // up
-		-(pvMatT[3] + pvMatT[1]), // bottom
-		-(pvMatT[3] - pvMatT[0]), // right
-		-(pvMatT[3] + pvMatT[0]), // left 
-		-(pvMatT[3] - pvMatT[2]),  // far
-		-(pvMatT[3] + pvMatT[2]), // near
+		-(pvMatT[3] - pvMatT[1]), // +Y
+		-(pvMatT[3] + pvMatT[1]), // -Y
+		-(pvMatT[3] - pvMatT[0]), // +X
+		-(pvMatT[3] + pvMatT[0]), // -X 
+		-(pvMatT[3] - pvMatT[2]),  // +Z
+		-(pvMatT[3] + pvMatT[2]), // -Z
 	};
 
 	Frustum f2(frustumPlanesFromMatrix);
@@ -378,13 +369,13 @@ void SoftRenderer::Render3D()
 		const Sphere& sphereBound = mesh.GetSphereBound();
 		const Box& boxBound = mesh.GetBoxBound();
 
-		if (f3.IsOutside(boxBound))
+		auto checkResult = f3.CheckBound(boxBound);
+		if (checkResult == BoundCheckResult::Outside)
 		{
 			culledObjects++;
 			continue;
 		}
-
-		if (f3.IsIntersect(boxBound))
+		else if(checkResult == BoundCheckResult::Intersect)
 		{
 			intersectedObjects++;
 			colorParam = LinearColor::Red;
