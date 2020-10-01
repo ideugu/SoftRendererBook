@@ -8,7 +8,7 @@ struct Sphere
 public:
 	FORCEINLINE Sphere() = default;
 	FORCEINLINE Sphere(const Circle& InCircle) : Center(InCircle.Center), Radius(InCircle.Radius) {};
-	Sphere(const std::vector<Vector3> InVertices);
+	Sphere(const std::vector<Vector3>& InVertices);
 
 	FORCEINLINE bool IsInside(const Vector3& InVector) const;
 	FORCEINLINE bool Intersect(const Sphere& InCircle) const;

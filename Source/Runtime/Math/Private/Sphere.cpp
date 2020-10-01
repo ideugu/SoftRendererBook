@@ -2,7 +2,7 @@
 #include "Precompiled.h"
 using namespace CK;
 
-Sphere::Sphere(const std::vector<Vector3> InVertices)
+Sphere::Sphere(const std::vector<Vector3>& InVertices)
 {
 	size_t cnt = InVertices.size();
 	if (cnt == 0)
