@@ -10,50 +10,47 @@ struct Frustum
 	Frustum(const std::array<Plane, 6>& InPlanes);
 
 	// 멤버함수 
-	FORCEINLINE bool IsOutside(const Vector3& InPoint) const;
-	FORCEINLINE bool IsOutside(const Sphere& InSphere) const;
-	FORCEINLINE bool IsIntersect(const Sphere& InSphere) const;
+	FORCEINLINE BoundCheckResult CheckBound(const Vector3& InPoint) const;
+	FORCEINLINE BoundCheckResult CheckBound(const Sphere& InSphere) const;
 
 	// 멤버변수 	
 	std::array<Plane, 6> Planes; // Y+, Y-, X+, X-, Z+, Z- 순으로 저장
 };
 
-FORCEINLINE bool Frustum::IsOutside(const Vector3& InPoint) const
+FORCEINLINE BoundCheckResult Frustum::CheckBound(const Vector3& InPoint) const
 {
 	for (const auto& p : Planes)
 	{
 		if (p.IsOutside(InPoint))
-			return true;
+		{
+			return BoundCheckResult::Outside;
+		}
+		else if (Math::EqualsInTolerance(p.Distance(InPoint), 0.f))
+		{
+			return BoundCheckResult::Intersect;
+		}
+	
 	}
 
-	return false;
+	return BoundCheckResult::Inside;
 }
 
-FORCEINLINE bool Frustum::IsOutside(const Sphere& InSphere) const
+FORCEINLINE BoundCheckResult Frustum::CheckBound(const Sphere& InSphere) const
 {
 	for (const auto& p : Planes)
 	{
 		if (p.Distance(InSphere.Center) > InSphere.Radius)
 		{
-			return true;
+			return BoundCheckResult::Outside;
 		}
-	}
-
-	return false;
-}
-
-FORCEINLINE bool Frustum::IsIntersect(const Sphere& InSphere) const
-{
-	for (const auto& p : Planes)
-	{
-		if (Math::Abs(p.Distance(InSphere.Center)) <= InSphere.Radius)
+		else if (Math::Abs(p.Distance(InSphere.Center)) <= InSphere.Radius)
 		{
-			return true;
+			return BoundCheckResult::Intersect;
 		}
+
 	}
 
-	return false;
+	return BoundCheckResult::Inside;
 }
-
 
 }

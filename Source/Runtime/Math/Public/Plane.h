@@ -30,7 +30,7 @@ FORCEINLINE float Plane::Distance(const Vector3& InPoint) const
 
 FORCEINLINE bool Plane::IsOutside(const Vector3& InPoint) const
 {
-	return Distance(InPoint) > 0;
+	return Distance(InPoint) > 0.f;
 }
 
 }
