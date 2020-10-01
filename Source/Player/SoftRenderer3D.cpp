@@ -126,7 +126,6 @@ void SoftRenderer::Render3D()
 
 	size_t totalObjects = _GameEngine3.GetScene().size();
 	size_t culledObjects = 0;
-	size_t intersectedObjects = 0;
 	size_t renderedObjects = 0;
 
 	// 절두체 컬링을 수행하기 위한 기본 설정 값
@@ -145,7 +144,6 @@ void SoftRenderer::Render3D()
 	};
 
 	Frustum f1(frustumPlanesManual);
-
 
 	const Texture& mainTexture = _GameEngine3.GetMainTexture();
 
@@ -202,7 +200,6 @@ void SoftRenderer::Render3D()
 
 	_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
 	_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
-	_RSI->PushStatisticText("Intersected GameObjects : " + std::to_string(intersectedObjects));
 	_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 
