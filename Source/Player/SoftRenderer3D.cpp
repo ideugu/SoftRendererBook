@@ -359,21 +359,32 @@ void SoftRenderer::Render3D()
 		const Transform& transform = gameObject.GetTransformConst();
 
 		// 동차좌표계를 사용해 절두체 컬링을 수행
-		//Vector4 viewPos = viewMat * Vector4(transform.GetPosition());
 		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
 
-		// 바운딩 영역의 크기도 트랜스폼에 맞게 조정
-		Sphere sphereBound = mesh.GetSphereBound();
-		sphereBound.Radius *= transform.GetScale().Max();
-		sphereBound.Center = transform.GetPosition();
+		Matrix4x4 finalMat = pvMat * transform.GetModelingMatrix();
+		Matrix4x4 finalMatT = finalMat.Tranpose();
+		std::array<Plane, 6> frustumPlanesFromMatrix2 = {
+			-(finalMatT[3] - finalMatT[1]), // up
+			-(finalMatT[3] + finalMatT[1]), // bottom
+			-(finalMatT[3] - finalMatT[0]), // right
+			-(finalMatT[3] + finalMatT[0]), // left 
+			-(finalMatT[3] - finalMatT[2]),  // far
+			-(finalMatT[3] + finalMatT[2]), // near
+		};
 
-		if (f2.IsOutside(sphereBound))
+		Frustum f3(frustumPlanesFromMatrix2);
+
+		// 바운딩 영역의 크기도 트랜스폼에 맞게 조정
+		const Sphere& sphereBound = mesh.GetSphereBound();
+		const Box& boxBound = mesh.GetBoxBound();
+
+		if (f3.IsOutside(boxBound))
 		{
 			culledObjects++;
 			continue;
 		}
 
-		if (f2.IsIntersect(sphereBound))
+		if (f3.IsIntersect(boxBound))
 		{
 			intersectedObjects++;
 			colorParam = LinearColor::Red;
@@ -382,8 +393,6 @@ void SoftRenderer::Render3D()
 		{
 			colorParam = LinearColor::White;
 		}
-
-		Matrix4x4 finalMat = pvMat * transform.GetModelingMatrix();
 
 		size_t vertexCount = mesh._Vertices.size();
 		size_t indexCount = mesh._Indices.size();
