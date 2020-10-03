@@ -101,6 +101,13 @@ void SoftRenderer::PreUpdate()
 
 	// 배경 지우기.
 	_RSI->Clear(_BackgroundColor);
+
+	// 버퍼 시각화
+	const InputManager& input = _GameEngine3.GetInputManager();
+
+	if (input.IsReleased(InputButton::F1)) { _CurrentShowMode = ShowMode::Normal; }
+	if (input.IsReleased(InputButton::F2)) { _CurrentShowMode = ShowMode::Wireframe; }
+	if (input.IsReleased(InputButton::F3)) { _CurrentShowMode = ShowMode::DepthBuffer; }
 }
 
 void SoftRenderer::PostUpdate()

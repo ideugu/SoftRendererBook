@@ -30,6 +30,8 @@
 
 #include "Rotator.h"
 
+#include "Quaternion.h"
+
 #include "Plane.h"
 
 #include "Circle.h"

@@ -1,7 +1,7 @@
 
 #include "Precompiled.h"
 #include "SoftRenderer.h"
-#include <algorithm>
+#include <random>
 using namespace CK::DDD;
 
 struct Vertex3D
@@ -267,30 +267,43 @@ void SoftRenderer::DrawGizmo3D()
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
-	static float moveSpeed = 500.f;
+	static float duration = 5.f;
 	static float fovSpeed = 100.f;
+	static float elapsedTime = 0.f;
 
-	InputManager& input = _GameEngine3.GetInputManager();
+	// 랜덤 발생기
+	static std::mt19937 generator(0);
+	static std::uniform_real_distribution<float> dir(-1.f, 1.f);
+	static std::uniform_real_distribution<float> angle(0.f, 180.f);
 
-	// 플레이어 게임 오브젝트 트랜스폼의 변경
-	GameObject& player = _GameEngine3.FindGameObject(GameEngine::PlayerKey);
-	if (!player.IsNotFound())
+	const InputManager& input = _GameEngine3.GetInputManager();
+	Camera& camera = _GameEngine3.GetMainCamera();
+
+	// 선형 보간을 위한 사원수 변수
+	static Quaternion startRotation(camera.GetTransform().GetRotation());
+	static Quaternion targetRotation(Rotator(90.f, 0.f, 0.f));
+
+	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
+	if (elapsedTime == duration)
 	{
-		Transform& playerTransform = player.GetTransform();
-		playerTransform.AddPosition(Vector3(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::WAxis), input.GetAxis(InputAxis::YAxis)) * moveSpeed * InDeltaSeconds);
-		_GameEngine3.GetMainCamera().SetLookAtRotation(player.GetTransform().GetPosition());
+		elapsedTime = 0.f;
+		startRotation = targetRotation;
+
+		Vector3 randomAxis(dir(generator), dir(generator), dir(generator));
+		randomAxis.Normalize();
+		targetRotation = Quaternion(randomAxis, angle(generator));
+		camera.GetTransform().SetRotation(startRotation);
+	}
+	else
+	{
+		float t = elapsedTime / duration;
+		Quaternion current = Quaternion::Slerp(startRotation, targetRotation, t);
+		camera.GetTransform().SetRotation(current);
 	}
 
-	// 카메라 FOV 조절
-	Camera& camera = _GameEngine3.GetMainCamera();
+	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
-
-	// 버퍼 시각화 토글
-
-	if (input.IsReleased(InputButton::F1)) { _CurrentShowMode = ShowMode::Normal; }
-	if (input.IsReleased(InputButton::F2)) { _CurrentShowMode = ShowMode::Wireframe; }
-	if (input.IsReleased(InputButton::F3)) { _CurrentShowMode = ShowMode::DepthBuffer; }
 }
 
 // 렌더링 로직
@@ -347,7 +360,7 @@ void SoftRenderer::Render3D()
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
-		const Transform& transform = gameObject.GetTransformConst();
+		const Transform& transform = gameObject.GetReadOnlyTransform();
 
 		// 동차좌표계를 사용해 절두체 컬링을 수행
 		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
