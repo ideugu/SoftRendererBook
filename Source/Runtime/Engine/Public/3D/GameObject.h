@@ -19,7 +19,7 @@ public:
 public:
 	// 트랜스폼
 	Transform& GetTransform() { return _Transform; }
-	const Transform& GetReadOnlyTransform() const { return _Transform; }
+	const Transform& GetTransform() const { return _Transform; }
 
 	// 메시
 	void SetMesh(const std::string& InMeshKey);

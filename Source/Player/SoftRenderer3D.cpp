@@ -360,7 +360,7 @@ void SoftRenderer::Render3D()
 	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *it;
-		const Transform& transform = gameObject.GetReadOnlyTransform();
+		const Transform& transform = gameObject.GetTransform();
 
 		// 동차좌표계를 사용해 절두체 컬링을 수행
 		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
