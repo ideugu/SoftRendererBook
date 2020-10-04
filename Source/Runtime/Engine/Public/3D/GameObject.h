@@ -21,13 +21,13 @@ public:
 	const Transform& GetTransform() const { return _Transform; }
 
 	// 메시
-	void SetMesh(const std::size_t& InMeshKey);
-	std::size_t GetMeshKey() const;
+	void SetMesh(const std::size_t& InMeshKey) { _MeshKey = InMeshKey; }
 	bool HasMesh() const { return _MeshKey != Math::DefaultHash; }
+	FORCEINLINE std::size_t GetMeshKey() const { return _MeshKey; }
 
 	// 색상
 	void SetColor(const LinearColor& InColor) { _Color = InColor; }
-	const LinearColor& GetColor() const { return _Color; }
+	FORCEINLINE const LinearColor& GetColor() const { return _Color; }
 
 	// 키 관련
 	const std::string& GetName() const { return _Name; }

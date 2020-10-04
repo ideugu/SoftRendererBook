@@ -12,17 +12,9 @@ public:
 	Transform(const Vector3& InPosition) : _Position(InPosition) {}
 	Transform(const Vector3& InPosition, const Quaternion& InRotation) : _Position(InPosition), _Rotation(InRotation) {}
 	Transform(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : _Position(InPosition), _Rotation(InRotation), _Scale(InScale) {}
-	Transform(const Matrix4x4& InMatrix)
-	{
-		_Position = InMatrix[3].ToVector3();
-		_Scale = Vector3(InMatrix[0].ToVector3().Size(), InMatrix[1].ToVector3().Size(), InMatrix[2].ToVector3().Size());
-		_Right = InMatrix[0].ToVector3() / _Scale.X;
-		_Up = InMatrix[1].ToVector3() / _Scale.Y;
-		_Forward = InMatrix[2].ToVector3() / _Scale.Z;
-	}
 
 public:
-	void SetPosition(const Vector3& InPosition) { _Position = InPosition; }
+	FORCEINLINE void SetPosition(const Vector3& InPosition) { _Position = InPosition; }
 	void AddPosition(const Vector3& InDeltaPosition) { _Position += InDeltaPosition; }
 	void AddYawRotation(float InDegree) { _Rotation *= Quaternion(Vector3::UnitY, InDegree); CalculateLocalAxis(); }
 	void AddRollRotation(float InDegree) { _Rotation *= Quaternion(Vector3::UnitZ, InDegree); CalculateLocalAxis(); }
@@ -31,7 +23,7 @@ public:
 	void SetRotation(const Quaternion& InQuaternion) { _Rotation = InQuaternion; CalculateLocalAxis(); }
 	void SetScale(const Vector3& InScale) { _Scale = InScale; }
 
-	Vector3 GetPosition() const { return _Position; }
+	FORCEINLINE Vector3 GetPosition() const { return _Position; }
 	Rotator GetRotator() const { return _Rotation.ToRotator(); }
 	Quaternion GetRotation() const { return _Rotation; }
 	Vector3 GetScale() const { return _Scale; }

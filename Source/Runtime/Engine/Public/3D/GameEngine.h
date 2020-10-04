@@ -19,7 +19,7 @@ public: // 공용 로직
 	bool LoadScene();
 
 	// 입력 관리자
-	FORCEINLINE InputManager& GetInputManager() { return _InputManager; }  // 입력 설정에 사용
+	InputManager& GetInputManager() { return _InputManager; }  // 입력 설정에 사용
 
 	// 리소스 관리
 	bool AddMesh(const std::size_t& InKey, const Mesh& InMesh);
@@ -33,8 +33,8 @@ public: // 공용 로직
 	GameObject& GetGameObject(const std::string& InName);
 
 	// 메시
-	FORCEINLINE Mesh& GetMesh(const std::size_t& InMeshKey) { return *_Meshes.at(InMeshKey).get(); }
-	FORCEINLINE const Mesh& GetMesh(const std::size_t& InMeshKey) const { return *_Meshes.at(InMeshKey).get(); }
+	Mesh& GetMesh(const std::size_t& InMeshKey) { return *_Meshes.at(InMeshKey).get(); }
+	const Mesh& GetMesh(const std::size_t& InMeshKey) const { return *_Meshes.at(InMeshKey).get(); }
 
 	// 카메라 
 	FORCEINLINE Camera& GetMainCamera() { return _MainCamera; }

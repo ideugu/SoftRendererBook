@@ -23,9 +23,9 @@ public:
 	Mesh() = default;
 
 	void SetMeshType(const MeshType& _InMeshType) { _MeshType = _InMeshType; }
-	bool IsSkinnedMesh() const { return _MeshType == MeshType::Skinned; }
-	bool HasUV() const { return _UVs.size() > 0; }
-	bool HasBone(const std::string& InBoneName) const { return _Bones.find(InBoneName) != _Bones.end(); }
+	FORCEINLINE bool IsSkinnedMesh() const { return _MeshType == MeshType::Skinned; }
+	FORCEINLINE bool HasUV() const { return _UVs.size() > 0; }
+	FORCEINLINE bool HasBone(const std::string& InBoneName) const { return _Bones.find(InBoneName) != _Bones.end(); }
 
 	void CalculateBounds();
 	const Sphere& GetSphereBound() const { return _SphereBound; }
@@ -33,7 +33,7 @@ public:
 
 	// 리깅 관련 함수
 	Transform& GetBoneTransform(const std::string& InBoneName) { return _Bones.at(InBoneName).GetTransform(); }
-	const Transform& GetBoneTransform(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetTransform(); }
+	FORCEINLINE const Transform& GetBoneTransform(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetTransform(); }
 	const Transform& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
 
 public:
