@@ -267,7 +267,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 {
 	// 기본 레퍼런스
 	GameEngine& g = GetGameEngine();
-	const InputManager& input = g.GetInputManagerC();
+	const InputManager& input = g.GetInputManager();
 	Camera& camera = g.GetMainCamera();
 
 	// 기본 변수
@@ -336,8 +336,6 @@ void SoftRenderer::Render3D()
 	ScreenPoint viewportSize = mainCamera.GetViewportSize();
 	float nearZ = mainCamera.GetNearZ();
 	float farZ = mainCamera.GetFarZ();
-
-	const Texture& mainTexture = g.GetTextureC(GameEngine::DiffuseTexture);
 
 	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
@@ -562,7 +560,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const LinearCol
 					Vector2 targetUV = (vertices[0].UV * oneMinusST * invZ0 + vertices[1].UV * s * invZ1 + vertices[2].UV * t * invZ2) * invZ;
 
 					// 텍스쳐 매핑 진행
-					_RSI->DrawPoint(fragment, FragmentShader3D(g.GetTextureC(GameEngine::DiffuseTexture).GetSample(targetUV), InColorParam));
+					_RSI->DrawPoint(fragment, FragmentShader3D(g.GetTexture(GameEngine::DiffuseTexture).GetSample(targetUV), InColorParam));
 				}
 			}
 		}

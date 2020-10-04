@@ -20,7 +20,6 @@ public: // 공용 로직
 
 	// 입력 관리자
 	FORCEINLINE InputManager& GetInputManager() { return _InputManager; }  // 입력 설정에 사용
-	FORCEINLINE const InputManager& GetInputManagerC() const { return _InputManager; } // 입력 값 읽기 전용
 
 	// 리소스 관리
 	bool AddMesh(const std::size_t& InKey, const Mesh& InMesh);
@@ -42,7 +41,7 @@ public: // 공용 로직
 	FORCEINLINE const Camera& GetMainCamera() const { return _MainCamera; }
 
 	// 메인 텍스쳐
-	FORCEINLINE const Texture& GetTextureC(const std::size_t& InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
+	FORCEINLINE const Texture& GetTexture(const std::size_t& InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
 
 public: // 주요 키 값
 	const static std::size_t QuadMeshKey;
