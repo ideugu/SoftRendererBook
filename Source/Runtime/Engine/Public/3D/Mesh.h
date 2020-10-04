@@ -23,15 +23,16 @@ public:
 	Mesh() = default;
 
 	void SetMeshType(const MeshType& _InMeshType) { _MeshType = _InMeshType; }
-	FORCEINLINE bool IsSkinnedMesh() const { return _MeshType == MeshType::Skinned; }
 	FORCEINLINE bool HasUV() const { return _UVs.size() > 0; }
-	FORCEINLINE bool HasBone(const std::string& InBoneName) const { return _Bones.find(InBoneName) != _Bones.end(); }
 
 	void CalculateBounds();
 	const Sphere& GetSphereBound() const { return _SphereBound; }
 	const Box& GetBoxBound() const { return _BoxBound; }
 
-	// 리깅 관련 함수
+	// 스켈레탈 애니메이션 관련 함수
+	FORCEINLINE bool IsSkinnedMesh() const { return _MeshType == MeshType::Skinned; }
+	FORCEINLINE bool HasBone(const std::string& InBoneName) const { return _Bones.find(InBoneName) != _Bones.end(); }
+
 	Transform& GetBoneTransform(const std::string& InBoneName) { return _Bones.at(InBoneName).GetTransform(); }
 	FORCEINLINE const Transform& GetBoneTransform(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetTransform(); }
 	const Transform& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }

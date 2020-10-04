@@ -270,7 +270,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	const InputManager& input = g.GetInputManager();
 	Camera& camera = g.GetMainCamera();
 
-	// 기본 변수
+	// 기본 설정 변수
 	static float elapsedTime = 0.f;
 	static float duration = 5.f;
 	static float fovSpeed = 100.f;
@@ -279,7 +279,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
 
-	// 애니메이션을 위한 키 생성 ( 0~1 SineWave )
+	// 애니메이션을 위한 커브 생성 ( 0~1 SineWave )
 	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
 	if (elapsedTime == duration)
 	{
@@ -288,7 +288,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	float sinParam = elapsedTime * Math::TwoPI / duration;
 	float sinWave = (sinf(sinParam) + 1.f) * 0.5f;
 
-	// 게임 오브젝트의 본에 애니메이션 적용
+	// 게임 오브젝트의 본에 애니메이션 커브 적용
 	GameObject& go = g.GetGameObject(GameEngine::QuadKey);
 	if(go.IsValid())
 	{
@@ -361,7 +361,7 @@ void SoftRenderer::Render3D()
 		{
 			vertices[vi].Position = Vector4(m._Vertices[vi]);
 			
-			// 위치에 대한 스키닝 계산
+			// 위치에 대해 스키닝 연산 수행
 			if (m.IsSkinnedMesh())
 			{
 				Vector3 deltaPosition;

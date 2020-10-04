@@ -4,7 +4,7 @@
 
 using namespace CK::DD;
 
-const std::string GameEngine::QuadMeshKey("SM_Quad");
+const std::string GameEngine::QuadMeshKey("SK_Quad");
 const std::string GameEngine::PlayerKey("Player");
 const std::string GameEngine::SteveTextureKey("Steve.png");
 

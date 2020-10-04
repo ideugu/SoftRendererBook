@@ -62,8 +62,8 @@ bool GameEngine::LoadResources()
 	// 본 정보 설정
 	quadMesh.SetMeshType(MeshType::Skinned);
 	quadMesh._Bones = {
-		{"left", Bone("left", Transform(Vector3(-1.f, 0.f, 1.f)))},
-		{"right", Bone("right", Transform(Vector3(1.f, 0.f, 1.f)))}
+		{"left", Bone("left", Transform(Vector3(-1.f, 0.f, 1.f) * halfSize))},
+		{"right", Bone("right", Transform(Vector3(1.f, 0.f, 1.f) * halfSize))}
 	};
 	quadMesh._ConnectedBones = { 1, 1, 1, 1 };
 	quadMesh._Weights = {
