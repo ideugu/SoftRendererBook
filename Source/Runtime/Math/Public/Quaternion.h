@@ -33,6 +33,13 @@ public:
 		Z = -sy * sp * cr + sr * cy * cp;
 	}
 
+	FORCEINLINE explicit Quaternion(const Matrix3x3& InMatrix)
+	{
+		float trace = InMatrix[0][0] + InMatrix[1][1] + InMatrix[2][2];
+		// Trace 값은 3 - 4(x^2+y^2+w^2),  trace + 1 = w^2.  그러므로 trace = w^2 - 1
+		// 
+	}
+
 	FORCEINLINE Quaternion operator*(const Quaternion& InQuaternion) const;
 	FORCEINLINE Quaternion operator*=(const Quaternion& InQuaternion);
 	FORCEINLINE Vector3 operator*(const Vector3& InVector) const;

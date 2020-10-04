@@ -35,7 +35,7 @@ public:
 	std::size_t GetHash() const { return _Hash; }
 
 	// 검색 관련
-	bool IsNotFound() const { return _Hash == std::hash<std::string>()("!NOTFOUND"); }
+	bool Found() const { return _Hash == std::hash<std::string>()("!NOTFOUND"); }
 	FORCEINLINE bool operator<(const GameObject& InGameObject) const;
 	FORCEINLINE bool operator<(const std::string& InString) const;
 	FORCEINLINE bool operator==(const GameObject& InGameObject) const;

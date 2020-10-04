@@ -82,7 +82,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	// 플레이어 게임 오브젝트 트랜스폼의 변경
 	GameObject& player = _GameEngine2.FindGameObject(GameEngine::PlayerKey);
-	if (!player.IsNotFound())
+	if (!player.Found())
 	{
 		Transform& playerTransform = player.GetTransform();
 		playerTransform.AddPosition(Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)) * moveSpeed * InDeltaSeconds);
@@ -226,7 +226,7 @@ void SoftRenderer::Render2D()
 	_RSI->PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
 
 	const GameObject& player = _GameEngine2.FindGameObject(GameEngine::PlayerKey);
-	if (!player.IsNotFound())
+	if (!player.Found())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
 		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());

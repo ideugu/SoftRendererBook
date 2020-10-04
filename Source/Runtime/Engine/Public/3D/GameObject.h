@@ -8,13 +8,12 @@ namespace DDD
 class GameObject
 {
 public:
-	GameObject() = default;
 	GameObject(const std::string& InName) : _Name(InName)
 	{
 		_Hash = std::hash<std::string>()(_Name);
 	}
 
-	~GameObject() { }
+	~GameObject() {}
 
 public:
 	// 트랜스폼
@@ -22,9 +21,9 @@ public:
 	const Transform& GetTransform() const { return _Transform; }
 
 	// 메시
-	void SetMesh(const std::string& InMeshKey);
-	const std::string& GetMeshKey() const;
-	bool HasMesh() const { return _MeshKey.size() > 0; }
+	void SetMesh(const std::size_t& InMeshKey);
+	std::size_t GetMeshKey() const;
+	bool HasMesh() const { return _MeshKey != Math::DefaultHash; }
 
 	// 색상
 	void SetColor(const LinearColor& InColor) { _Color = InColor; }
@@ -35,54 +34,16 @@ public:
 	std::size_t GetHash() const { return _Hash; }
 
 	// 검색 관련
-	bool IsNotFound() const { return _Hash == std::hash<std::string>()("!NOTFOUND"); }
-	FORCEINLINE bool operator<(const GameObject& InGameObject) const;
-	FORCEINLINE bool operator<(const std::string& InString) const;
-	FORCEINLINE bool operator==(const GameObject& InGameObject) const;
-	FORCEINLINE bool operator==(const std::string& InString) const;
-	FORCEINLINE bool operator!=(const GameObject& InGameObject) const;
-	FORCEINLINE bool operator!=(const std::string& InString) const;
-
+	bool IsValid() const { return _Hash != Math::DefaultHash; }
 	const static GameObject NotFound;
 
 private:
-	std::size_t _Hash = 0;
+	std::size_t _Hash = Math::DefaultHash;
 	std::string _Name;
-	std::string _MeshKey;
+	std::size_t _MeshKey = Math::DefaultHash;
 	Transform _Transform;
 	LinearColor _Color = LinearColor::Error;
 };
-
-
-FORCEINLINE bool GameObject::operator<(const GameObject& InGameObject) const
-{
-	return _Hash < InGameObject.GetHash();
-}
-
-FORCEINLINE bool GameObject::operator<(const std::string& InString) const
-{
-	return _Hash < std::hash<std::string>()(InString);
-}
-
-FORCEINLINE bool GameObject::operator==(const GameObject& InGameObject) const
-{
-	return _Hash == InGameObject.GetHash();
-}
-
-FORCEINLINE bool GameObject::operator==(const std::string& InString) const
-{
-	return _Hash == std::hash<std::string>()(InString);
-}
-
-FORCEINLINE bool GameObject::operator!=(const GameObject& InGameObject) const
-{
-	return _Hash != InGameObject.GetHash();
-}
-
-FORCEINLINE bool GameObject::operator!=(const std::string& InString) const
-{
-	return _Hash != std::hash<std::string>()(InString);
-}
 
 }
 }

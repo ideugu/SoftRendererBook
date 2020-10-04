@@ -3,12 +3,10 @@
 #include <random>
 using namespace CK::DDD;
 
-const std::string GameEngine::CubeMeshKey("SM_Cube");
-const std::string GameEngine::GizmoArrowMeshKey("SM_Arrow");
-const std::string GameEngine::PlaneMeshKey("SM_Plane");
-const std::string GameEngine::PlaneKey("Plane");
-const std::string GameEngine::PlayerKey("Player");
-const std::string GameEngine::SteveTextureKey("Steve.png");
+const std::size_t GameEngine::QuadMeshKey = std::hash<std::string>()("SM_Quad");
+const std::size_t GameEngine::DiffuseTexture = std::hash<std::string>()("Diffuse");
+const std::string GameEngine::QuadKey("Player");
+const std::string GameEngine::SteveTexturePath("Steve.png");
 
 void GameEngine::OnScreenResize(const ScreenPoint& InScreenSize)
 {
@@ -46,122 +44,45 @@ bool GameEngine::Init()
 bool GameEngine::LoadResources()
 {
 	// 큐브 메시
-	Mesh cubeMesh;
+	Mesh quadMesh;
 	static const float halfSize = 0.5f;
 
-	cubeMesh._Vertices = {
-		// Right 
-		Vector3(-1.f, -1.f, -1.f)* halfSize, Vector3(-1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, -1.f)* halfSize,
-		// Front
-		Vector3(-1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize,
-		// Back
-		Vector3(-1.f, -1.f, -1.f)* halfSize, Vector3(-1.f, 1.f, -1.f)* halfSize, Vector3(1.f, 1.f, -1.f)* halfSize, Vector3(1.f, -1.f, -1.f)* halfSize,
-		// Left
-		Vector3(1.f, -1.f, -1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(1.f, 1.f, -1.f)* halfSize,
-		// Top
-		Vector3(-1.f, 1.f, -1.f)* halfSize, Vector3(1.f, 1.f, -1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize,
-		// Bottom
-		Vector3(-1.f, -1.f, -1.f)* halfSize, Vector3(1.f, -1.f, -1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, -1.f, 1.f)* halfSize
+	quadMesh._Vertices = {
+		Vector3(-1.f, -1.f, 1.f)* halfSize, Vector3(-1.f, 1.f, 1.f)* halfSize, Vector3(1.f, 1.f, 1.f)* halfSize, Vector3(1.f, -1.f, 1.f)* halfSize
 	};
 
-	cubeMesh._Indices = {
-			0, 1, 2, 0, 2, 3, // Right
-			4, 6, 5, 4, 7, 6, // Front
-			8, 9, 10, 8, 10, 11, // Back
-			12, 14, 13, 12, 15, 14, // Left
-			16, 18, 17, 16, 19, 18, // Top
-			20, 21, 22, 20, 22, 23  // Bottom
+	quadMesh._Indices = {
+		0, 2, 1, 0, 3, 2
 	};
 
-	cubeMesh._UVs = {
-		// Right
-		Vector2(0.f, 48.f) / 64.f, Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(0.f, 56.f) / 64.f,
-		// Front
-		Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(16.f, 48.f) / 64.f,
-		// Back
-		Vector2(32.f, 48.f) / 64.f, Vector2(32.f, 56.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(24.f, 48.f) / 64.f,
-		// Left
-		Vector2(24.f, 48.f) / 64.f, Vector2(16.f, 48.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(24.f, 56.f) / 64.f,
-		// Top
-		Vector2(8.f, 64.f) / 64.f, Vector2(16.f, 64.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(8.f, 56.f) / 64.f,
-		// Bottom
-		Vector2(16.f, 64.f) / 64.f, Vector2(24.f, 64.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f
+	quadMesh._UVs = {
+		Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(16.f, 48.f) / 64.f
 	};
 
-	cubeMesh.CalculateBounds();
-
-	_Meshes.insert({ GameEngine::CubeMeshKey , std::move(cubeMesh) });
-
-	// 기즈모 화살표
-	Mesh gizmoArrow;
-	gizmoArrow._Vertices = {
-		// Shaft
-		Vector3(-1.f, -1.f, 0.f) * halfSize, Vector3(-1.f, -1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 0.f) * halfSize,
-		Vector3(-1.f, -1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 5.f) * halfSize, Vector3(1.f, 1.f, 5.f) * halfSize, Vector3(1.f, -1.f, 5.f) * halfSize,
-		Vector3(-1.f, -1.f, 0.f) * halfSize, Vector3(-1.f, 1.f, 0.f) * halfSize, Vector3(1.f, 1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 0.f) * halfSize,
-		Vector3(1.f, -1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 5.f) * halfSize, Vector3(1.f, 1.f, 5.f) * halfSize, Vector3(1.f, 1.f, 0.f) * halfSize,
-		Vector3(-1.f, 1.f, 0.f) * halfSize, Vector3(1.f, 1.f, 0.f) * halfSize, Vector3(1.f, 1.f, 5.f) * halfSize, Vector3(-1.f, 1.f, 5.f) * halfSize,
-		Vector3(-1.f, -1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 0.f) * halfSize, Vector3(1.f, -1.f, 5.f) * halfSize, Vector3(-1.f, -1.f, 5.f) * halfSize,
-
-		// Head
-		Vector3(-1.f, -1.f, 2.5f), Vector3(-1.f, 1.f, 2.5f), Vector3(1.f, 1.f, 2.5f), Vector3(1.f, -1.f, 2.5f),
-		Vector3(0.f, 0.f, 4.f)
+	// 본 정보 설정
+	quadMesh.SetMeshType(MeshType::Skinned);
+	quadMesh._Bones = {
+		{"left", Bone("left", Transform(Vector3(-1.f, 0.f, 1.f)))},
+		{"right", Bone("right", Transform(Vector3(1.f, 0.f, 1.f)))}
+	};
+	quadMesh._ConnectedBones = { 1, 1, 1, 1 };
+	quadMesh._Weights = {
+		{ {"left"}, {1.f} },
+		{ {"left"}, {1.f} },
+		{ {"right"}, {1.f} },
+		{ {"right"}, {1.f} }
 	};
 
-	gizmoArrow._Indices = {
-		// Shaft
-		0, 1, 2, 0, 2, 3,
-		4, 6, 5, 4, 7, 6,
-		8, 9, 10, 8, 10, 11,
-		12, 14, 13, 12, 15, 14,
-		16, 18, 17, 16, 19, 18,
-		20, 21, 22, 20, 22, 23,
-		// Head
-		24, 26, 25, 24, 27, 26,
-		24, 28, 27, 24, 25, 28, 25, 26, 28, 26, 27, 28
-	};
-
-	gizmoArrow.CalculateBounds();
-
-	_Meshes.insert({ GameEngine::GizmoArrowMeshKey , std::move(gizmoArrow) });
-
-	// 평면
-	Mesh planeMesh;
-	planeMesh._Vertices = {
-		//Vector3(-1.f, 0.f, -1.f),
-		//Vector3(0.f, 0.f, 1.f),
-		//Vector3(1.f, 0.f, -1.f)
-
-		Vector3(-1.f, 0.f, -1.f),
-		Vector3(-1.f, 0.f, 1.f),
-		Vector3(1.f, 0.f, 1.f),
-		Vector3(1.f, 0.f, -1.f)
-	};
-
-	planeMesh._UVs = {
-		Vector2(0.125f, 0.75f),
-		Vector2(0.125f, 0.875f),
-		Vector2(0.25f, 0.875f),
-		Vector2(0.25f, 0.75f)
-	};
-
-	planeMesh._Indices = {
-		//1, 2, 0
-
-		0, 1, 2,
-		0, 2, 3
-	};
-
-	planeMesh.CalculateBounds();
-
-	_Meshes.insert({ GameEngine::PlaneMeshKey, std::move(planeMesh) });
+	quadMesh.CalculateBounds();
+	AddMesh(GameEngine::QuadMeshKey, quadMesh);
 
 	// 텍스쳐 로딩
-	_MainTexture = Texture(SteveTextureKey);
-	if (!GetMainTexture().IsIntialized())
+	Texture diffuseTexture(SteveTexturePath);
+	if(!diffuseTexture.IsIntialized())
 	{
 		return false;
 	}
+	AddTexture(GameEngine::DiffuseTexture, diffuseTexture);
 
 	return true;
 }
@@ -169,71 +90,54 @@ bool GameEngine::LoadResources()
 bool GameEngine::LoadScene()
 {
 	// 플레이어 설정
-	static float cubeScale = 100.f;
-	GameObject player(GameEngine::PlayerKey);
-	player.SetMesh(GameEngine::CubeMeshKey);
-	player.GetTransform().SetPosition(Vector3(0.f, 300.f, 0.f));
-	player.GetTransform().SetScale(Vector3::One * cubeScale);
+	static float quadScale = 100.f;
+	GameObject player(GameEngine::QuadKey);
+	player.SetMesh(GameEngine::QuadMeshKey);
+	player.GetTransform().SetPosition(Vector3::Zero);
+	player.GetTransform().SetScale(Vector3::One * quadScale);
 	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
 	player.SetColor(LinearColor::Blue);
-	InsertGameObject(std::move(player));
-
-	// 고정 시드로 랜덤하게 생성
-	std::mt19937 generator(0);
-	std::uniform_real_distribution<float> distZ(-3000.f, 3000.f);
-	std::uniform_real_distribution<float> distXY(-3000.f, 3000.f);
-
-	// 500개의 배경 게임 오브젝트 생성
-	for (int i = 0; i < 500; ++i)
-	{
-		char name[64];
-		std::snprintf(name, sizeof(name), "GameObject%d", i);
-		GameObject newGo(name);
-		newGo.GetTransform().SetPosition(Vector3(distXY(generator), distXY(generator), distZ(generator)));
-		newGo.GetTransform().SetScale(Vector3::One * cubeScale);
-		newGo.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
-		newGo.SetMesh(GameEngine::CubeMeshKey);
-		newGo.SetColor(LinearColor::Blue);
-		if (!InsertGameObject(std::move(newGo)))
-		{
-			// 같은 이름 중복이 발생하면 로딩 취소.
-			return false;
-		}
-	}
+	AddGameObject(std::move(player));
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -500.f));
-	_MainCamera.SetFarZ(5000.f);
-
-	// 평면 설정
-	static float planeScale = 800.f;
-	GameObject plane(GameEngine::PlaneKey);
-	plane.SetMesh(GameEngine::PlaneMeshKey);
-	plane.GetTransform().SetScale(Vector3::One * planeScale);
-	plane.GetTransform().SetPosition(Vector3(0.f, 0.f, 0.f));
-	plane.GetTransform().SetRotation(Rotator(0.f, 0.f, 0.f));
-	plane.SetColor(LinearColor::LightGray);
-	//InsertGameObject(std::move(plane));
-
-	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 500.f, -700.f));
-	//_MainCamera.SetLookAtRotation(Vector3(0.f, 300.f, 0.f));
+	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 0.f, -500.f));
+	_MainCamera.SetLookAtRotation(Vector3::Zero);
 
 	return true;
 }
 
-// 정렬하면서 삽입하기
-bool GameEngine::InsertGameObject(GameObject& InGameObject)
+bool GameEngine::AddMesh(const std::size_t& InKey, const Mesh& InMesh)
 {
-	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InGameObject);
+	auto meshPtr = std::make_unique<Mesh>(InMesh);
+	return _Meshes.insert({ InKey, std::move(meshPtr) }).second;
+}
+
+bool GameEngine::AddTexture(const std::size_t& InKey, const Texture& InTexture)
+{
+	auto texturePtr = std::make_unique<Texture>(InTexture);
+	return _Textures.insert({ InKey, std::move(texturePtr) }).second;
+}
+
+// 정렬하면서 삽입하기
+bool GameEngine::AddGameObject(const GameObject& InGameObject)
+{
+	auto goPtr = std::make_unique<GameObject>(InGameObject);
+
+	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), InGameObject, 
+		[](const std::unique_ptr<GameObject>& lhs, const GameObject& rhs) 
+		{
+			return lhs->GetHash() < rhs.GetHash(); 
+		}
+	);
+
 	if (it == _Scene.end())
 	{
-		_Scene.push_back(std::move(InGameObject));
+		_Scene.push_back(std::move(goPtr));
 		return true;
 	}
 
 	std::size_t inHash = InGameObject.GetHash();
-	std::size_t targetHash = (*it).GetHash();
+	std::size_t targetHash = (*it)->GetHash();
 
 	if (targetHash == inHash)
 	{
@@ -242,22 +146,29 @@ bool GameEngine::InsertGameObject(GameObject& InGameObject)
 	}
 	else if (targetHash < inHash)
 	{
-		_Scene.insert(it + 1, std::move(InGameObject));
+		_Scene.insert(it + 1, std::move(goPtr));
 	}
 	else
 	{
-		_Scene.insert(it, std::move(InGameObject));
+		_Scene.insert(it, std::move(goPtr));
 	}
 
 	return true;
 }
 
-GameObject& GameEngine::FindGameObject(const std::string& InName)
+GameObject& GameEngine::GetGameObject(const std::string& InName)
 {
-	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InName);
+	std::size_t targetHash = std::hash<std::string>()(InName);
+	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), targetHash,
+		[](const std::unique_ptr<GameObject>& lhs, std::size_t rhs)
+	{
+		return lhs->GetHash() < rhs;
+	}
+	);
+
 	if (it != _Scene.end())
 	{
-		return (*it);
+		return *(*it).get();
 	}
 
 	return const_cast<GameObject&>(GameObject::NotFound);

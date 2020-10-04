@@ -2,14 +2,14 @@
 #include "Precompiled.h"
 using namespace CK::DDD;
 
-const GameObject GameObject::NotFound("!NOTFOUND");
+const GameObject GameObject::NotFound(Math::DefaultHashName);
 
-void GameObject::SetMesh(const std::string& InMeshKey)
+void GameObject::SetMesh(const std::size_t& InMeshKey)
 {
 	_MeshKey = InMeshKey;
 }
 
-const std::string& GameObject::GetMeshKey() const
+std::size_t GameObject::GetMeshKey() const
 {
 	return _MeshKey;
 }

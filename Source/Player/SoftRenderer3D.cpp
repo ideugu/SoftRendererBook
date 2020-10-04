@@ -221,7 +221,7 @@ namespace CK::DDD
 
 
 	// 정점 변환 코드
-	FORCEINLINE void VertexShader3D(std::vector<Vertex3D>& InVertices, Matrix4x4 InMatrix)
+	FORCEINLINE void VertexShader3D(std::vector<Vertex3D>& InVertices, const Matrix4x4& InMatrix)
 	{
 		// 위치 값에 최종 행렬을 적용해 변환
 		for (Vertex3D& v : InVertices)
@@ -230,12 +230,10 @@ namespace CK::DDD
 		}
 	}
 
-	LinearColor colorParam = LinearColor::White;
-
 	// 픽셀 변환 코드
-	FORCEINLINE LinearColor FragmentShader3D(LinearColor InColor)
+	FORCEINLINE LinearColor FragmentShader3D(LinearColor& InColor, const LinearColor& InColorParam)
 	{
-		return InColor * colorParam;
+		return InColor * InColorParam;
 	}
 }
 
@@ -267,52 +265,71 @@ void SoftRenderer::DrawGizmo3D()
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
+	// 기본 레퍼런스
+	GameEngine& g = GetGameEngine();
+	const InputManager& input = g.GetInputManagerC();
+	Camera& camera = g.GetMainCamera();
+
+	// 기본 변수
+	static float elapsedTime = 0.f;
 	static float duration = 5.f;
 	static float fovSpeed = 100.f;
-	static float elapsedTime = 0.f;
-
-	// 랜덤 발생기
-	static std::mt19937 generator(0);
-	static std::uniform_real_distribution<float> dir(-1.f, 1.f);
-	static std::uniform_real_distribution<float> angle(0.f, 180.f);
-
-	const InputManager& input = _GameEngine3.GetInputManager();
-	Camera& camera = _GameEngine3.GetMainCamera();
-
-	// 선형 보간을 위한 사원수 변수
-	static Quaternion startRotation(camera.GetTransform().GetRotation());
-	static Quaternion targetRotation(Rotator(90.f, 0.f, 0.f));
-
-	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
-	if (elapsedTime == duration)
-	{
-		elapsedTime = 0.f;
-		startRotation = targetRotation;
-
-		Vector3 randomAxis(dir(generator), dir(generator), dir(generator));
-		randomAxis.Normalize();
-		targetRotation = Quaternion(randomAxis, angle(generator));
-		camera.GetTransform().SetRotation(startRotation);
-	}
-	else
-	{
-		float t = elapsedTime / duration;
-		Quaternion current = Quaternion::Slerp(startRotation, targetRotation, t);
-		camera.GetTransform().SetRotation(current);
-	}
 
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
+
+	// 애니메이션을 위한 키 생성 ( 0~1 SineWave )
+	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
+	if (elapsedTime == duration)
+	{
+		elapsedTime = 0.f;
+	}
+	float sinParam = elapsedTime * Math::TwoPI / duration;
+	float sinWave = (sinf(sinParam) + 1.f) * 0.5f;
+
+	// 게임 오브젝트의 본에 애니메이션 적용
+	GameObject& go = g.GetGameObject(GameEngine::QuadKey);
+	if(go.IsValid())
+	{
+		Mesh& m = g.GetMesh(go.GetMeshKey());
+		if (m.IsSkinnedMesh())
+		{
+			const std::string leftBone("left");
+			const std::string rightBone("right");
+
+			if (m.HasBone(leftBone))
+			{
+				Transform& boneTransform = m.GetBoneTransform(leftBone);
+				boneTransform.SetPosition(Vector3::UnitX * -sinWave);
+				const Transform& bindPoseTransform = m.GetBindPose(leftBone);
+				Vector3 bonePosition = bindPoseTransform.GetPosition() + boneTransform.GetPosition();
+
+				_RSI->PushStatisticText("Left Bone : " + bonePosition.ToString());
+			}
+
+			if (m.HasBone(rightBone))
+			{
+				Transform& boneTransform = m.GetBoneTransform(rightBone);
+				boneTransform.SetPosition(Vector3::UnitX * sinWave);
+				const Transform& bindPoseTransform = m.GetBindPose(rightBone);
+				Vector3 bonePosition = bindPoseTransform.GetPosition() + boneTransform.GetPosition();
+
+				_RSI->PushStatisticText("Right Bone : " + bonePosition.ToString());
+			}
+		}
+	}
 }
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
 {
+	const GameEngine& g = GetGameEngineC();
+
 	// 기즈모 그리기
 	DrawGizmo3D();
 
-	const Camera& mainCamera = _GameEngine3.GetMainCamera();
+	const Camera& mainCamera = g.GetMainCamera();
 	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
 	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
 	Matrix4x4 pvMat = perspMat * viewMat;
@@ -320,103 +337,64 @@ void SoftRenderer::Render3D()
 	float nearZ = mainCamera.GetNearZ();
 	float farZ = mainCamera.GetFarZ();
 
-	size_t totalObjects = _GameEngine3.GetScene().size();
-	size_t culledObjects = 0;
-	size_t intersectedObjects = 0;
-	size_t renderedObjects = 0;
+	const Texture& mainTexture = g.GetTextureC(GameEngine::DiffuseTexture);
 
-	// 절두체 컬링을 수행하기 위한 기본 설정 값
-	float halfFOV = mainCamera.GetFOV() * 0.5f;
-	float pSin, pCos;
-	Math::GetSinCos(pSin, pCos, halfFOV);
-
-	// 절두체 평면의 방정식
-	static std::array<Plane, 6> frustumPlanesManual = {
-		Plane(Vector3(pCos, 0.f, pSin), 0.f), // +Y
-		Plane(Vector3(-pCos, 0.f, pSin), 0.f), // -Y
-		Plane(Vector3(0.f, pCos, pSin), 0.f), // +X
-		Plane(Vector3(0.f, -pCos, pSin), 0.f), // -X
-		Plane(Vector3::UnitZ, nearZ), // +Z
-		Plane(-Vector3::UnitZ, -farZ) // -Z
-	};
-
-	Frustum f1(frustumPlanesManual);
-
-	// 절두체 컬링을 위한 준비 작업. 행 벡터를 쉽게 구할 수 있게 전치시켜 둔다.
-	Matrix4x4 pvMatT = pvMat.Tranpose();
-	std::array<Plane, 6> frustumPlanesFromMatrix = {
-		-(pvMatT[3] - pvMatT[1]), // +Y
-		-(pvMatT[3] + pvMatT[1]), // -Y
-		-(pvMatT[3] - pvMatT[0]), // +X
-		-(pvMatT[3] + pvMatT[0]), // -X 
-		-(pvMatT[3] - pvMatT[2]),  // +Z
-		-(pvMatT[3] + pvMatT[2]), // -Z
-	};
-
-	Frustum f2(frustumPlanesFromMatrix);
-
-	const Texture& mainTexture = _GameEngine3.GetMainTexture();
-
-	for (auto it = _GameEngine3.SceneBegin(); it != _GameEngine3.SceneEnd(); ++it)
+	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
-		const GameObject& gameObject = *it;
+		const GameObject& gameObject = *(*it);
 		const Transform& transform = gameObject.GetTransform();
 
-		// 동차좌표계를 사용해 절두체 컬링을 수행
-		const Mesh& mesh = _GameEngine3.GetMesh(gameObject.GetMeshKey());
-
-		Matrix4x4 finalMat = pvMat * transform.GetModelingMatrix();
-		Matrix4x4 finalMatT = finalMat.Tranpose();
-		std::array<Plane, 6> frustumPlanesFromMatrix2 = {
-			-(finalMatT[3] - finalMatT[1]), // up
-			-(finalMatT[3] + finalMatT[1]), // bottom
-			-(finalMatT[3] - finalMatT[0]), // right
-			-(finalMatT[3] + finalMatT[0]), // left 
-			-(finalMatT[3] - finalMatT[2]),  // far
-			-(finalMatT[3] + finalMatT[2]), // near
-		};
-
-		Frustum f3(frustumPlanesFromMatrix2);
-
-		// 바운딩 영역의 크기도 트랜스폼에 맞게 조정
-		const Sphere& sphereBound = mesh.GetSphereBound();
-		const Box& boxBound = mesh.GetBoxBound();
-
-		auto checkResult = f3.CheckBound(boxBound);
-		if (checkResult == BoundCheckResult::Outside)
+		if (!gameObject.HasMesh())
 		{
-			culledObjects++;
 			continue;
 		}
-		else if(checkResult == BoundCheckResult::Intersect)
-		{
-			intersectedObjects++;
-			colorParam = LinearColor::Red;
-		}
-		else
-		{
-			colorParam = LinearColor::White;
-		}
 
-		size_t vertexCount = mesh._Vertices.size();
-		size_t indexCount = mesh._Indices.size();
+		const Mesh& m = g.GetMesh(gameObject.GetMeshKey());
+
+		size_t vertexCount = m._Vertices.size();
+		size_t indexCount = m._Indices.size();
 		size_t triangleCount = indexCount / 3;
-		bool hasUV = mesh._UVs.size() > 0;
+		bool hasUV = m._UVs.size() > 0;
 
 		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼로 변환
 		std::vector<Vertex3D> vertices(vertexCount);
-		std::vector<int> indice(mesh._Indices);
-		for (int vi = 0; vi < vertexCount; ++vi)
+		std::vector<int> indice(m._Indices);
+		for (size_t vi = 0; vi < vertexCount; ++vi)
 		{
-			vertices[vi].Position = Vector4(mesh._Vertices[vi]);
+			vertices[vi].Position = Vector4(m._Vertices[vi]);
+			
+			// 위치에 대한 스키닝 계산
+			if (m.IsSkinnedMesh())
+			{
+				Vector3 deltaPosition;
+				Weight w = m._Weights[vi];
+				for (size_t wi = 0; wi < m._ConnectedBones[vi]; ++wi)
+				{
+					std::string boneName = w.Bones[wi];
+					if (m.HasBone(boneName))
+					{
+						const Transform& boneTransform = m.GetBoneTransform(boneName);
+						deltaPosition += boneTransform.GetPosition() * w.Values[wi];
+					}
+				}
+
+				vertices[vi].Position += Vector4(deltaPosition, false);
+			}
+
 			if(hasUV)
 			{
-				vertices[vi].UV = mesh._UVs[vi];
+				vertices[vi].UV = m._UVs[vi];
 			}
 		}
 
+		// 최종 변환 행렬
+		Matrix4x4 finalMatrix = pvMat * transform.GetModelingMatrix();
+
+		// 최종 색상
+		LinearColor finalColor = LinearColor::White;
+
 		// 정점 변환 진행
-		VertexShader3D(vertices, finalMat);
+		VertexShader3D(vertices, finalMatrix);
 
 		// 삼각형 별로 그리기
 		for (int ti = 0; ti < triangleCount; ++ti)
@@ -446,21 +424,16 @@ void SoftRenderer::Render3D()
 			{
 				size_t si = ti * 3;
 				std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);
-				DrawTriangle(sub);
+				DrawTriangle(sub, finalColor);
 			}
 		}
-
-		renderedObjects++;
 	}
-
-	_RSI->PushStatisticText("Total GameObjects : " + std::to_string(totalObjects));
-	_RSI->PushStatisticText("Culled GameObjects : " + std::to_string(culledObjects));
-	_RSI->PushStatisticText("Intersected GameObjects : " + std::to_string(intersectedObjects));
-	_RSI->PushStatisticText("Rendered GameObjects : " + std::to_string(renderedObjects));
 }
 
-void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)
+void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices, const LinearColor& InColorParam)
 {
+	const GameEngine& g = GetGameEngineC();
+
 	for (auto& v : vertices)
 	{
 		// 무한 원점인 경우, 약간 보정해준다.
@@ -560,8 +533,8 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)
 				float z = invZ0 * oneMinusST + invZ1 * s + invZ2 * t;
 				float invZ = 1.f / z;
 
-				float n = _GameEngine3.GetMainCamera().GetNearZ();
-				float f = _GameEngine3.GetMainCamera().GetFarZ();
+				float n = g.GetMainCamera().GetNearZ();
+				float f = g.GetMainCamera().GetFarZ();
 				//float newDepth = (invZ - n) / (f - n);
 				float newDepth = (vertices[0].Position.Z * oneMinusST * invZ0 + vertices[1].Position.Z * s * invZ1 + vertices[2].Position.Z * t * invZ2) * invZ;
 				float prevDepth = _RSI->GetDepthBufferValue(fragment);
@@ -589,7 +562,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& vertices)
 					Vector2 targetUV = (vertices[0].UV * oneMinusST * invZ0 + vertices[1].UV * s * invZ1 + vertices[2].UV * t * invZ2) * invZ;
 
 					// 텍스쳐 매핑 진행
-					_RSI->DrawPoint(fragment, FragmentShader3D(_GameEngine3.GetMainTexture().GetSample(targetUV)));
+					_RSI->DrawPoint(fragment, FragmentShader3D(g.GetTextureC(GameEngine::DiffuseTexture).GetSample(targetUV), InColorParam));
 				}
 			}
 		}

@@ -31,6 +31,7 @@ public:
 	}
 
 	// ¸â¹öÇÔ¼ö 
+	FORCEINLINE Matrix2x2 ToMatrix2x2() const;
 	FORCEINLINE void SetIdentity();
 	FORCEINLINE Matrix3x3 Tranpose() const;
 
@@ -130,6 +131,11 @@ FORCEINLINE Vector2 Matrix3x3::operator*(const Vector2& InVector) const
 	v3 *= *this;
 
 	return v3.ToVector2();
+}
+
+FORCEINLINE Matrix2x2 Matrix3x3::ToMatrix2x2() const
+{
+	return Matrix2x2(Cols[0].ToVector2(), Cols[1].ToVector2());
 }
 
 }

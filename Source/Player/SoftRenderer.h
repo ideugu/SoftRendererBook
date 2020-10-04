@@ -24,7 +24,8 @@ public:
 	std::function<INT64()> _PerformanceMeasureFunc;
 
 	// 게임 엔진 레퍼런스 ( 외부 연동 및 공용 로직 ) 
-	DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
+	FORCEINLINE DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
+	FORCEINLINE const DDD::GameEngine& GetGameEngineC() { return _GameEngine3; }
 
 private:
 	// 기본 루프 함수
@@ -52,7 +53,7 @@ private:
 	void Update3D(float InDeltaSeconds);
 	void Render3D();
 
-	void DrawTriangle(std::vector<struct Vertex3D>& vertices);
+	void DrawTriangle(std::vector<struct Vertex3D>& vertices, const LinearColor& InColorParam);
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);

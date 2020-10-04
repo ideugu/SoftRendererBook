@@ -9,6 +9,17 @@ class Transform
 {
 public:
 	Transform() = default;
+	Transform(const Vector3& InPosition) : _Position(InPosition) {}
+	Transform(const Vector3& InPosition, const Quaternion& InRotation) : _Position(InPosition), _Rotation(InRotation) {}
+	Transform(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : _Position(InPosition), _Rotation(InRotation), _Scale(InScale) {}
+	Transform(const Matrix4x4& InMatrix)
+	{
+		_Position = InMatrix[3].ToVector3();
+		_Scale = Vector3(InMatrix[0].ToVector3().Size(), InMatrix[1].ToVector3().Size(), InMatrix[2].ToVector3().Size());
+		_Right = InMatrix[0].ToVector3() / _Scale.X;
+		_Up = InMatrix[1].ToVector3() / _Scale.Y;
+		_Forward = InMatrix[2].ToVector3() / _Scale.Z;
+	}
 
 public:
 	void SetPosition(const Vector3& InPosition) { _Position = InPosition; }

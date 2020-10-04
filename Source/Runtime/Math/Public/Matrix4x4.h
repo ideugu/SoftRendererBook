@@ -29,6 +29,7 @@ public:
 	}
 
 	// ¸â¹öÇÔ¼ö 
+	FORCEINLINE Matrix3x3 ToMatrix3x3() const;
 	FORCEINLINE void SetIdentity();
 	FORCEINLINE Matrix4x4 Tranpose() const;
 
@@ -117,6 +118,11 @@ FORCEINLINE Vector3 Matrix4x4::operator*(const Vector3& InVector) const
 	v4 *= *this;
 
 	return v4.ToVector3();
+}
+
+FORCEINLINE Matrix3x3 Matrix4x4::ToMatrix3x3() const
+{
+	return Matrix3x3(Cols[0].ToVector3(), Cols[1].ToVector3(), Cols[2].ToVector3());
 }
 
 }

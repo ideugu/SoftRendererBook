@@ -26,8 +26,8 @@ public:
 
 	// 게임 오브젝트
 	const std::vector<GameObject>& GetScene() { return _Scene; }
-	std::vector<GameObject>::const_iterator SceneBegin() const { return _Scene.begin(); }
-	std::vector<GameObject>::const_iterator SceneEnd() const { return _Scene.end(); }
+	const std::vector<GameObject>::const_iterator SceneBegin() const { return _Scene.begin(); }
+	const std::vector<GameObject>::const_iterator SceneEnd() const { return _Scene.end(); }
 	bool InsertGameObject(GameObject& InGameObject);
 	GameObject& FindGameObject(const std::string& InName);
 
@@ -55,7 +55,6 @@ private:
 FORCEINLINE bool GameEngine::CheckInputSystem()
 {
 	return _InputManager.IsInputSystemReady();
-	//return (_InputManager.GetXAxis || !_InputManager.GetYAxis || !_InputManager.GetZAxis || !_InputManager.GetWAxis || !_InputManager.SpacePressed);
 }
 
 }
