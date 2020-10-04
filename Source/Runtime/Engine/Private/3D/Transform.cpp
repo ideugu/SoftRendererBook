@@ -38,12 +38,12 @@ bool Transform::SetParent(Transform& InTransform)
 	Vector3 invScale = Vector3(1.f / parentWorldScale.X, 1.f / parentWorldScale.Y, 1.f / parentWorldScale.Z);
 	Quaternion invRotation = parentWorldRotation.Inverse();
 
-	_Scale = _Scale * invScale;
-	_Rotation = invRotation * _Rotation;
+	_LocalScale = _LocalScale * invScale;
+	_LocalRotation = invRotation * _LocalRotation;
 
-	Vector3 translatedVector = _Position - parentWorldPosition;
+	Vector3 translatedVector = _LocalPosition - parentWorldPosition;
 	Vector3 rotatedVector = invRotation.RotateVector(translatedVector);
-	_Position = rotatedVector * invScale;
+	_LocalPosition = rotatedVector * invScale;
 
 	Update();
 	return true;

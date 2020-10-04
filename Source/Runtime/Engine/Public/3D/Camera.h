@@ -55,7 +55,7 @@ FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
 {
 	Vector3 viewX, viewY, viewZ;
 	GetViewLocalAxes(viewX, viewY, viewZ);
-	Vector3 pos = _Transform.GetPosition();
+	Vector3 pos = _Transform.GetLocalPosition();
 
 	return Matrix4x4(
 		Vector4(Vector3(viewX.X, viewY.X, viewZ.X), false),

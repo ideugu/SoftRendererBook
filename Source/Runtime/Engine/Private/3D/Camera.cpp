@@ -7,7 +7,7 @@ void Camera::SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& I
 	Vector3 localX, localY, localZ;
 
 	// 단위 Z축 생성
-	localZ = (InTargetPosition - _Transform.GetPosition()).Normalize();
+	localZ = (InTargetPosition - _Transform.GetLocalPosition()).Normalize();
 	// 시선 방향과 월드 Y축이 평행한 경우
 	if (Math::Abs(localZ.Y) >= (1.f - KINDA_SMALL_NUMBER))
 	{

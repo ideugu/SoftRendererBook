@@ -331,7 +331,7 @@ void SoftRenderer::Render3D()
 					if (m.HasBone(boneName))
 					{
 						const Transform& boneTransform = m.GetBoneTransform(boneName);
-						deltaPosition += boneTransform.GetPosition() * w.Values[wi];
+						deltaPosition += boneTransform.GetLocalPosition() * w.Values[wi];
 					}
 				}
 

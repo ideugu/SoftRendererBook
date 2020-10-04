@@ -345,67 +345,67 @@ bool GameEngine::LoadScene()
 	// 바디 설정
 	GameObject body(GameEngine::BodyKey);
 	body.SetMesh(GameEngine::BodyMeshKey);
-	body.GetTransform().SetPosition(bodyOffset);
+	body.GetTransform().SetLocalPosition(bodyOffset);
 	body.SetParent(player);
 
 	// 머리 피봇 설정
 	GameObject headPivot(GameEngine::HeadPivotKey);
 	headPivot.SetParent(body);
-	headPivot.GetTransform().SetPosition(headPivotOffset);
+	headPivot.GetTransform().SetLocalPosition(headPivotOffset);
 
 	// 머리 설정
 	GameObject head(GameEngine::HeadKey);
 	head.SetMesh(GameEngine::HeadMeshKey);
 	head.SetParent(headPivot);
-	head.GetTransform().SetPosition(headOffset);
+	head.GetTransform().SetLocalPosition(headOffset);
 
 	// 왼팔 피봇 설정
 	GameObject leftArmPivot(GameEngine::LArmPivotKey);
 	leftArmPivot.SetParent(body);
-	leftArmPivot.GetTransform().SetPosition(lArmPivotOffset);
+	leftArmPivot.GetTransform().SetLocalPosition(lArmPivotOffset);
 
 	// 왼팔 설정
 	GameObject leftArm(GameEngine::LArmKey);
 	leftArm.SetMesh(GameEngine::LArmMeshKey);
 	leftArm.SetParent(leftArmPivot);
-	leftArm.GetTransform().SetPosition(lArmOffset);
+	leftArm.GetTransform().SetLocalPosition(lArmOffset);
 
 	// 오른팔 피봇 설정
 	GameObject rightArmPivot(GameEngine::RArmPivotKey);
 	rightArmPivot.SetParent(body);
-	rightArmPivot.GetTransform().SetPosition(rArmPivotOffset);
+	rightArmPivot.GetTransform().SetLocalPosition(rArmPivotOffset);
 
 	// 오른팔 설정
 	GameObject rightArm(GameEngine::RArmKey);
 	rightArm.SetMesh(GameEngine::RArmMeshKey);
 	rightArm.SetParent(rightArmPivot);
-	rightArm.GetTransform().SetPosition(rArmOffset);
+	rightArm.GetTransform().SetLocalPosition(rArmOffset);
 
 	// 왼발 피봇 설정
 	GameObject leftLegPivot(GameEngine::LLegPivotKey);
 	leftLegPivot.SetParent(body);
-	leftLegPivot.GetTransform().SetPosition(lLegPivotOffset);
+	leftLegPivot.GetTransform().SetLocalPosition(lLegPivotOffset);
 
 	// 왼발 설정
 	GameObject leftLeg(GameEngine::LLegKey);
 	leftLeg.SetMesh(GameEngine::LLegMeshKey);
 	leftLeg.SetParent(leftLegPivot);
-	leftLeg.GetTransform().SetPosition(lLegOffset);
+	leftLeg.GetTransform().SetLocalPosition(lLegOffset);
 
 	// 오른발 피봇 설정
 	GameObject rightLegPivot(GameEngine::RLegPivotKey);
 	rightLegPivot.SetParent(body);
-	rightLegPivot.GetTransform().SetPosition(rLegPivotOffset);
+	rightLegPivot.GetTransform().SetLocalPosition(rLegPivotOffset);
 
 	// 오른발 설정
 	GameObject rightLeg(GameEngine::RLegKey);
 	rightLeg.SetMesh(GameEngine::RLegMeshKey);
 	rightLeg.SetParent(rightLegPivot);
-	rightLeg.GetTransform().SetPosition(rLegOffset);
+	rightLeg.GetTransform().SetLocalPosition(rLegOffset);
 
 	// 플레이어 크기 설정
-	player.GetTransform().SetScale(Vector3::One * baseScale);
-	player.GetTransform().SetRotation(Rotator(180.f, 0.f, 0.f));
+	player.GetTransform().SetLocalScale(Vector3::One * baseScale);
+	player.GetTransform().SetLocalRotation(Rotator(180.f, 0.f, 0.f));
 
 	// 최종 추가
 	AddGameObject(player);
@@ -422,7 +422,7 @@ bool GameEngine::LoadScene()
 	AddGameObject(rightLeg);
 
 	// 카메라 설정
-	_MainCamera.GetTransform().SetPosition(Vector3(0.f, 50.f, -700.f));
+	_MainCamera.GetTransform().SetLocalPosition(Vector3(0.f, 50.f, -700.f));
 
 	return true;
 }
