@@ -278,47 +278,6 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
-
-	// 애니메이션을 위한 커브 생성 ( 0~1 SineWave )
-	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
-	if (elapsedTime == duration)
-	{
-		elapsedTime = 0.f;
-	}
-	float sinParam = elapsedTime * Math::TwoPI / duration;
-	float sinWave = (sinf(sinParam) + 1.f) * 0.5f;
-
-	// 게임 오브젝트의 본에 애니메이션 커브 적용
-	GameObject& go = g.GetGameObject(GameEngine::QuadKey);
-	if(go.IsValid())
-	{
-		Mesh& m = g.GetMesh(go.GetMeshKey());
-		if (m.IsSkinnedMesh())
-		{
-			const std::string leftBone("left");
-			const std::string rightBone("right");
-
-			if (m.HasBone(leftBone))
-			{
-				Transform& boneTransform = m.GetBoneTransform(leftBone);
-				boneTransform.SetPosition(Vector3::UnitX * -sinWave);
-				const Transform& bindPoseTransform = m.GetBindPose(leftBone);
-				Vector3 bonePosition = bindPoseTransform.GetPosition() + boneTransform.GetPosition();
-
-				_RSI->PushStatisticText("Left Bone : " + bonePosition.ToString());
-			}
-
-			if (m.HasBone(rightBone))
-			{
-				Transform& boneTransform = m.GetBoneTransform(rightBone);
-				boneTransform.SetPosition(Vector3::UnitX * sinWave);
-				const Transform& bindPoseTransform = m.GetBindPose(rightBone);
-				Vector3 bonePosition = bindPoseTransform.GetPosition() + boneTransform.GetPosition();
-
-				_RSI->PushStatisticText("Right Bone : " + bonePosition.ToString());
-			}
-		}
-	}
 }
 
 // 렌더링 로직
@@ -386,7 +345,7 @@ void SoftRenderer::Render3D()
 		}
 
 		// 최종 변환 행렬
-		Matrix4x4 finalMatrix = pvMat * transform.GetModelingMatrix();
+		Matrix4x4 finalMatrix = pvMat * transform.GetWorldMatrix();
 
 		// 최종 색상
 		LinearColor finalColor = LinearColor::White;

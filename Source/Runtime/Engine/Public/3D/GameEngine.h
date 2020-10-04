@@ -44,9 +44,30 @@ public: // 공용 로직
 	FORCEINLINE const Texture& GetTexture(const std::size_t& InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
 
 public: // 주요 키 값
-	const static std::size_t QuadMeshKey;
+	// 메시
+	static const std::size_t HeadMeshKey;
+	static const std::size_t BodyMeshKey;
+	static const std::size_t LArmMeshKey;
+	static const std::size_t RArmMeshKey;
+	static const std::size_t LLegMeshKey;
+	static const std::size_t RLegMeshKey;
+
+	// 게임 오브젝트
+	static const std::string BodyKey;
+	static const std::string HeadKey;
+	static const std::string LArmKey;
+	static const std::string RArmKey;
+	static const std::string LLegKey;
+	static const std::string RLegKey;
+	static const std::string PlayerKey;
+	static const std::string HeadPivotKey;
+	static const std::string LArmPivotKey;
+	static const std::string RArmPivotKey;
+	static const std::string LLegPivotKey;
+	static const std::string RLegPivotKey;
+
+	// 텍스쳐
 	const static std::size_t DiffuseTexture;
-	const static std::string QuadKey;
 	const static std::string SteveTexturePath;
 
 private:

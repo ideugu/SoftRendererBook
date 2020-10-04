@@ -17,6 +17,7 @@ public:
 	FORCEINLINE Vector2 operator-() const;
 	FORCEINLINE Vector2 operator*(float InScalar) const;
 	FORCEINLINE Vector2 operator/(float InScalar) const;
+	FORCEINLINE Vector2 operator*(const Vector2& InVector) const;
 	FORCEINLINE Vector2 operator+(const Vector2& InVector) const;
 	FORCEINLINE Vector2 operator-(const Vector2& InVector) const;
 	FORCEINLINE Vector2& operator*=(float InScale);
@@ -110,6 +111,11 @@ FORCEINLINE Vector2 Vector2::operator+(const Vector2& InVector) const
 FORCEINLINE Vector2 Vector2::operator-(const Vector2& InVector) const
 {
 	return Vector2(X - InVector.X, Y - InVector.Y);
+}
+
+FORCEINLINE Vector2 Vector2::operator*(const Vector2& InVector) const
+{
+	return Vector2(X * InVector.X, Y * InVector.Y);
 }
 
 FORCEINLINE Vector2& Vector2::operator*=(float InScale)

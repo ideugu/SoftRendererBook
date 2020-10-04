@@ -47,7 +47,7 @@ public:
 	std::unordered_map<std::string, Bone> _Bones;
 
 private:
-	MeshType _MeshType;
+	MeshType _MeshType = MeshType::Normal;
 	Sphere _SphereBound;
 	Box _BoxBound;
 };

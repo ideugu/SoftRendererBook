@@ -19,6 +19,7 @@ public:
 	FORCEINLINE Vector4 operator-() const;
 	FORCEINLINE Vector4 operator*(float InScale) const;
 	FORCEINLINE Vector4 operator/(float InScale) const;
+	FORCEINLINE Vector4 operator*(const Vector4& InVector) const;
 	FORCEINLINE Vector4 operator+(const Vector4& InVector) const;
 	FORCEINLINE Vector4 operator-(const Vector4& InVector) const;
 	FORCEINLINE Vector4& operator*=(float InScale);
@@ -118,14 +119,19 @@ FORCEINLINE Vector4 Vector4::operator/(float InScale) const
 	return Vector4(X / InScale, Y / InScale, Z / InScale, W / InScale);
 }
 
-FORCEINLINE Vector4 Vector4::operator+(const Vector4& InV) const
+FORCEINLINE Vector4 Vector4::operator*(const Vector4& InVector) const
 {
-	return Vector4(X + InV.X, Y + InV.Y, Z + InV.Z, W + InV.W);
+	return Vector4(X * InVector.X, Y * InVector.Y, Z * InVector.Z, W * InVector.W);
 }
 
-FORCEINLINE Vector4 Vector4::operator-(const Vector4& InV) const
+FORCEINLINE Vector4 Vector4::operator+(const Vector4& InVector) const
 {
-	return Vector4(X - InV.X, Y - InV.Y, Z - InV.Z, W - InV.W);
+	return Vector4(X + InVector.X, Y + InVector.Y, Z + InVector.Z, W + InVector.W);
+}
+
+FORCEINLINE Vector4 Vector4::operator-(const Vector4& InVector) const
+{
+	return Vector4(X - InVector.X, Y - InVector.Y, Z - InVector.Z, W - InVector.W);
 }
 
 FORCEINLINE Vector4& Vector4::operator*=(float InScale)
@@ -146,21 +152,21 @@ FORCEINLINE Vector4& Vector4::operator/=(float InScale)
 	return *this;
 }
 
-FORCEINLINE Vector4& Vector4::operator+=(const Vector4& InV)
+FORCEINLINE Vector4& Vector4::operator+=(const Vector4& InVector)
 {
-	X += InV.X;
-	Y += InV.Y;
-	Z += InV.Z;
-	W += InV.W;
+	X += InVector.X;
+	Y += InVector.Y;
+	Z += InVector.Z;
+	W += InVector.W;
 	return *this;
 }
 
-FORCEINLINE Vector4& Vector4::operator-=(const Vector4& InV)
+FORCEINLINE Vector4& Vector4::operator-=(const Vector4& InVector)
 {
-	X -= InV.X;
-	Y -= InV.Y;
-	Z -= InV.Z;
-	W -= InV.W;
+	X -= InVector.X;
+	Y -= InVector.Y;
+	Z -= InVector.Z;
+	W -= InVector.W;
 	return *this;
 }
 
@@ -180,9 +186,9 @@ FORCEINLINE float Vector4::Max() const
 }
 
 
-FORCEINLINE float Vector4::Dot(const Vector4& InV) const
+FORCEINLINE float Vector4::Dot(const Vector4& InVector) const
 {
-	return X * InV.X + Y * InV.Y + Z * InV.Z + W * InV.W;
+	return X * InVector.X + Y * InVector.Y + Z * InVector.Z + W * InVector.W;
 }
 
 }
