@@ -13,8 +13,8 @@ public:
 
 public:
 	// 트랜스폼
-	Transform& GetTransform() { return _Transform; }
-	const Transform& GetTransformConst() const { return _Transform; }
+	TransformNode& GetTransformNode() { return _TransformNode; }
+	const TransformNode& GetTransformNode() const { return _TransformNode; }
 
 	// 카메라 값을 가져오는 함수
 	float GetFOV() const { return _FOV; }
@@ -36,7 +36,7 @@ public:
 	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
 
 private:
-	Transform _Transform;
+	TransformNode _TransformNode;
 
 	float _FOV = 60.f;
 	float _NearZ = 5.5f;
@@ -46,16 +46,16 @@ private:
 
 FORCEINLINE void Camera::GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
 {
-	OutViewZ = -_Transform.GetLocalZ();
-	OutViewX = -_Transform.GetLocalX();
-	OutViewY = _Transform.GetLocalY();
+	OutViewZ = -_TransformNode.GetLocalZ();
+	OutViewX = -_TransformNode.GetLocalX();
+	OutViewY = _TransformNode.GetLocalY();
 }
 
 FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
 {
 	Vector3 viewX, viewY, viewZ;
 	GetViewLocalAxes(viewX, viewY, viewZ);
-	Vector3 pos = _Transform.GetLocalPosition();
+	Vector3 pos = _TransformNode.GetWorldPosition();
 
 	return Matrix4x4(
 		Vector4(Vector3(viewX.X, viewY.X, viewZ.X), false),

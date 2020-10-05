@@ -17,9 +17,9 @@ public:
 
 public:
 	// 트랜스폼
-	Transform& GetTransform() { return _Transform; }
-	const Transform& GetTransform() const { return _Transform; }
-	void SetParent(GameObject& InGameObject) { _Transform.SetParent(InGameObject.GetTransform()); }
+	TransformNode& GetTransformNode() { return _TransformNode; }
+	const TransformNode& GetTransformNode() const { return _TransformNode; }
+	void SetParent(GameObject& InGameObject) { _TransformNode.SetParent(InGameObject.GetTransformNode()); }
 
 	// 메시
 	void SetMesh(const std::size_t& InMeshKey) { _MeshKey = InMeshKey; }
@@ -42,7 +42,7 @@ private:
 	std::size_t _Hash = Math::DefaultHash;
 	std::string _Name;
 	std::size_t _MeshKey = Math::DefaultHash;
-	Transform _Transform;
+	TransformNode _TransformNode;
 	LinearColor _Color = LinearColor::Error;
 };
 

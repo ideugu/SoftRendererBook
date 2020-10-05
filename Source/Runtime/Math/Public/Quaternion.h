@@ -35,9 +35,45 @@ public:
 
 	FORCEINLINE explicit Quaternion(const Matrix3x3& InMatrix)
 	{
+		float s = 0.f;
 		float trace = InMatrix[0][0] + InMatrix[1][1] + InMatrix[2][2];
 		// Trace 값은 3 - 4(x^2+y^2+w^2),  trace + 1 = w^2.  그러므로 trace = w^2 - 1
-		// 
+		// trace 값이 0보다 크면 별 문제 없음
+		if (trace > 0.f)
+		{
+			float invS = Math::InvSqrt(trace + 1.f);
+			W = 0.5f * (1.f / invS);
+			s = 0.5f * invS;
+
+			X = (InMatrix[2][1] - InMatrix[1][2]) * s;
+			Y = (InMatrix[0][2] - InMatrix[2][0]) * s;
+			Z = (InMatrix[1][0] - InMatrix[0][1]) * s;
+		}
+		else
+		{
+			BYTE i = 0;
+
+			if (InMatrix[1][1] > InMatrix[0][0]) { i = 1; }
+			if (InMatrix[2][2] > InMatrix[1][1]) { i = 2; }
+
+			// i, j, k 의 순서 지정
+			static const BYTE next[3] = { 1, 2, 0 };
+			const BYTE j = next[i];
+			const BYTE k = next[j];
+
+			float newTrace = InMatrix[i][i] - InMatrix[j][j] - InMatrix[k][k];
+			float invS = Math::InvSqrt(newTrace + 1.f);
+			s = 0.5f * invS;
+
+			float qt[3];
+			W = (InMatrix[k][j] - InMatrix[j][k]) * s;
+			qt[i] = 0.5f * (1.f / invS);
+			qt[j] = (InMatrix[j][i] - InMatrix[i][j]) * s;
+			qt[k] = (InMatrix[k][i] - InMatrix[i][k]) * s;
+			X = qt[0];
+			Y = qt[1];
+			Z = qt[2];
+		}
 	}
 
 	FORCEINLINE Quaternion operator*(const Quaternion& InQuaternion) const;

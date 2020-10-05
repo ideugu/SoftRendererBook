@@ -299,7 +299,7 @@ void SoftRenderer::Render3D()
 	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *(*it);
-		const Transform& transform = gameObject.GetTransform();
+		const TransformNode& transformNode = gameObject.GetTransformNode();
 
 		if (!gameObject.HasMesh())
 		{
@@ -321,22 +321,22 @@ void SoftRenderer::Render3D()
 			vertices[vi].Position = Vector4(m._Vertices[vi]);
 			
 			// 위치에 대해 스키닝 연산 수행
-			if (m.IsSkinnedMesh())
-			{
-				Vector3 deltaPosition;
-				Weight w = m._Weights[vi];
-				for (size_t wi = 0; wi < m._ConnectedBones[vi]; ++wi)
-				{
-					std::string boneName = w.Bones[wi];
-					if (m.HasBone(boneName))
-					{
-						const Transform& boneTransform = m.GetBoneTransform(boneName);
-						deltaPosition += boneTransform.GetLocalPosition() * w.Values[wi];
-					}
-				}
+			//if (m.IsSkinnedMesh())
+			//{
+			//	Vector3 deltaPosition;
+			//	Weight w = m._Weights[vi];
+			//	for (size_t wi = 0; wi < m._ConnectedBones[vi]; ++wi)
+			//	{
+			//		std::string boneName = w.Bones[wi];
+			//		if (m.HasBone(boneName))
+			//		{
+			//			const Transform& boneTransform = m.GetBoneTransform(boneName);
+			//			deltaPosition += boneTransform.GetLocalPosition() * w.Values[wi];
+			//		}
+			//	}
 
-				vertices[vi].Position += Vector4(deltaPosition, false);
-			}
+			//	vertices[vi].Position += Vector4(deltaPosition, false);
+			//}
 
 			if(hasUV)
 			{
@@ -345,7 +345,7 @@ void SoftRenderer::Render3D()
 		}
 
 		// 최종 변환 행렬
-		Matrix4x4 finalMatrix = pvMat * transform.GetWorldMatrix();
+		Matrix4x4 finalMatrix = pvMat * transformNode.GetWorldMatrix();
 
 		// 최종 색상
 		LinearColor finalColor = LinearColor::White;
