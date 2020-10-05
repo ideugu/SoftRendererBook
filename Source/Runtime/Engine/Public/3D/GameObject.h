@@ -46,5 +46,7 @@ private:
 	LinearColor _Color = LinearColor::Error;
 };
 
+
+
 }
 }

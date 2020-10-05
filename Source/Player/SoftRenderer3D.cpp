@@ -288,8 +288,8 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	goMoon.GetTransformNode().AddLocalYawRotation(rotateSpeedMoon * InDeltaSeconds);
 
 	// 카메라 릭의 회전 조절
-	//goCameraRig.GetTransformNode().AddLocalYawRotation(-input.GetAxis(InputAxis::XAxis) * yawSpeed * InDeltaSeconds);
-	//goCameraRig.GetTransformNode().AddLocalPitchRotation(-input.GetAxis(InputAxis::YAxis) * pitchSpeed * InDeltaSeconds);
+	goCameraRig.GetTransformNode().AddLocalYawRotation(-input.GetAxis(InputAxis::XAxis) * yawSpeed * InDeltaSeconds);
+	goCameraRig.GetTransformNode().AddLocalPitchRotation(-input.GetAxis(InputAxis::YAxis) * pitchSpeed * InDeltaSeconds);
 
 	// 카메라가 항상 태양을 바라보도록 설정
 	camera.SetLookAtRotation(goSun.GetTransformNode().GetWorldPosition());

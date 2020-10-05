@@ -3,7 +3,6 @@
 #include <random>
 using namespace CK::DDD;
 
-
 const std::size_t GameEngine::CubeMeshKey = std::hash<std::string>()("SM_Cube");
 
 const std::string GameEngine::Sun("Sun");
@@ -13,6 +12,15 @@ const std::string GameEngine::CameraRig("CameraRig");
 
 const std::size_t GameEngine::DiffuseTexture = std::hash<std::string>()("Diffuse");
 const std::string GameEngine::SteveTexturePath("Steve.png");
+
+struct GameObjectCompare
+{
+	bool operator()(const std::unique_ptr<GameObject>& lhs, std::size_t rhs)
+	{
+		return lhs->GetHash() < rhs;
+	}
+};
+
 
 void GameEngine::OnScreenResize(const ScreenPoint& InScreenSize)
 {
@@ -139,9 +147,8 @@ bool GameEngine::LoadScene()
 	GameObject& cameraRig = CreateNewGameObject(GameEngine::CameraRig);
 
 	// 카메라 설정
-	//_MainCamera.GetTransformNode().SetWorldPosition(Vector3(700.f, 700.f, -700.f));
 	_MainCamera.GetTransformNode().SetWorldPosition(Vector3(700.f, 700.f, -700.f));
-	_MainCamera.SetParent(sun);
+	_MainCamera.SetParent(cameraRig);
 
 	return true;
 }
@@ -161,12 +168,7 @@ bool GameEngine::AddTexture(const std::size_t& InKey, const Texture& InTexture)
 GameObject& GameEngine::CreateNewGameObject(const std::string& InName)
 {
 	std::size_t inHash = std::hash<std::string>()(InName);
-	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), inHash,
-		[](const std::unique_ptr<GameObject>& lhs, std::size_t rhs)
-	{
-		return lhs->GetHash() < rhs;
-	}
-	);
+	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), inHash, GameObjectCompare());
 
 	auto newGameObject = std::make_unique<GameObject>(InName);
 	if (it != _Scene.end())
@@ -197,12 +199,7 @@ GameObject& GameEngine::CreateNewGameObject(const std::string& InName)
 GameObject& GameEngine::GetGameObject(const std::string& InName)
 {
 	std::size_t targetHash = std::hash<std::string>()(InName);
-	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), targetHash,
-		[](const std::unique_ptr<GameObject>& lhs, std::size_t rhs)
-	{
-		return lhs->GetHash() < rhs;
-	}
-	);
+	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), targetHash, GameObjectCompare());
 
 	if (it != _Scene.end())
 	{
