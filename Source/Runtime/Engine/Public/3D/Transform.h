@@ -12,49 +12,28 @@ public:
 	Transform(const Vector3& InPosition) : Position(InPosition) { }
 	Transform(const Vector3& InPosition, const Quaternion& InRotation) : Position(InPosition), Rotation(InRotation) { }
 	Transform(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : Position(InPosition), Rotation(InRotation), Scale(InScale) { }
-	Transform(const Matrix4x4& InMatrix) 
+	Transform(const Matrix4x4& InMatrix)
 	{ 
-		//Vector3 Scale3D;
+		// 스케일 회전 행렬만 분리
+		Matrix3x3 rotScaleMatrix = InMatrix.ToMatrix3x3();
+		Position = InMatrix[3].ToVector3();
 
-		//const float SquareSum0 = InMatrix[0].ToVector3().SizeSquared();
-		//const float SquareSum1 = InMatrix[1].ToVector3().SizeSquared();
-		//const float SquareSum2 = InMatrix[2].ToVector3().SizeSquared();
+		// 크기 행렬부터 구한다. 
+		Scale = Vector3::Zero;
+		const float squareSumX = rotScaleMatrix[0].SizeSquared();
+		const float squareSumY = rotScaleMatrix[1].SizeSquared();
+		const float squareSumZ = rotScaleMatrix[2].SizeSquared();
+		if (squareSumX > SMALL_NUMBER) { Scale.X = sqrtf(squareSumX); }
+		if (squareSumY > SMALL_NUMBER) { Scale.Y = sqrtf(squareSumY); }
+		if (squareSumZ > SMALL_NUMBER) { Scale.Z = sqrtf(squareSumZ); }
 
-		//if (SquareSum0 > SMALL_NUMBER)
-		//{
-		//	float Scale0 = sqrtf(SquareSum0);
-		//	Scale3D[0] = Scale0;
-		//}
-		//else
-		//{
-		//	Scale3D[0] = 0;
-		//}
+		// 크기 요소를 나눠 직교 정방 행렬을 구한다.
+		rotScaleMatrix[0] /= squareSumX;
+		rotScaleMatrix[1] /= squareSumY;
+		rotScaleMatrix[2] /= squareSumZ;
 
-		//if (SquareSum1 > Tolerance)
-		//{
-		//	float Scale1 = FMath::Sqrt(SquareSum1);
-		//	Scale3D[1] = Scale1;
-		//}
-		//else
-		//{
-		//	Scale3D[1] = 0;
-		//}
-
-		//if (SquareSum2 > Tolerance)
-		//{
-		//	float Scale2 = FMath::Sqrt(SquareSum2);
-		//	Scale3D[2] = Scale2;
-		//	float InvScale2 = 1.f / Scale2;
-		//	M[2][0] *= InvScale2;
-		//	M[2][1] *= InvScale2;
-		//	M[2][2] *= InvScale2;
-		//}
-		//else
-		//{
-		//	Scale3D[2] = 0;
-		//}
-
-		//return Scale3D;
+		// 사원수로 변환한다.
+		Rotation = Quaternion(rotScaleMatrix);
 	}
 
 public: // 트랜스폼 설정함수

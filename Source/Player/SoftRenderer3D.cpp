@@ -278,11 +278,13 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	static float yawSpeed = 100.f;
 	static float pitchSpeed = 30.f;
 
+	// 게임 로직에서 사용할 게임 오브젝트 레퍼런스
 	GameObject& goSun = g.GetGameObject(GameEngine::Sun);
 	GameObject& goEarth = g.GetGameObject(GameEngine::Earth);
 	GameObject& goMoon = g.GetGameObject(GameEngine::Moon);
 	GameObject& goCameraRig = g.GetGameObject(GameEngine::CameraRig);
 
+	// 각 행성에 회전 부여
 	goSun.GetTransformNode().AddLocalYawRotation(rotateSpeedSun * InDeltaSeconds);
 	goEarth.GetTransformNode().AddLocalYawRotation(rotateSpeedEarth * InDeltaSeconds);
 	goMoon.GetTransformNode().AddLocalYawRotation(rotateSpeedMoon * InDeltaSeconds);
@@ -297,7 +299,6 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
-
 }
 
 // 렌더링 로직

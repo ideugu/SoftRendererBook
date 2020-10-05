@@ -63,9 +63,12 @@ bool TransformNode::SetParent(TransformNode& InTransformNode)
 		return false;
 	}
 
+	// 새로운 트랜스폼 노드로 부모 재설정
 	InTransformNode.GetChildren().emplace_back(this);
 	_ParentPtr = &InTransformNode;
 	TransformNode& newParent = *_ParentPtr;
+
+	// 자신의 로컬과 모든 자식의 월드를 업데이트한다.
 	UpdateLocal();
 
 	return true;
