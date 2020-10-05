@@ -271,35 +271,56 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	Camera& camera = g.GetMainCamera();
 
 	// 기본 설정 변수
-	static float rotateSpeedSun = 40.f;
-	static float rotateSpeedEarth = 120.f;
-	static float rotateSpeedMoon = 48.f;
 	static float fovSpeed = 100.f;
 	static float yawSpeed = 100.f;
 	static float pitchSpeed = 30.f;
 
 	// 게임 로직에서 사용할 게임 오브젝트 레퍼런스
-	GameObject& goSun = g.GetGameObject(GameEngine::Sun);
-	GameObject& goEarth = g.GetGameObject(GameEngine::Earth);
-	GameObject& goMoon = g.GetGameObject(GameEngine::Moon);
-	GameObject& goCameraRig = g.GetGameObject(GameEngine::CameraRig);
-
-	// 각 행성에 회전 부여
-	goSun.GetTransformNode().AddLocalYawRotation(rotateSpeedSun * InDeltaSeconds);
-	goEarth.GetTransformNode().AddLocalYawRotation(rotateSpeedEarth * InDeltaSeconds);
-	goMoon.GetTransformNode().AddLocalYawRotation(rotateSpeedMoon * InDeltaSeconds);
+	GameObject& goPlayer = g.GetGameObject(GameEngine::PlayerGo);
+	GameObject& goCameraRig = g.GetGameObject(GameEngine::CameraRigGo);
 
 	// 카메라 릭의 회전 조절
 	goCameraRig.GetTransformNode().AddLocalYawRotation(-input.GetAxis(InputAxis::XAxis) * yawSpeed * InDeltaSeconds);
 	goCameraRig.GetTransformNode().AddLocalPitchRotation(-input.GetAxis(InputAxis::YAxis) * pitchSpeed * InDeltaSeconds);
 
-	// 카메라가 항상 태양을 바라보도록 설정
-	camera.SetLookAtRotation(goSun.GetTransformNode().GetWorldPosition());
+	// 카메라가 항상 플레이어를 바라보도록 설정
+	camera.SetLookAtRotation(goPlayer);
 
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
 }
+
+// 캐릭터 애니메이션 로직
+void SoftRenderer::LateUpdate3D(float InDeltaSeconds)
+{
+	// 기본 레퍼런스
+	GameEngine& g = GetGameEngine();
+
+	// 기본 설정 변수
+	static float elapsedTime = 0.f;
+	static float duration = 5.f;
+
+	// 애니메이션을 위한 커브 생성 ( 0~1 SineWave )
+	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
+	if (elapsedTime == duration)
+	{
+		elapsedTime = 0.f;
+	}
+	float sinParam = elapsedTime * Math::TwoPI / duration;
+	float sinWave = sinf(sinParam) * 90.f; //(sinf(sinParam) + 1.f) * 0.5f;
+
+	// 캐릭터 레퍼런스
+	GameObject& goPlayer = g.GetGameObject(GameEngine::PlayerGo);
+
+	// 목의 회전
+	Mesh& m = g.GetMesh(goPlayer.GetMeshKey());
+	Bone& neckBone = m.GetBone(GameEngine::NeckBone);
+	Bone& rightArmBone = m.GetBone(GameEngine::RightArmBone);
+	neckBone.GetTransformNode().SetWorldRotation(Rotator(sinWave, 0.f, 0.f));
+	rightArmBone.GetTransformNode().SetWorldRotation(Rotator(0.f, 0.f, sinWave));
+}
+
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
@@ -336,28 +357,45 @@ void SoftRenderer::Render3D()
 
 		// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼로 변환
 		std::vector<Vertex3D> vertices(vertexCount);
-		std::vector<int> indice(m._Indices);
+		std::vector<size_t> indice(m._Indices);
 		for (size_t vi = 0; vi < vertexCount; ++vi)
 		{
 			vertices[vi].Position = Vector4(m._Vertices[vi]);
 			
-			// 위치에 대해 스키닝 연산 수행
-			//if (m.IsSkinnedMesh())
-			//{
-			//	Vector3 deltaPosition;
-			//	Weight w = m._Weights[vi];
-			//	for (size_t wi = 0; wi < m._ConnectedBones[vi]; ++wi)
-			//	{
-			//		std::string boneName = w.Bones[wi];
-			//		if (m.HasBone(boneName))
-			//		{
-			//			const Transform& boneTransform = m.GetBoneTransform(boneName);
-			//			deltaPosition += boneTransform.GetLocalPosition() * w.Values[wi];
-			//		}
-			//	}
+			//스켈레탈 메시면 스키닝 작업 수행
+			if (m.IsSkinnedMesh())
+			{
+				Vector4 totalPosition = Vector4::Zero;
+				Weight w = m._Weights[vi];
+				for (size_t wi = 0; wi < m._ConnectedBones[vi]; ++wi)
+				{
+					std::string boneName = w.Bones[wi];
+					if (m.HasBone(boneName))
+					{
+						const Bone& b = m.GetBone(boneName);
+						const TransformNode& t = b.GetTransformNode();
+						const Transform& bindPose = b.GetBindPose();
 
-			//	vertices[vi].Position += Vector4(deltaPosition, false);
-			//}
+						const Vector3& bindPoseScale = bindPose.GetScale();
+						const Quaternion& bindPoseRotation = bindPose.GetRotation();
+						const Vector3& bindPosePosition = bindPose.GetPosition();
+						Vector3 invScale = Vector3(1.f / bindPoseScale.X, 1.f / bindPoseScale.Y, 1.f / bindPoseScale.Z);
+						Quaternion invRotation = bindPoseRotation.Inverse();
+						Vector3 newScale = t.GetWorldScale() * invScale;
+						Quaternion newRotation = invRotation * t.GetWorldRotation();
+						Vector3 translatedVector = t.GetWorldPosition() - bindPosePosition;
+						Vector3 rotatedVector = invRotation.RotateVector(translatedVector);
+						Vector3 finalPosition = rotatedVector * invScale;
+
+						// 바인드포즈에 대한 상대 트랜스폼들
+						Transform offset(finalPosition, newRotation, newScale);
+						Vector4 weightedPosition = offset.GetMatrix() * vertices[vi].Position;
+						totalPosition += weightedPosition * w.Values[wi];
+					}
+				}
+
+				vertices[vi].Position = totalPosition;
+			}
 
 			if(hasUV)
 			{

@@ -61,6 +61,9 @@ void SoftRenderer::OnTick()
 			// 게임 로직 수행.
 			Update3D(_FrameTime / 1000.f);
 
+			// 애니메이션 로직 수행.
+			LateUpdate3D(_FrameTime / 1000.f);
+
 			// 렌더링 로직 수행.
 			Render3D();
 

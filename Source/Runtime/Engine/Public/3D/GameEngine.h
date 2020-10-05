@@ -22,8 +22,8 @@ public: // 공용 로직
 	InputManager& GetInputManager() { return _InputManager; }  // 입력 설정에 사용
 
 	// 리소스 관리
-	bool AddMesh(const std::size_t& InKey, const Mesh& InMesh);
-	bool AddTexture(const std::size_t& InKey, const Texture& InTexture);
+	Mesh& CreateMesh(const std::size_t& InKey);
+	Texture& CreateTexture(const std::size_t& InKey, const std::string& InTexturePath);
 
 	// 게임 오브젝트
 	const std::vector<std::unique_ptr<GameObject>>& GetScene() const { return _Scene; }
@@ -31,7 +31,6 @@ public: // 공용 로직
 	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneEnd() const { return _Scene.end(); }
 	GameObject& CreateNewGameObject(const std::string& InName);
 	GameObject& GetGameObject(const std::string& InName);
-
 
 	// 메시
 	Mesh& GetMesh(const std::size_t& InMeshKey) { return *_Meshes.at(InMeshKey).get(); }
@@ -45,14 +44,22 @@ public: // 공용 로직
 	FORCEINLINE const Texture& GetTexture(const std::size_t& InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
 
 public: // 주요 키 값
+	// 본
+	static const std::string RootBone;
+	static const std::string PelvisBone;
+	static const std::string SpineBone;
+	static const std::string LeftArmBone;
+	static const std::string RightArmBone;
+	static const std::string NeckBone;
+	static const std::string LeftLegBone;
+	static const std::string RightLegBone;
+
 	// 메시
-	static const std::size_t CubeMeshKey;
+	static const std::size_t CharacterMesh;
 
 	// 게임 오브젝트
-	static const std::string Sun;
-	static const std::string Earth;
-	static const std::string Moon;
-	static const std::string CameraRig;
+	static const std::string PlayerGo;
+	static const std::string CameraRigGo;
 
 	// 텍스쳐
 	const static std::size_t DiffuseTexture;

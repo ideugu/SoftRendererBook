@@ -3,13 +3,24 @@
 #include <random>
 using namespace CK::DDD;
 
-const std::size_t GameEngine::CubeMeshKey = std::hash<std::string>()("SM_Cube");
+// 본 명칭
+const std::string GameEngine::RootBone("RootBone");
+const std::string GameEngine::PelvisBone("PelvisBone");
+const std::string GameEngine::SpineBone("SpineBone");
+const std::string GameEngine::LeftArmBone("LeftArmBone");
+const std::string GameEngine::RightArmBone("RightArmBone");
+const std::string GameEngine::NeckBone("NeckBone");
+const std::string GameEngine::LeftLegBone("LeftLegBone");
+const std::string GameEngine::RightLegBone("RightLegBone");
 
-const std::string GameEngine::Sun("Sun");
-const std::string GameEngine::Earth("Earth");
-const std::string GameEngine::Moon("Moon");
-const std::string GameEngine::CameraRig("CameraRig");
+// 메시
+const std::size_t GameEngine::CharacterMesh = std::hash<std::string>()("SK_Steve");;
 
+// 게임 오브젝트
+const std::string GameEngine::PlayerGo("Player");
+const std::string GameEngine::CameraRigGo("CameraRig");
+
+// 텍스쳐
 const std::size_t GameEngine::DiffuseTexture = std::hash<std::string>()("Diffuse");
 const std::string GameEngine::SteveTexturePath("Steve.png");
 
@@ -57,29 +68,26 @@ bool GameEngine::Init()
 
 bool GameEngine::LoadResources()
 {
-	static const float cubeHalfSize = 0.5f;
+	static const Vector3 headSize(0.5f, 0.5f, 0.5f);
+	static const Vector3 bodySize(0.5f, 0.75f, 0.25f);
+	static const Vector3 armLegSize(0.25f, 0.75f, 0.25f);
 
-	// 큐브 메시 정보
-	static const int vertexCount = 24;
-	static const int triangleCount = 12;
-	static const int indexCount = triangleCount * 3;
+	Mesh& characterMesh = CreateMesh(GameEngine::CharacterMesh);
+	auto& v = characterMesh._Vertices;
+	auto& i = characterMesh._Indices;
+	auto& uv = characterMesh._UVs;
 
-	Mesh cubeMesh;
-	cubeMesh._Vertices = {
-		// Right 
-		Vector3(-1.f, -1.f, -1.f) * cubeHalfSize, Vector3(-1.f, -1.f, 1.f) * cubeHalfSize, Vector3(-1.f, 1.f, 1.f) * cubeHalfSize, Vector3(-1.f, 1.f, -1.f) * cubeHalfSize,
-		// Front
-		Vector3(-1.f, -1.f, 1.f) * cubeHalfSize, Vector3(-1.f, 1.f, 1.f) * cubeHalfSize, Vector3(1.f, 1.f, 1.f) * cubeHalfSize, Vector3(1.f, -1.f, 1.f) * cubeHalfSize,
-		// Back
-		Vector3(-1.f, -1.f, -1.f) * cubeHalfSize, Vector3(-1.f, 1.f, -1.f) * cubeHalfSize, Vector3(1.f, 1.f, -1.f) * cubeHalfSize, Vector3(1.f, -1.f, -1.f) * cubeHalfSize,
-		// Left
-		Vector3(1.f, -1.f, -1.f) * cubeHalfSize, Vector3(1.f, -1.f, 1.f) * cubeHalfSize, Vector3(1.f, 1.f, 1.f) * cubeHalfSize, Vector3(1.f, 1.f, -1.f) * cubeHalfSize,
-		// Top
-		Vector3(-1.f, 1.f, -1.f) * cubeHalfSize, Vector3(1.f, 1.f, -1.f) * cubeHalfSize, Vector3(1.f, 1.f, 1.f) * cubeHalfSize, Vector3(-1.f, 1.f, 1.f) * cubeHalfSize,
-		// Bottom
-		Vector3(-1.f, -1.f, -1.f) * cubeHalfSize, Vector3(1.f, -1.f, -1.f) * cubeHalfSize, Vector3(1.f, -1.f, 1.f) * cubeHalfSize, Vector3(-1.f, -1.f, 1.f) * cubeHalfSize
+	// 6개의 파트로 구성되어 있음.
+	static std::array<Vector3, 24> cubeMeshPositions = {
+		Vector3(-1.f, -1.f, -1.f), Vector3(-1.f, -1.f, 1.f), Vector3(-1.f, 1.f, 1.f), Vector3(-1.f, 1.f, -1.f),
+		Vector3(-1.f, -1.f, 1.f), Vector3(-1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, -1.f, 1.f),
+		Vector3(-1.f, -1.f, -1.f), Vector3(-1.f, 1.f, -1.f), Vector3(1.f, 1.f, -1.f), Vector3(1.f, -1.f, -1.f),
+		Vector3(1.f, -1.f, -1.f), Vector3(1.f, -1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, -1.f),
+		Vector3(-1.f, 1.f, -1.f), Vector3(1.f, 1.f, -1.f), Vector3(1.f, 1.f, 1.f), Vector3(-1.f, 1.f, 1.f),
+		Vector3(-1.f, -1.f, -1.f), Vector3(1.f, -1.f, -1.f), Vector3(1.f, -1.f, 1.f), Vector3(-1.f, -1.f, 1.f)
 	};
-	cubeMesh._Indices = {
+
+	static std::array<size_t, 36> cubeMeshIndice = {
 		0, 1, 2, 0, 2, 3, // Right
 		4, 6, 5, 4, 7, 6, // Front
 		8, 9, 10, 8, 10, 11, // Back
@@ -87,64 +95,172 @@ bool GameEngine::LoadResources()
 		16, 18, 17, 16, 19, 18, // Top
 		20, 21, 22, 20, 22, 23  // Bottom
 	};
-	cubeMesh._UVs = {
-		// Right
-		Vector2(0.f, 48.f) / 64.f, Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(0.f, 56.f) / 64.f,
-		// Front
-		Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(16.f, 48.f) / 64.f,
-		// Back
-		Vector2(32.f, 48.f) / 64.f, Vector2(32.f, 56.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(24.f, 48.f) / 64.f,
-		// Left
-		Vector2(24.f, 48.f) / 64.f, Vector2(16.f, 48.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(24.f, 56.f) / 64.f,
-		// Top
-		Vector2(8.f, 64.f) / 64.f, Vector2(16.f, 64.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(8.f, 56.f) / 64.f,
-		// Bottom
-		Vector2(16.f, 64.f) / 64.f, Vector2(24.f, 64.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f
+
+	static std::array<Vector3, 6> cubeMeshSize = {
+		headSize, bodySize, armLegSize, armLegSize, armLegSize, armLegSize
 	};
 
-	cubeMesh.CalculateBounds();
-	AddMesh(GameEngine::CubeMeshKey, cubeMesh);
+	static std::array<Vector3, 6> cubeMeshOffset = {
+		Vector3(0.f, 3.5f, 0.f), Vector3(0.f, 2.25f, 0.f), Vector3(-0.75f, 2.25f, 0.f), Vector3(0.75f, 2.25f, 0.f), Vector3(-0.25f, 0.75f, 0.f), Vector3(0.25f, 0.75f, 0.f)
+	};
+
+	for (size_t part = 0; part < 6; part++)
+	{
+		std::transform(cubeMeshPositions.begin(), cubeMeshPositions.end(), std::back_inserter(v), [&](auto& p) { return p * cubeMeshSize[part] + cubeMeshOffset[part]; });
+		std::transform(cubeMeshIndice.begin(), cubeMeshIndice.end(), std::back_inserter(i), [&](auto& p) { return p + 24 * part; });
+	}
+
+	uv = {
+		// HeadRight
+		Vector2(0.f, 48.f) / 64.f, Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(0.f, 56.f) / 64.f,
+		// HeadFront
+		Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(16.f, 48.f) / 64.f,
+		// HeadBack
+		Vector2(32.f, 48.f) / 64.f, Vector2(32.f, 56.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(24.f, 48.f) / 64.f,
+		// HeadLeft
+		Vector2(24.f, 48.f) / 64.f, Vector2(16.f, 48.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(24.f, 56.f) / 64.f,
+		// HeadTop
+		Vector2(8.f, 64.f) / 64.f, Vector2(16.f, 64.f) / 64.f, Vector2(16.f, 56.f) / 64.f, Vector2(8.f, 56.f) / 64.f,
+		// HeadBottom
+		Vector2(16.f, 64.f) / 64.f, Vector2(24.f, 64.f) / 64.f, Vector2(24.f, 56.f) / 64.f, Vector2(16.f, 56.f) / 64.f,
+		// BodyRight
+		Vector2(16.f, 32.f) / 64.f, Vector2(20.f, 32.f) / 64.f, Vector2(20.f, 44.f) / 64.f, Vector2(16.f, 44.f) / 64.f,
+		// BodyFront
+		Vector2(20.f, 32.f) / 64.f, Vector2(20.f, 44.f) / 64.f, Vector2(28.f, 44.f) / 64.f, Vector2(28.f, 32.f) / 64.f,
+		// BodyBack
+		Vector2(36.f, 32.f) / 64.f, Vector2(36.f, 44.f) / 64.f, Vector2(28.f, 44.f) / 64.f, Vector2(28.f, 32.f) / 64.f,
+		// BodyLeft
+		Vector2(40.f, 32.f) / 64.f, Vector2(36.f, 32.f) / 64.f, Vector2(36.f, 44.f) / 64.f, Vector2(40.f, 44.f) / 64.f,
+		// BodyTop
+		Vector2(20.f, 48.f) / 64.f, Vector2(28.f, 48.f) / 64.f, Vector2(28.f, 44.f) / 64.f, Vector2(20.f, 44.f) / 64.f,
+		// BodyBottom
+		Vector2(28.f, 48.f) / 64.f, Vector2(36.f, 48.f) / 64.f, Vector2(36.f, 44.f) / 64.f, Vector2(28.f, 44.f) / 64.f,
+		// LeftArmRight
+		Vector2(32.f, 0.f) / 64.f, Vector2(36.f, 0.f) / 64.f, Vector2(36.f, 12.f) / 64.f, Vector2(32.f, 12.f) / 64.f,
+		// LeftArmFront
+		Vector2(36.f, 0.f) / 64.f, Vector2(36.f, 12.f) / 64.f, Vector2(40.f, 12.f) / 64.f, Vector2(40.f, 0.f) / 64.f,
+		// LeftArmBack
+		Vector2(44.f, 0.f) / 64.f, Vector2(44.f, 12.f) / 64.f, Vector2(40.f, 12.f) / 64.f, Vector2(40.f, 0.f) / 64.f,
+		// LeftArmLeft
+		Vector2(48.f, 0.f) / 64.f, Vector2(44.f, 0.f) / 64.f, Vector2(44.f, 12.f) / 64.f, Vector2(48.f, 12.f) / 64.f,
+		// LeftArmTop
+		Vector2(36.f, 16.f) / 64.f, Vector2(40.f, 16.f) / 64.f, Vector2(40.f, 12.f) / 64.f, Vector2(36.f, 12.f) / 64.f,
+		// LeftArmBottom
+		Vector2(40.f, 16.f) / 64.f, Vector2(44.f, 16.f) / 64.f, Vector2(44.f, 12.f) / 64.f, Vector2(40.f, 12.f) / 64.f,
+		// RightArmRight
+		Vector2(40.f, 32.f) / 64.f, Vector2(44.f, 32.f) / 64.f, Vector2(44.f, 44.f) / 64.f, Vector2(40.f, 44.f) / 64.f,
+		// RightArmFront
+		Vector2(44.f, 32.f) / 64.f, Vector2(44.f, 44.f) / 64.f, Vector2(48.f, 44.f) / 64.f, Vector2(48.f, 32.f) / 64.f,
+		// RightArmBack
+		Vector2(52.f, 32.f) / 64.f, Vector2(52.f, 44.f) / 64.f, Vector2(48.f, 44.f) / 64.f, Vector2(48.f, 32.f) / 64.f,
+		// RightArmLeft
+		Vector2(56.f, 32.f) / 64.f, Vector2(52.f, 32.f) / 64.f, Vector2(52.f, 44.f) / 64.f, Vector2(56.f, 44.f) / 64.f,
+		// RightArmTop
+		Vector2(44.f, 48.f) / 64.f, Vector2(48.f, 48.f) / 64.f, Vector2(48.f, 44.f) / 64.f, Vector2(44.f, 44.f) / 64.f,
+		// RightArmBottom
+		Vector2(48.f, 48.f) / 64.f, Vector2(52.f, 48.f) / 64.f, Vector2(52.f, 44.f) / 64.f, Vector2(48.f, 44.f) / 64.f,
+		// LeftLegRight
+		Vector2(16.f, 0.f) / 64.f, Vector2(20.f, 0.f) / 64.f, Vector2(20.f, 12.f) / 64.f, Vector2(16.f, 12.f) / 64.f,
+		// LeftLegFront
+		Vector2(20.f, 0.f) / 64.f, Vector2(20.f, 12.f) / 64.f, Vector2(24.f, 12.f) / 64.f, Vector2(24.f, 0.f) / 64.f,
+		// LeftLegBack
+		Vector2(28.f, 0.f) / 64.f, Vector2(28.f, 12.f) / 64.f, Vector2(24.f, 12.f) / 64.f, Vector2(24.f, 0.f) / 64.f,
+		// LeftLegLeft
+		Vector2(32.f, 0.f) / 64.f, Vector2(28.f, 0.f) / 64.f, Vector2(28.f, 12.f) / 64.f, Vector2(32.f, 12.f) / 64.f,
+		// LeftLegTop
+		Vector2(20.f, 16.f) / 64.f, Vector2(24.f, 16.f) / 64.f, Vector2(24.f, 12.f) / 64.f, Vector2(20.f, 12.f) / 64.f,
+		// LeftLegBottom
+		Vector2(24.f, 16.f) / 64.f, Vector2(28.f, 16.f) / 64.f, Vector2(28.f, 12.f) / 64.f, Vector2(24.f, 12.f) / 64.f,
+		// RightLegRight
+		Vector2(0.f, 32.f) / 64.f, Vector2(4.f, 32.f) / 64.f, Vector2(4.f, 44.f) / 64.f, Vector2(0.f, 44.f) / 64.f,
+		// RightLegFront
+		Vector2(4.f, 32.f) / 64.f, Vector2(4.f, 44.f) / 64.f, Vector2(8.f, 44.f) / 64.f, Vector2(8.f, 32.f) / 64.f,
+		// RightLegBack
+		Vector2(12.f, 32.f) / 64.f, Vector2(12.f, 44.f) / 64.f, Vector2(8.f, 44.f) / 64.f, Vector2(8.f, 32.f) / 64.f,
+		// RightLegLeft
+		Vector2(16.f, 32.f) / 64.f, Vector2(12.f, 32.f) / 64.f, Vector2(12.f, 44.f) / 64.f, Vector2(16.f, 44.f) / 64.f,
+		// RightLegTop
+		Vector2(4.f, 48.f) / 64.f, Vector2(8.f, 48.f) / 64.f, Vector2(8.f, 44.f) / 64.f, Vector2(4.f, 44.f) / 64.f,
+		// RightLegBottom
+		Vector2(8.f, 48.f) / 64.f, Vector2(12.f, 48.f) / 64.f, Vector2(12.f, 44.f) / 64.f, Vector2(8.f, 44.f) / 64.f
+	};
+
+	// 캐릭터 Rig 설정
+	characterMesh.SetMeshType(MeshType::Skinned);
+	auto& b = characterMesh._ConnectedBones;
+	auto& w = characterMesh._Weights;
+
+	// 본 생성
+	characterMesh._Bones = {
+		{ GameEngine::RootBone, Bone(GameEngine::RootBone, Transform()) },
+		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, Transform(Vector3(0.f, 1.5f, 0.f))) },
+		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, Transform(Vector3(0.f, 2.25f, 0.f))) },
+		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, Transform(Vector3(-0.75f, 2.25f, 0.f))) },
+		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, Transform(Vector3(0.75f, 2.25f, 0.f))) },
+		{ GameEngine::LeftLegBone, Bone(GameEngine::LeftLegBone, Transform(Vector3(0.25f, 1.5f, 0.f))) },
+		{ GameEngine::RightLegBone, Bone(GameEngine::RightLegBone, Transform(Vector3(-0.25f, 1.5f, 0.f))) },
+		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, Transform(Vector3(0.f, 3.0f, 0.f))) }
+	};
+
+	// 계층 구조 생성
+	Bone& root = characterMesh.GetBone(GameEngine::RootBone);
+	Bone& pelvis = characterMesh.GetBone(GameEngine::PelvisBone);
+	pelvis.SetParent(root);
+	Bone& spine = characterMesh.GetBone(GameEngine::SpineBone);
+	spine.SetParent(pelvis);
+	Bone& leftArm = characterMesh.GetBone(GameEngine::LeftArmBone);
+	leftArm.SetParent(spine);
+	Bone& rightArm = characterMesh.GetBone(GameEngine::RightArmBone);
+	rightArm.SetParent(spine);
+	Bone& leftLeg = characterMesh.GetBone(GameEngine::LeftLegBone);
+	leftLeg.SetParent(pelvis);
+	Bone& rightLeg = characterMesh.GetBone(GameEngine::RightLegBone);
+	rightLeg.SetParent(pelvis);
+	Bone& neck = characterMesh.GetBone(GameEngine::NeckBone);
+	neck.SetParent(spine);
+
+	// 메시에 리깅 
+	static std::array<std::string, 6> boneOrder = {
+		GameEngine::NeckBone, GameEngine::SpineBone, GameEngine::LeftArmBone, GameEngine::RightArmBone, GameEngine::LeftLegBone, GameEngine::RightLegBone
+	};
+
+	b.resize(v.size());
+	w.resize(v.size());
+	std::fill(b.begin(), b.end(), 1);
+
+	for (size_t part = 0; part < 6; part++)
+	{
+		Weight weight;
+		weight.Bones = { boneOrder[part] };
+		weight.Values = { 1.f };
+		auto startIt = w.begin() + part * 24;
+		std::fill(startIt, startIt + 24, weight);
+	}
+
+	characterMesh.CalculateBounds();
 
 	// 텍스쳐 로딩
-	Texture diffuseTexture(SteveTexturePath);
+	Texture& diffuseTexture = CreateTexture(GameEngine::DiffuseTexture, GameEngine::SteveTexturePath);
 	if(!diffuseTexture.IsIntialized())
 	{
 		return false;
 	}
-	AddTexture(GameEngine::DiffuseTexture, diffuseTexture);
 
 	return true;
 }
 
 bool GameEngine::LoadScene()
 {
-	static const float sunScale = 100.f;
-	static const float earthScale = 40.f;
-	static const float moonScale = 30.f;
-	static const Vector3 earthOffset(500.f, 0.0f, 0.f);
-	static const Vector3 moonOffset(400.f, 0.0f, 0.f);
+	// 플레이어
+	static const float playerScale = 100.f;
 
-	// 태양 ( 최상단 )
-	GameObject& sun = CreateNewGameObject(GameEngine::Sun);
-	sun.SetMesh(GameEngine::CubeMeshKey);
-	sun.GetTransformNode().SetWorldScale(Vector3::One * sunScale);
-
-	// 지구
-	GameObject& earth = CreateNewGameObject(GameEngine::Earth);
-	earth.SetMesh(GameEngine::CubeMeshKey);
-	earth.GetTransformNode().SetWorldScale(Vector3::One * earthScale);
-	earth.GetTransformNode().SetWorldPosition(earthOffset);
-	earth.SetParent(sun);
-
-	// 달
-	GameObject& moon = CreateNewGameObject(GameEngine::Moon);
-	moon.SetMesh(GameEngine::CubeMeshKey);
-	moon.GetTransformNode().SetWorldScale(Vector3::One * moonScale);
-	moon.GetTransformNode().SetWorldPosition(moonOffset);
-	moon.SetParent(earth);
+	GameObject& player = CreateNewGameObject(GameEngine::PlayerGo);
+	player.SetMesh(GameEngine::CharacterMesh);
+	player.GetTransformNode().SetWorldScale(Vector3::One * playerScale);
+	player.GetTransformNode().SetWorldRotation(Rotator(180.f, 0.f, 0.f));
 
 	// 카메라 릭
-	GameObject& cameraRig = CreateNewGameObject(GameEngine::CameraRig);
+	GameObject& cameraRig = CreateNewGameObject(GameEngine::CameraRigGo);
 
 	// 카메라 설정
 	_MainCamera.GetTransformNode().SetWorldPosition(Vector3(700.f, 700.f, -700.f));
@@ -153,16 +269,18 @@ bool GameEngine::LoadScene()
 	return true;
 }
 
-bool GameEngine::AddMesh(const std::size_t& InKey, const Mesh& InMesh)
+Mesh& GameEngine::CreateMesh(const std::size_t& InKey)
 {
-	auto meshPtr = std::make_unique<Mesh>(InMesh);
-	return _Meshes.insert({ InKey, std::move(meshPtr) }).second;
+	auto meshPtr = std::make_unique<Mesh>();
+	_Meshes.insert({ InKey, std::move(meshPtr) });
+	return *_Meshes.at(InKey).get();
 }
 
-bool GameEngine::AddTexture(const std::size_t& InKey, const Texture& InTexture)
+Texture& GameEngine::CreateTexture(const std::size_t& InKey, const std::string& InTexturePath)
 {
-	auto texturePtr = std::make_unique<Texture>(InTexture);
-	return _Textures.insert({ InKey, std::move(texturePtr) }).second;
+	auto texturePtr = std::make_unique<Texture>(InTexturePath);
+	_Textures.insert({ InKey, std::move(texturePtr) });
+	return *_Textures.at(InKey).get();
 }
 
 GameObject& GameEngine::CreateNewGameObject(const std::string& InName)
@@ -177,7 +295,7 @@ GameObject& GameEngine::CreateNewGameObject(const std::string& InName)
 		if (targetHash == inHash)
 		{
 			// 중복된 키 발생. 무시.
-			return const_cast<GameObject&>(GameObject::Invalid);
+			return GameObject::Invalid;
 		}
 		else if (targetHash < inHash)
 		{
@@ -206,5 +324,5 @@ GameObject& GameEngine::GetGameObject(const std::string& InName)
 		return *(*it).get();
 	}
 
-	return const_cast<GameObject&>(GameObject::Invalid);
+	return GameObject::Invalid;
 }

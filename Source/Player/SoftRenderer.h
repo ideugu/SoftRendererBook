@@ -51,6 +51,7 @@ private:
 	// 3D 구현함수
 	void DrawGizmo3D();
 	void Update3D(float InDeltaSeconds);
+	void LateUpdate3D(float InDeltaSeconds);
 	void Render3D();
 
 	void DrawTriangle(std::vector<struct Vertex3D>& vertices, const LinearColor& InColorParam);

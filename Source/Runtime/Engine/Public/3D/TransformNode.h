@@ -16,6 +16,7 @@ public:
 
 public: // 로컬 트랜스폼 관련 함수
 	FORCEINLINE Transform& GetLocalTransform() { return _LocalTransform; }
+	FORCEINLINE void SetLocalTransform(const Transform& InTransform) { _LocalTransform = InTransform; UpdateWorld(); }
 	FORCEINLINE const Transform& GetLocalTransform() const { return _LocalTransform; }
 
 	FORCEINLINE void SetLocalPosition(const Vector3& InPosition);
@@ -40,6 +41,7 @@ public: // 로컬 트랜스폼 관련 함수
 
 public: // 월드 트랜스폼 관련 함수
 	FORCEINLINE Transform& GetWorldTransform() { return _WorldTransform; }
+	FORCEINLINE void SetWorldTransform(const Transform& InTransform) { _WorldTransform = InTransform; UpdateLocal(); }
 	FORCEINLINE const Transform& GetWorldTransform() const { return _WorldTransform; }
 
 	FORCEINLINE void SetWorldPosition(const Vector3& InPosition);

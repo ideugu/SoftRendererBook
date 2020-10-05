@@ -36,7 +36,7 @@ public:
 
 	// 검색 관련
 	bool IsValid() const { return _Hash != Math::InvalidHash; }
-	const static GameObject Invalid;
+	static GameObject Invalid;
 
 private:
 	std::size_t _Hash = Math::InvalidHash;

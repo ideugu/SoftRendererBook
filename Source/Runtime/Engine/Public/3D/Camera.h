@@ -25,6 +25,7 @@ public:
 
 	// 카메라 값을 설정하는 함수
 	void SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp = Vector3::UnitY);
+	void SetLookAtRotation(const GameObject& InGameObject, const Vector3& InUp = Vector3::UnitY);
 	void SetFOV(float InFOV) { _FOV = InFOV; }
 	void SetNearZ(float InNearZ) { _NearZ = InNearZ; }
 	void SetFarZ(float InFarZ) { _FarZ = InFarZ; }

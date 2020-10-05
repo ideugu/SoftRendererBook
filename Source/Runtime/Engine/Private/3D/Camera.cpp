@@ -2,6 +2,12 @@
 #include "Precompiled.h"
 using namespace CK::DDD;
 
+void Camera::SetLookAtRotation(const GameObject& InGameObject, const Vector3& InUp)
+{
+	SetLookAtRotation(InGameObject.GetTransformNode().GetWorldPosition(), InUp);
+}
+
+
 void Camera::SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& InUp)
 {
 	Vector3 viewX, viewY, viewZ;

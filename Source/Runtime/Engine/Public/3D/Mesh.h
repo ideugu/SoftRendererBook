@@ -33,13 +33,15 @@ public:
 	FORCEINLINE bool IsSkinnedMesh() const { return _MeshType == MeshType::Skinned; }
 	FORCEINLINE bool HasBone(const std::string& InBoneName) const { return _Bones.find(InBoneName) != _Bones.end(); }
 
-	Transform& GetBoneTransform(const std::string& InBoneName) { return _Bones.at(InBoneName).GetTransform(); }
-	FORCEINLINE const Transform& GetBoneTransform(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetTransform(); }
+	Bone& GetBone(const std::string& InBoneName) { return _Bones.at(InBoneName); }
+	const Bone& GetBone(const std::string& InBoneName) const { return _Bones.at(InBoneName); }
+	//TransformNode& GetBoneTransformNode(const std::string& InBoneName) { return _Bones.at(InBoneName).GetTransformNode(); }
+	//FORCEINLINE const TransformNode& GetBoneTransformNode(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetTransformNode(); }
 	const Transform& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
 
 public:
 	std::vector<Vector3> _Vertices;
-	std::vector<int> _Indices;
+	std::vector<size_t> _Indices;
 	std::vector<Vector2> _UVs;
 
 	std::vector<BYTE> _ConnectedBones;

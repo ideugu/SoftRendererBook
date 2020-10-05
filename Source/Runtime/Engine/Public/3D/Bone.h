@@ -12,14 +12,20 @@ public:
 	Bone(const std::string& InName, const Transform& InTransform) : _Name(InName)
 	{
 		_Hash = std::hash<std::string>()(_Name);
-		_BindPose = _Transform;
+		_BindPose = InTransform;
+		_TransformNode.SetLocalTransform(InTransform);
 	}
 
 public:
 	// 트랜스폼
-	Transform& GetTransform() { return _Transform; }
-	const Transform& GetTransform() const { return _Transform; }
+	TransformNode& GetTransformNode() { return _TransformNode; }
+	const TransformNode& GetTransformNode() const { return _TransformNode; }
 	const Transform& GetBindPose() const { return _BindPose; }
+	void SetParent(Bone& InBone) 
+	{
+		_ParentName = InBone.GetName();
+		_TransformNode.SetParent(InBone.GetTransformNode());
+	}
 
 	// 키 관련
 	const std::string& GetName() const { return _Name; }
@@ -28,8 +34,13 @@ public:
 private:
 	std::size_t _Hash = 0;
 	std::string _Name;
-	Transform _Transform;
+	TransformNode _TransformNode;
+
+	// 로컬 공간의 좌표로 기록
 	Transform _BindPose;
+
+	// 부모 정보
+	std::string _ParentName;
 };
 
 }
