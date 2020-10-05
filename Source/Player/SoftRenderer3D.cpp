@@ -298,7 +298,6 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
 
-	_RSI->PushStatisticText(camera.GetTransformNode().GetLocalRotation().ToString());
 }
 
 // 렌더링 로직

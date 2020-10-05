@@ -35,42 +35,45 @@ public:
 
 	FORCEINLINE explicit Quaternion(const Matrix3x3& InMatrix)
 	{
-		float s = 0.f;
+		float root = 0.f;
 		float trace = InMatrix[0][0] + InMatrix[1][1] + InMatrix[2][2];
+
+		if(!Math::EqualsInTolerance(InMatrix[0].SizeSquared(), 1.f) || !Math::EqualsInTolerance(InMatrix[1].SizeSquared(), 1.f) || !Math::EqualsInTolerance(InMatrix[2].SizeSquared(), 1.f))
+		{ 
+			*this = Quaternion::Identity;
+		}
+
 		if (trace > 0.f)
 		{
-			float invS = Math::InvSqrt(trace + 1.f);
-			W = 0.5f * (1.f / invS);
-			s = 0.5f * invS;
+			root = sqrtf(trace + 1.f);
+			W = 0.5f * root;
+			root = 0.5f / root;
 
-			X = (InMatrix[1][2] - InMatrix[2][1]) * s;
-			Y = (InMatrix[2][0] - InMatrix[0][2]) * s;
-			Z = (InMatrix[0][1] - InMatrix[1][0]) * s;
+			X = (InMatrix[1][2] - InMatrix[2][1]) * root;
+			Y = (InMatrix[2][0] - InMatrix[0][2]) * root;
+			Z = (InMatrix[0][1] - InMatrix[1][0]) * root;
 		}
 		else
 		{
 			BYTE i = 0;
 
 			if (InMatrix[1][1] > InMatrix[0][0]) { i = 1; }
-			if (InMatrix[2][2] > InMatrix[1][1]) { i = 2; }
+			if (InMatrix[2][2] > InMatrix[i][i]) { i = 2; }
 
 			// i, j, k 의 순서 지정
 			static const BYTE next[3] = { 1, 2, 0 };
 			const BYTE j = next[i];
 			const BYTE k = next[j];
 
-			float newTrace = InMatrix[i][i] - InMatrix[j][j] - InMatrix[k][k];
-			float invS = Math::InvSqrt(newTrace + 1.f);
-			s = 0.5f * invS;
+			root = sqrtf(InMatrix[i][i] - InMatrix[j][j] - InMatrix[k][k] + 1.f);
 
-			float qt[3];
-			W = (InMatrix[j][k] - InMatrix[k][j]) * s;
-			qt[i] = 0.5f * (1.f / invS);
-			qt[j] = (InMatrix[i][j] - InMatrix[j][i]) * s;
-			qt[k] = (InMatrix[i][k] - InMatrix[k][i]) * s;
-			X = qt[0];
-			Y = qt[1];
-			Z = qt[2];
+			float* qt[3] = { &X, &Y, &Z };
+			*qt[i] = 0.5f * root;
+
+			root = 0.5f / root;
+			*qt[j] = (InMatrix[i][j] + InMatrix[j][i]) * root;
+			*qt[k] = (InMatrix[i][k] + InMatrix[k][i]) * root;
+			W = (InMatrix[j][k] - InMatrix[k][j]) * root;
 		}
 	}
 

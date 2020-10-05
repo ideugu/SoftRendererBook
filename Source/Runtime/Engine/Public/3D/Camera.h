@@ -31,7 +31,7 @@ public:
 	void SetViewportSize(const ScreenPoint& InViewportSize) { _ViewportSize = InViewportSize; }
 
 	// 행렬 생성
-	FORCEINLINE void GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
+	FORCEINLINE void GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const;
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
 	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
@@ -45,17 +45,18 @@ private:
 	ScreenPoint _ViewportSize;
 };
 
-FORCEINLINE void Camera::GetViewLocalAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
+FORCEINLINE void Camera::GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
 {
-	OutViewZ = -_TransformNode.GetLocalZ();
-	OutViewX = -_TransformNode.GetLocalX();
-	OutViewY = _TransformNode.GetLocalY();
+	Quaternion worldRotation = _TransformNode.GetWorldRotation();
+	OutViewZ = worldRotation.RotateVector(-Vector3::UnitZ);
+	OutViewX = worldRotation.RotateVector(-Vector3::UnitX);
+	OutViewY = worldRotation.RotateVector(Vector3::UnitY);
 }
 
 FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
 {
 	Vector3 viewX, viewY, viewZ;
-	GetViewLocalAxes(viewX, viewY, viewZ);
+	GetViewAxes(viewX, viewY, viewZ);
 	Vector3 pos = _TransformNode.GetWorldPosition();
 
 	return Matrix4x4(
@@ -69,7 +70,7 @@ FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
 FORCEINLINE Matrix4x4 Camera::GetViewMatrixRotationOnly() const
 {
 	Vector3 viewX, viewY, viewZ;
-	GetViewLocalAxes(viewX, viewY, viewZ);
+	GetViewAxes(viewX, viewY, viewZ);
 
 	return Matrix4x4(
 		Vector4(Vector3(viewX.X, viewY.X, viewZ.X), false),

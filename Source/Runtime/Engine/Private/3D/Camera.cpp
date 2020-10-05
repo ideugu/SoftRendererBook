@@ -20,5 +20,5 @@ void Camera::SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& I
 	}
 	viewY = viewZ.Cross(viewX).Normalize();
 
-	_TransformNode.SetLocalRotation(Matrix3x3(viewX, viewY, viewZ));
+	_TransformNode.SetWorldRotation(Matrix3x3(viewX, viewY, viewZ));
 }
