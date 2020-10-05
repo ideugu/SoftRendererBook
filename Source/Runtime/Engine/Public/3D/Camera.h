@@ -15,6 +15,7 @@ public:
 	// 트랜스폼
 	TransformNode& GetTransformNode() { return _TransformNode; }
 	const TransformNode& GetTransformNode() const { return _TransformNode; }
+	void SetParent(GameObject& InGameObject) { _TransformNode.SetParent(InGameObject.GetTransformNode()); }
 
 	// 카메라 값을 가져오는 함수
 	float GetFOV() const { return _FOV; }

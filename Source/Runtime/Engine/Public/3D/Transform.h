@@ -96,6 +96,9 @@ public: // 트랜스폼 설정함수
 	FORCEINLINE Quaternion GetRotation() const { return Rotation; }
 	FORCEINLINE Vector3 GetScale() const { return Scale; }
 
+	// 연산자
+	FORCEINLINE Transform operator*(const Transform& InTransform) const;
+
 private: // 트랜스폼에 관련된 변수
 	Vector3 Position;
 	Quaternion Rotation;
@@ -111,6 +114,15 @@ FORCEINLINE Matrix4x4 Transform::GetMatrix() const
 		Vector4(GetZAxis() * Scale.Z, false),
 		Vector4(Position, true)
 	);
+}
+
+FORCEINLINE Transform Transform::operator*(const Transform& InTransform) const
+{
+	Transform result;
+	result.Rotation = InTransform.Rotation * Rotation;
+	result.Scale = Scale * InTransform.Scale;
+	result.Position = InTransform.Rotation.RotateVector(InTransform.Scale * Position) + InTransform.Position;
+	return result;
 }
 
 }

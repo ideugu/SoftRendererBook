@@ -271,27 +271,34 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	Camera& camera = g.GetMainCamera();
 
 	// 기본 설정 변수
-	static float rotateSpeedSun = 0.f;
-	static float rotateSpeedEarth = 360.f;
-	static float rotateSpeedMoon = 0.f;
+	static float rotateSpeedSun = 40.f;
+	static float rotateSpeedEarth = 120.f;
+	static float rotateSpeedMoon = 48.f;
 	static float fovSpeed = 100.f;
+	static float yawSpeed = 100.f;
+	static float pitchSpeed = 30.f;
 
 	GameObject& goSun = g.GetGameObject(GameEngine::Sun);
 	GameObject& goEarth = g.GetGameObject(GameEngine::Earth);
 	GameObject& goMoon = g.GetGameObject(GameEngine::Moon);
+	GameObject& goCameraRig = g.GetGameObject(GameEngine::CameraRig);
 
 	goSun.GetTransformNode().AddLocalYawRotation(rotateSpeedSun * InDeltaSeconds);
 	goEarth.GetTransformNode().AddLocalYawRotation(rotateSpeedEarth * InDeltaSeconds);
 	goMoon.GetTransformNode().AddLocalYawRotation(rotateSpeedMoon * InDeltaSeconds);
 
+	// 카메라 릭의 회전 조절
+	//goCameraRig.GetTransformNode().AddLocalYawRotation(-input.GetAxis(InputAxis::XAxis) * yawSpeed * InDeltaSeconds);
+	//goCameraRig.GetTransformNode().AddLocalPitchRotation(-input.GetAxis(InputAxis::YAxis) * pitchSpeed * InDeltaSeconds);
+
+	// 카메라가 항상 태양을 바라보도록 설정
+	camera.SetLookAtRotation(goSun.GetTransformNode().GetWorldPosition());
+
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
 
-	//_RSI->PushStatisticText("Sun : " + goSun.GetTransformNode().GetWorldPosition().ToString());
-	//_RSI->PushStatisticTexts(goEarth.GetTransformNode().GetWorldMatrix().ToStrings());
-	_RSI->PushStatisticText("Earth : " + goEarth.GetTransformNode().GetWorldRotation().ToString());
-	//_RSI->PushStatisticText("Moon : " + goMoon.GetTransformNode().GetWorldPosition().ToString());
+	_RSI->PushStatisticText(camera.GetTransformNode().GetLocalRotation().ToString());
 }
 
 // 렌더링 로직

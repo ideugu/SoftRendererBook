@@ -26,10 +26,6 @@ public:
 	// 행렬 생성 함수
 	FORCEINLINE Matrix3x3 GetModelingMatrix() const;
 
-	// 연산자
-	FORCEINLINE Transform operator*(const Transform& InTransform) const;
-	FORCEINLINE Transform operator*=(const Transform& InTransform);
-
 private:
 	FORCEINLINE void CalculateLocalAxis();
 
@@ -58,15 +54,6 @@ FORCEINLINE void Transform::CalculateLocalAxis()
 
 	Right = Vector2(cos, sin);
 	Up = Vector2(-sin, cos);
-}
-
-FORCEINLINE Transform Transform::operator*(const Transform& InTransform) const
-{
-	Transform result;
-	result.Rotation = InTransform.Rotation * Rotation;
-	result.Scale = Scale * InTransform.Scale;
-	result.Position = InTransform.Rotation.RotateVector(InTransform.Scale * Position) + InTransform.Position;
-	return result;
 }
 
 }

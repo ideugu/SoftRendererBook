@@ -9,6 +9,7 @@ const std::size_t GameEngine::CubeMeshKey = std::hash<std::string>()("SM_Cube");
 const std::string GameEngine::Sun("Sun");
 const std::string GameEngine::Earth("Earth");
 const std::string GameEngine::Moon("Moon");
+const std::string GameEngine::CameraRig("CameraRig");
 
 const std::size_t GameEngine::DiffuseTexture = std::hash<std::string>()("Diffuse");
 const std::string GameEngine::SteveTexturePath("Steve.png");
@@ -118,7 +119,7 @@ bool GameEngine::LoadScene()
 	// 태양 ( 최상단 )
 	GameObject& sun = CreateNewGameObject(GameEngine::Sun);
 	sun.SetMesh(GameEngine::CubeMeshKey);
-	sun.GetTransformNode().SetLocalScale(Vector3::One * sunScale);
+	sun.GetTransformNode().SetWorldScale(Vector3::One * sunScale);
 
 	// 지구
 	GameObject& earth = CreateNewGameObject(GameEngine::Earth);
@@ -134,11 +135,13 @@ bool GameEngine::LoadScene()
 	moon.GetTransformNode().SetWorldPosition(moonOffset);
 	moon.SetParent(earth);
 
+	// 카메라 릭
+	GameObject& cameraRig = CreateNewGameObject(GameEngine::CameraRig);
 
 	// 카메라 설정
+	//_MainCamera.GetTransformNode().SetWorldPosition(Vector3(700.f, 700.f, -700.f));
 	_MainCamera.GetTransformNode().SetWorldPosition(Vector3(700.f, 700.f, -700.f));
-	//_MainCamera.GetTransformNode().SetWorldRotation(Rotator(-45.f, 0.f, 45.f));
-	_MainCamera.SetLookAtRotation(Vector3::Zero);
+	_MainCamera.SetParent(sun);
 
 	return true;
 }
@@ -190,45 +193,6 @@ GameObject& GameEngine::CreateNewGameObject(const std::string& InName)
 
 	return GetGameObject(InName);
 }
-
-
-// 정렬하면서 삽입하기
-//bool GameEngine::AddGameObject(std::unique_ptr<GameObject> InGameObject)
-//{
-//	//auto goPtr = std::make_unique<GameObject>(InGameObject);
-//
-//	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), InGameObject, 
-//		[](const std::unique_ptr<GameObject>& lhs, const GameObject& rhs) 
-//		{
-//			return lhs->GetHash() < rhs.GetHash(); 
-//		}
-//	);
-//
-//	if (it == _Scene.end())
-//	{
-//		_Scene.push_back(std::move(InGameObject));
-//		return true;
-//	}
-//
-//	std::size_t inHash = InGameObject->GetHash();
-//	std::size_t targetHash = (*it)->GetHash();
-//
-//	if (targetHash == inHash)
-//	{
-//		// 중복된 키 발생. 무시.
-//		return false;
-//	}
-//	else if (targetHash < inHash)
-//	{
-//		_Scene.insert(it + 1, std::move(InGameObject));
-//	}
-//	else
-//	{
-//		_Scene.insert(it, std::move(InGameObject));
-//	}
-//
-//	return true;
-//}
 
 GameObject& GameEngine::GetGameObject(const std::string& InName)
 {

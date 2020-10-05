@@ -107,11 +107,6 @@ void TransformNode::UpdateWorld()
 	if (HasParent())
 	{
 		const TransformNode& parent = *GetParentPtr();
-		//_WorldTransform.SetScale(GetLocalScale() * parent.GetWorldScale());
-		//_WorldTransform.SetRotation(parent.GetWorldRotation() * GetLocalRotation());
-		//Vector3 newPosition = parent.GetWorldRotation().RotateVector(parent.GetWorldScale() * GetLocalPosition()) + parent.GetWorldPosition();
-		//_WorldTransform.SetPosition(newPosition);
-
 		_WorldTransform = _LocalTransform * parent.GetWorldTransform();
 	}
 	else

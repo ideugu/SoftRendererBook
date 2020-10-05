@@ -29,7 +29,6 @@ public: // 공용 로직
 	const std::vector<std::unique_ptr<GameObject>>& GetScene() const { return _Scene; }
 	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneBegin() const { return _Scene.begin(); }
 	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneEnd() const { return _Scene.end(); }
-	//bool AddGameObject(std::unique_ptr<GameObject> InGameObject);
 	GameObject& CreateNewGameObject(const std::string& InName);
 	GameObject& GetGameObject(const std::string& InName);
 
@@ -52,6 +51,7 @@ public: // 주요 키 값
 	static const std::string Sun;
 	static const std::string Earth;
 	static const std::string Moon;
+	static const std::string CameraRig;
 
 	// 텍스쳐
 	const static std::size_t DiffuseTexture;
