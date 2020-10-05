@@ -9,6 +9,6 @@ const float Math::InvPI = 0.31830988618f;
 const int Math::IntMin = (-2147483647 - 1);
 const int Math::IntMax = 2147483647;
 
-const std::string Math::DefaultHashName("!@INVALIDHASH#$");
-const std::size_t Math::DefaultHash = std::hash<std::string>()(DefaultHashName);
+const std::string Math::InvalidHashName("!@CK_INVALIDHASH#$");
+const std::size_t Math::InvalidHash = std::hash<std::string>()(InvalidHashName);
 

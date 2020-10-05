@@ -23,7 +23,7 @@ public:
 
 	// 메시
 	void SetMesh(const std::size_t& InMeshKey) { _MeshKey = InMeshKey; }
-	bool HasMesh() const { return _MeshKey != Math::DefaultHash; }
+	bool HasMesh() const { return _MeshKey != Math::InvalidHash; }
 	FORCEINLINE std::size_t GetMeshKey() const { return _MeshKey; }
 
 	// 색상
@@ -35,13 +35,13 @@ public:
 	std::size_t GetHash() const { return _Hash; }
 
 	// 검색 관련
-	bool IsValid() const { return _Hash != Math::DefaultHash; }
-	const static GameObject NotFound;
+	bool IsValid() const { return _Hash != Math::InvalidHash; }
+	const static GameObject Invalid;
 
 private:
-	std::size_t _Hash = Math::DefaultHash;
+	std::size_t _Hash = Math::InvalidHash;
 	std::string _Name;
-	std::size_t _MeshKey = Math::DefaultHash;
+	std::size_t _MeshKey = Math::InvalidHash;
 	TransformNode _TransformNode;
 	LinearColor _Color = LinearColor::Error;
 };

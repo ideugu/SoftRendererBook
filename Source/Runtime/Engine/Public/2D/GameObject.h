@@ -43,7 +43,7 @@ public:
 	FORCEINLINE bool operator!=(const GameObject& InGameObject) const;
 	FORCEINLINE bool operator!=(const std::string& InString) const;
 
-	const static GameObject NotFound;
+	const static GameObject Invalid;
 
 private:
 	std::size_t _Hash = 0;

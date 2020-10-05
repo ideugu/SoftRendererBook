@@ -11,8 +11,8 @@ struct Math
 	static const float InvPI;
 	static const int IntMin;
 	static const int IntMax;
-	static const std::string DefaultHashName;
-	static const std::size_t DefaultHash;
+	static const std::string InvalidHashName;
+	static const std::size_t InvalidHash;
 
 	static FORCEINLINE int TruncToInt(float InFloat)
 	{

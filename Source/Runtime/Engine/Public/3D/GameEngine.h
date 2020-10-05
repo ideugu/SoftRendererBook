@@ -29,7 +29,8 @@ public: // 공용 로직
 	const std::vector<std::unique_ptr<GameObject>>& GetScene() const { return _Scene; }
 	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneBegin() const { return _Scene.begin(); }
 	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneEnd() const { return _Scene.end(); }
-	bool AddGameObject(const GameObject& InGameObject);
+	//bool AddGameObject(std::unique_ptr<GameObject> InGameObject);
+	GameObject& CreateNewGameObject(const std::string& InName);
 	GameObject& GetGameObject(const std::string& InName);
 
 	// 메시
@@ -45,26 +46,12 @@ public: // 공용 로직
 
 public: // 주요 키 값
 	// 메시
-	static const std::size_t HeadMeshKey;
-	static const std::size_t BodyMeshKey;
-	static const std::size_t LArmMeshKey;
-	static const std::size_t RArmMeshKey;
-	static const std::size_t LLegMeshKey;
-	static const std::size_t RLegMeshKey;
+	static const std::size_t CubeMeshKey;
 
 	// 게임 오브젝트
-	static const std::string BodyKey;
-	static const std::string HeadKey;
-	static const std::string LArmKey;
-	static const std::string RArmKey;
-	static const std::string LLegKey;
-	static const std::string RLegKey;
-	static const std::string PlayerKey;
-	static const std::string HeadPivotKey;
-	static const std::string LArmPivotKey;
-	static const std::string RArmPivotKey;
-	static const std::string LLegPivotKey;
-	static const std::string RLegPivotKey;
+	static const std::string Sun;
+	static const std::string Earth;
+	static const std::string Moon;
 
 	// 텍스쳐
 	const static std::size_t DiffuseTexture;

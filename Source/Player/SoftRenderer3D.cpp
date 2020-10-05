@@ -271,13 +271,27 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	Camera& camera = g.GetMainCamera();
 
 	// 기본 설정 변수
-	static float elapsedTime = 0.f;
-	static float duration = 5.f;
+	static float rotateSpeedSun = 0.f;
+	static float rotateSpeedEarth = 360.f;
+	static float rotateSpeedMoon = 0.f;
 	static float fovSpeed = 100.f;
+
+	GameObject& goSun = g.GetGameObject(GameEngine::Sun);
+	GameObject& goEarth = g.GetGameObject(GameEngine::Earth);
+	GameObject& goMoon = g.GetGameObject(GameEngine::Moon);
+
+	goSun.GetTransformNode().AddLocalYawRotation(rotateSpeedSun * InDeltaSeconds);
+	goEarth.GetTransformNode().AddLocalYawRotation(rotateSpeedEarth * InDeltaSeconds);
+	goMoon.GetTransformNode().AddLocalYawRotation(rotateSpeedMoon * InDeltaSeconds);
 
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
 	camera.SetFOV(newFOV);
+
+	//_RSI->PushStatisticText("Sun : " + goSun.GetTransformNode().GetWorldPosition().ToString());
+	//_RSI->PushStatisticTexts(goEarth.GetTransformNode().GetWorldMatrix().ToStrings());
+	_RSI->PushStatisticText("Earth : " + goEarth.GetTransformNode().GetWorldRotation().ToString());
+	//_RSI->PushStatisticText("Moon : " + goMoon.GetTransformNode().GetWorldPosition().ToString());
 }
 
 // 렌더링 로직
@@ -289,10 +303,10 @@ void SoftRenderer::Render3D()
 	DrawGizmo3D();
 
 	const Camera& mainCamera = g.GetMainCamera();
-	Matrix4x4 viewMat = mainCamera.GetViewMatrix();
-	Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
-	Matrix4x4 pvMat = perspMat * viewMat;
-	ScreenPoint viewportSize = mainCamera.GetViewportSize();
+	const Matrix4x4 viewMat = mainCamera.GetViewMatrix();
+	const Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
+	const Matrix4x4 pvMat = perspMat * viewMat;
+	const ScreenPoint viewportSize = mainCamera.GetViewportSize();
 	float nearZ = mainCamera.GetNearZ();
 	float farZ = mainCamera.GetFarZ();
 

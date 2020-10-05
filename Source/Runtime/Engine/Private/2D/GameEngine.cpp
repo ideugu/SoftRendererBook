@@ -158,5 +158,5 @@ GameObject& GameEngine::FindGameObject(const std::string& InName)
 		return (*it);
 	}
 
-	return const_cast<GameObject&>(GameObject::NotFound);
+	return const_cast<GameObject&>(GameObject::Invalid);
 }

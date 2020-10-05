@@ -2,7 +2,7 @@
 #include "Precompiled.h"
 using namespace CK::DD;
 
-const GameObject GameObject::NotFound("!NOTFOUND");
+const GameObject GameObject::Invalid(Math::InvalidHashName);
 
 void GameObject::SetMesh(const std::string& InMeshKey)
 {

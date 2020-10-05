@@ -37,17 +37,15 @@ public:
 	{
 		float s = 0.f;
 		float trace = InMatrix[0][0] + InMatrix[1][1] + InMatrix[2][2];
-		// Trace 값은 3 - 4(x^2+y^2+w^2),  trace + 1 = w^2.  그러므로 trace = w^2 - 1
-		// trace 값이 0보다 크면 별 문제 없음
 		if (trace > 0.f)
 		{
 			float invS = Math::InvSqrt(trace + 1.f);
 			W = 0.5f * (1.f / invS);
 			s = 0.5f * invS;
 
-			X = (InMatrix[2][1] - InMatrix[1][2]) * s;
-			Y = (InMatrix[0][2] - InMatrix[2][0]) * s;
-			Z = (InMatrix[1][0] - InMatrix[0][1]) * s;
+			X = (InMatrix[1][2] - InMatrix[2][1]) * s;
+			Y = (InMatrix[2][0] - InMatrix[0][2]) * s;
+			Z = (InMatrix[0][1] - InMatrix[1][0]) * s;
 		}
 		else
 		{
@@ -66,10 +64,10 @@ public:
 			s = 0.5f * invS;
 
 			float qt[3];
-			W = (InMatrix[k][j] - InMatrix[j][k]) * s;
+			W = (InMatrix[j][k] - InMatrix[k][j]) * s;
 			qt[i] = 0.5f * (1.f / invS);
-			qt[j] = (InMatrix[j][i] - InMatrix[i][j]) * s;
-			qt[k] = (InMatrix[k][i] - InMatrix[i][k]) * s;
+			qt[j] = (InMatrix[i][j] - InMatrix[j][i]) * s;
+			qt[k] = (InMatrix[i][k] - InMatrix[k][i]) * s;
 			X = qt[0];
 			Y = qt[1];
 			Z = qt[2];
@@ -98,6 +96,7 @@ public:
 
 	FORCEINLINE float RealPart() const { return W; }
 	FORCEINLINE Vector3 ImaginaryPart() const { return Vector3(X, Y, Z); }
+	std::string ToString() const;
 
 	static const Quaternion Identity;
 

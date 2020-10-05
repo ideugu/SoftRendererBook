@@ -26,6 +26,7 @@ public:
 		return angle;
 	}
 
+	std::string ToString() const;
 	static const Rotator Identity;
 
 public:
