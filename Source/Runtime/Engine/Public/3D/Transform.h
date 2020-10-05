@@ -12,13 +12,76 @@ public:
 	Transform(const Vector3& InPosition) : Position(InPosition) { }
 	Transform(const Vector3& InPosition, const Quaternion& InRotation) : Position(InPosition), Rotation(InRotation) { }
 	Transform(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : Position(InPosition), Rotation(InRotation), Scale(InScale) { }
+	Transform(const Matrix4x4& InMatrix) 
+	{ 
+		//Vector3 Scale3D;
+
+		//const float SquareSum0 = InMatrix[0].ToVector3().SizeSquared();
+		//const float SquareSum1 = InMatrix[1].ToVector3().SizeSquared();
+		//const float SquareSum2 = InMatrix[2].ToVector3().SizeSquared();
+
+		//if (SquareSum0 > SMALL_NUMBER)
+		//{
+		//	float Scale0 = sqrtf(SquareSum0);
+		//	Scale3D[0] = Scale0;
+		//}
+		//else
+		//{
+		//	Scale3D[0] = 0;
+		//}
+
+		//if (SquareSum1 > Tolerance)
+		//{
+		//	float Scale1 = FMath::Sqrt(SquareSum1);
+		//	Scale3D[1] = Scale1;
+		//}
+		//else
+		//{
+		//	Scale3D[1] = 0;
+		//}
+
+		//if (SquareSum2 > Tolerance)
+		//{
+		//	float Scale2 = FMath::Sqrt(SquareSum2);
+		//	Scale3D[2] = Scale2;
+		//	float InvScale2 = 1.f / Scale2;
+		//	M[2][0] *= InvScale2;
+		//	M[2][1] *= InvScale2;
+		//	M[2][2] *= InvScale2;
+		//}
+		//else
+		//{
+		//	Scale3D[2] = 0;
+		//}
+
+		//return Scale3D;
+	}
 
 public: // 트랜스폼 설정함수
 	void SetPosition(const Vector3& InPosition) { Position = InPosition; }
 	void AddPosition(const Vector3& InDeltaPosition) { Position += InDeltaPosition; }
-	void AddYawRotation(float InDegree) { Rotation *= Quaternion(Vector3::UnitY, InDegree); }
-	void AddRollRotation(float InDegree) { Rotation *= Quaternion(Vector3::UnitZ, InDegree); }
-	void AddPitchRotation(float InDegree) { Rotation *= Quaternion(Vector3::UnitX, InDegree); }
+	void AddYawRotation(float InDegree) 
+	{
+		Rotator r = Rotation.ToRotator();
+		r.Yaw += InDegree;
+		r.Clamp();
+		Rotation = Quaternion(r);
+	}
+	void AddRollRotation(float InDegree) 
+	{ 
+		Rotator r = Rotation.ToRotator();
+		r.Roll += InDegree;
+		r.Clamp();
+		Rotation = Quaternion(r);
+	}
+	void AddPitchRotation(float InDegree) 
+	{ 
+		Rotator r = Rotation.ToRotator();
+		r.Pitch += InDegree;
+		r.Clamp();
+		Rotation = Quaternion(r);
+	}
+
 	void SetRotation(const Rotator& InRotator) { Rotation = Quaternion(InRotator); }
 	void SetRotation(const Matrix3x3& InMatrix) { Rotation = Quaternion(InMatrix); }
 	void SetRotation(const Quaternion& InQuaternion) { Rotation = InQuaternion; }
