@@ -32,6 +32,8 @@
 
 #include "Quaternion.h"
 
+#include "TransformData.h"
+
 #include "Plane.h"
 
 #include "Circle.h"

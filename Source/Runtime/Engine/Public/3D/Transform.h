@@ -5,137 +5,196 @@ namespace CK
 namespace DDD
 {
 
-struct Transform
+class Transform
 {
 public:
 	Transform() = default;
-	Transform(const Vector3& InPosition) : Position(InPosition) { }
-	Transform(const Vector3& InPosition, const Quaternion& InRotation) : Position(InPosition), Rotation(InRotation) { }
-	Transform(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : Position(InPosition), Rotation(InRotation), Scale(InScale) { }
-	Transform(const Matrix4x4& InMatrix)
+	Transform(const TransformData& InLocalTransform) : _LocalTransform(InLocalTransform) 
 	{ 
-		// 스케일 회전 행렬만 분리
-		Matrix3x3 rotScaleMatrix = InMatrix.ToMatrix3x3();
-		Position = InMatrix[3].ToVector3();
-
-		// 크기 행렬부터 구한다. 
-		Scale = Vector3::Zero;
-		const float squareSumX = rotScaleMatrix[0].SizeSquared();
-		const float squareSumY = rotScaleMatrix[1].SizeSquared();
-		const float squareSumZ = rotScaleMatrix[2].SizeSquared();
-		if (squareSumX > SMALL_NUMBER) { Scale.X = sqrtf(squareSumX); }
-		if (squareSumY > SMALL_NUMBER) { Scale.Y = sqrtf(squareSumY); }
-		if (squareSumZ > SMALL_NUMBER) { Scale.Z = sqrtf(squareSumZ); }
-
-		// 크기 요소를 나눠 직교 정방 행렬을 구한다.
-		rotScaleMatrix[0] /= squareSumX;
-		rotScaleMatrix[1] /= squareSumY;
-		rotScaleMatrix[2] /= squareSumZ;
-
-		// 사원수로 변환한다.
-		Rotation = Quaternion(rotScaleMatrix);
+		UpdateWorld(); 
 	}
 
-public: // 트랜스폼 설정함수
-	void SetPosition(const Vector3& InPosition) { Position = InPosition; }
-	void AddPosition(const Vector3& InDeltaPosition) { Position += InDeltaPosition; }
-	void AddYawRotation(float InDegree) 
-	{
-		Rotator r = Rotation.ToRotator();
-		r.Yaw += InDegree;
-		r.Clamp();
-		Rotation = Quaternion(r);
-	}
-	void AddRollRotation(float InDegree) 
-	{ 
-		Rotator r = Rotation.ToRotator();
-		r.Roll += InDegree;
-		r.Clamp();
-		Rotation = Quaternion(r);
-	}
-	void AddPitchRotation(float InDegree) 
-	{ 
-		Rotator r = Rotation.ToRotator();
-		r.Pitch += InDegree;
-		r.Clamp();
-		Rotation = Quaternion(r);
-	}
+public: // 로컬 트랜스폼 관련 함수
+	FORCEINLINE TransformData& GetLocalTransform() { return _LocalTransform; }
+	FORCEINLINE void SetLocalTransform(const TransformData& InTransform) { _LocalTransform = InTransform; UpdateWorld(); }
+	FORCEINLINE const TransformData& GetLocalTransform() const { return _LocalTransform; }
 
-	void SetRotation(const Rotator& InRotator) { Rotation = Quaternion(InRotator); }
-	void SetRotation(const Matrix3x3& InMatrix) { Rotation = Quaternion(InMatrix); }
-	void SetRotation(const Quaternion& InQuaternion) { Rotation = InQuaternion; }
-	void SetScale(const Vector3& InScale) { Scale = InScale; }
+	FORCEINLINE void SetLocalPosition(const Vector3& InPosition);
+	FORCEINLINE void AddLocalPosition(const Vector3& InDeltaPosition);
+	FORCEINLINE void AddLocalYawRotation(float InDegree);
+	FORCEINLINE void AddLocalRollRotation(float InDegree);
+	FORCEINLINE void AddLocalPitchRotation(float InDegree);
+	FORCEINLINE void SetLocalRotation(const Rotator& InRotator);
+	FORCEINLINE void SetLocalRotation(const Quaternion& InQuaternion);
+	FORCEINLINE void SetLocalRotation(const Matrix3x3& InMatrix);
+	FORCEINLINE void SetLocalScale(const Vector3& InScale);
 
-	FORCEINLINE Vector3 GetXAxis() const { return Rotation * Vector3::UnitX; }
-	FORCEINLINE Vector3 GetYAxis() const { return Rotation * Vector3::UnitY; }
-	FORCEINLINE Vector3 GetZAxis() const { return Rotation * Vector3::UnitZ; }
-	Matrix4x4 GetMatrix() const;
+	FORCEINLINE Vector3 GetLocalPosition() const { return _LocalTransform.GetPosition(); }
+	FORCEINLINE Rotator GetLocalRotator() const { return _LocalTransform.GetRotation().ToRotator(); }
+	FORCEINLINE Quaternion GetLocalRotation() const { return _LocalTransform.GetRotation(); }
+	FORCEINLINE Vector3 GetLocalScale() const { return _LocalTransform.GetScale(); }
 
-	FORCEINLINE Vector3 GetPosition() const { return Position; }
-	FORCEINLINE Quaternion GetRotation() const { return Rotation; }
-	FORCEINLINE Vector3 GetScale() const { return Scale; }
+	FORCEINLINE Vector3 GetLocalX() const { return _LocalTransform.GetXAxis(); }
+	FORCEINLINE Vector3 GetLocalY() const { return _LocalTransform.GetYAxis(); }
+	FORCEINLINE Vector3 GetLocalZ() const { return _LocalTransform.GetZAxis(); }
+	FORCEINLINE Matrix4x4 GetLocalMatrix() const { return _LocalTransform.GetMatrix(); }
 
-	// 트랜스폼 변환
-	FORCEINLINE Transform Inverse() const;
-	FORCEINLINE Transform LocalToWorld(const Transform& InParentWorldTransform) const;
-	FORCEINLINE Transform WorldToLocal(const Transform& InParentWorldTransform) const;
-	//// 연산자
-	//FORCEINLINE Transform operator*(const Transform& InTransform) const;
+public: // 월드 트랜스폼 관련 함수
+	FORCEINLINE TransformData& GetWorldTransform() { return _WorldTransform; }
+	FORCEINLINE void SetWorldTransform(const TransformData& InTransform) { _WorldTransform = InTransform; UpdateLocal(); }
+	FORCEINLINE const TransformData& GetWorldTransform() const { return _WorldTransform; }
 
-private: // 트랜스폼에 관련된 변수
-	Vector3 Position;
-	Quaternion Rotation;
-	Vector3 Scale = Vector3::One;
+	FORCEINLINE void SetWorldPosition(const Vector3& InPosition);
+	FORCEINLINE void AddWorldPosition(const Vector3& InDeltaPosition);
+	FORCEINLINE void AddWorldYawRotation(float InDegree);
+	FORCEINLINE void AddWorldRollRotation(float InDegree);
+	FORCEINLINE void AddWorldPitchRotation(float InDegree);
+	FORCEINLINE void SetWorldRotation(const Rotator& InRotator);
+	FORCEINLINE void SetWorldRotation(const Matrix3x3& InMatrix);
+	FORCEINLINE void SetWorldRotation(const Quaternion& InQuaternion);
+	FORCEINLINE void SetWorldScale(const Vector3& InScale);
 
+	FORCEINLINE Vector3 GetWorldPosition() const { return _WorldTransform.GetPosition(); }
+	FORCEINLINE Rotator GetWorldRotator() const { return _WorldTransform.GetRotation().ToRotator(); }
+	FORCEINLINE Quaternion GetWorldRotation() const { return _WorldTransform.GetRotation(); }
+	FORCEINLINE Vector3 GetWorldScale() const { return _WorldTransform.GetScale(); }
+
+	FORCEINLINE Matrix4x4 GetWorldMatrix() const { return _WorldTransform.GetMatrix(); }
+
+public: // 계층 구조 관련 함수
+	bool SetRoot();
+	bool RemoveFromParent();
+	Transform& GetRoot();
+	bool SetParent(Transform& InTransform);
+
+	FORCEINLINE bool HasParent() const { return _ParentPtr != nullptr; }
+	std::vector<Transform*>& GetChildren() { return _ChildrenPtr; }
+	std::vector<Transform*>::const_iterator ChildBegin() const { return _ChildrenPtr.begin(); }
+	std::vector<Transform*>::const_iterator ChildEnd() const { return _ChildrenPtr.end(); }
+
+private: // 내부에서만 호출하는 함수
+	FORCEINLINE Transform* GetParentPtr() const { return _ParentPtr; }
+	void UpdateLocal();
+	void UpdateWorld();
+	void UpdateChildrenWorld();
+
+private: // 계층 구조를 위한 변수
+	TransformData _LocalTransform;
+	TransformData _WorldTransform;
+
+	Transform* _ParentPtr = nullptr;
+	std::vector<Transform*> _ChildrenPtr;
 };
 
-FORCEINLINE Matrix4x4 Transform::GetMatrix() const
+
+FORCEINLINE void Transform::SetLocalPosition(const Vector3& InPosition)
 {
-	return Matrix4x4(
-		Vector4(GetXAxis() * Scale.X, false),
-		Vector4(GetYAxis() * Scale.Y, false),
-		Vector4(GetZAxis() * Scale.Z, false),
-		Vector4(Position, true)
-	);
+	_LocalTransform.SetPosition(InPosition);
+	UpdateWorld();
 }
 
-FORCEINLINE Transform Transform::Inverse() const
+FORCEINLINE void Transform::AddLocalPosition(const Vector3& InDeltaPosition)
 {
-	// 로컬 정보만 남기기 위한 트랜스폼 ( 역행렬 )
-	Vector3 reciprocalScale = Vector3::Zero;
-	if (!Math::EqualsInTolerance(Scale.X, 0.f)) reciprocalScale.X = 1.f / Scale.X;
-	if (!Math::EqualsInTolerance(Scale.Y, 0.f)) reciprocalScale.Y = 1.f / Scale.Y;
-	if (!Math::EqualsInTolerance(Scale.Z, 0.f)) reciprocalScale.Z = 1.f / Scale.Z;
-
-	Transform result;
-	result.Rotation = Rotation.Inverse();
-	result.Scale = reciprocalScale;
-	result.Position = result.Rotation * (result.Scale * -Position);
-	return result;
+	_LocalTransform.AddPosition(InDeltaPosition);
+	UpdateWorld();
 }
 
-
-FORCEINLINE Transform Transform::LocalToWorld(const Transform& InParentWorldTransform) const
+FORCEINLINE void Transform::AddLocalYawRotation(float InDegree)
 {
-	// 현재 트랜스폼 정보가 로컬인 경우
-	Transform result;
-	result.Rotation = InParentWorldTransform.Rotation * Rotation;
-	result.Scale = InParentWorldTransform.Scale * Scale;
-	result.Position = InParentWorldTransform.Rotation.RotateVector(InParentWorldTransform.Scale * Position) + InParentWorldTransform.Position;
-	return result;
+	_LocalTransform.AddYawRotation(InDegree);
+	UpdateWorld();
 }
 
-FORCEINLINE Transform Transform::WorldToLocal(const Transform& InParentWorldTransform) const
+FORCEINLINE void Transform::AddLocalRollRotation(float InDegree)
 {
-	Transform invParent = InParentWorldTransform.Inverse();
-
-	// 현재 트랜스폼 정보가 월드인 경우
-	Transform result;
-	result.Scale = invParent.GetScale() * Scale;
-	result.Rotation = invParent.GetRotation() * Rotation;
-	result.Position = invParent.GetPosition() + Position;
-	return result;
+	_LocalTransform.AddRollRotation(InDegree);
+	UpdateWorld();
 }
+
+FORCEINLINE void Transform::AddLocalPitchRotation(float InDegree)
+{
+	_LocalTransform.AddPitchRotation(InDegree);
+	UpdateWorld();
+}
+
+FORCEINLINE void Transform::SetLocalRotation(const Rotator& InRotator)
+{
+	_LocalTransform.SetRotation(InRotator);
+	UpdateWorld();
+}
+
+FORCEINLINE void Transform::SetLocalRotation(const Matrix3x3& InMatrix)
+{
+	_LocalTransform.SetRotation(InMatrix);
+	UpdateWorld();
+}
+
+FORCEINLINE void Transform::SetLocalRotation(const Quaternion& InQuaternion)
+{
+	_LocalTransform.SetRotation(InQuaternion);
+	UpdateWorld();
+}
+
+FORCEINLINE void Transform::SetLocalScale(const Vector3& InScale)
+{
+	_LocalTransform.SetScale(InScale);
+	UpdateWorld();
+}
+
+FORCEINLINE void Transform::SetWorldPosition(const Vector3& InPosition)
+{
+	_WorldTransform.SetPosition(InPosition);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::AddWorldPosition(const Vector3& InDeltaPosition)
+{
+	_WorldTransform.AddPosition(InDeltaPosition);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::AddWorldYawRotation(float InDegree)
+{
+	_WorldTransform.AddYawRotation(InDegree);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::AddWorldRollRotation(float InDegree)
+{
+	_WorldTransform.AddRollRotation(InDegree);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::AddWorldPitchRotation(float InDegree)
+{
+	_WorldTransform.AddPitchRotation(InDegree);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::SetWorldRotation(const Rotator& InRotator)
+{
+	_WorldTransform.SetRotation(InRotator);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::SetWorldRotation(const Matrix3x3& InMatrix)
+{
+	_WorldTransform.SetRotation(InMatrix);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::SetWorldRotation(const Quaternion& InQuaternion)
+{
+	_WorldTransform.SetRotation(InQuaternion);
+	UpdateLocal();
+}
+
+FORCEINLINE void Transform::SetWorldScale(const Vector3& InScale)
+{
+	_WorldTransform.SetScale(InScale);
+	UpdateLocal();
+}
+
 
 }
 }

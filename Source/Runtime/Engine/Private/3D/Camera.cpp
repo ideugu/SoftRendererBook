@@ -4,7 +4,7 @@ using namespace CK::DDD;
 
 void Camera::SetLookAtRotation(const GameObject& InGameObject, const Vector3& InUp)
 {
-	SetLookAtRotation(InGameObject.GetTransformNode().GetWorldPosition(), InUp);
+	SetLookAtRotation(InGameObject.GetTransform().GetWorldPosition(), InUp);
 }
 
 
@@ -13,7 +13,7 @@ void Camera::SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& I
 	Vector3 viewX, viewY, viewZ;
 
 	// 단위 Z축 생성
-	viewZ = (InTargetPosition - _TransformNode.GetWorldPosition()).Normalize();
+	viewZ = (InTargetPosition - _Transform.GetWorldPosition()).Normalize();
 	// 시선 방향과 월드 Y축이 평행한 경우
 	if (Math::Abs(viewZ.Y) >= (1.f - SMALL_NUMBER))
 	{
@@ -26,5 +26,5 @@ void Camera::SetLookAtRotation(const Vector3& InTargetPosition, const Vector3& I
 	}
 	viewY = viewZ.Cross(viewX).Normalize();
 
-	_TransformNode.SetWorldRotation(Matrix3x3(viewX, viewY, viewZ));
+	_Transform.SetWorldRotation(Matrix3x3(viewX, viewY, viewZ));
 }

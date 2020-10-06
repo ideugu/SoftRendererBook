@@ -35,9 +35,7 @@ public:
 
 	Bone& GetBone(const std::string& InBoneName) { return _Bones.at(InBoneName); }
 	const Bone& GetBone(const std::string& InBoneName) const { return _Bones.at(InBoneName); }
-	//TransformNode& GetBoneTransformNode(const std::string& InBoneName) { return _Bones.at(InBoneName).GetTransformNode(); }
-	//FORCEINLINE const TransformNode& GetBoneTransformNode(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetTransformNode(); }
-	const Transform& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
+	const TransformData& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
 
 public:
 	std::vector<Vector3> _Vertices;

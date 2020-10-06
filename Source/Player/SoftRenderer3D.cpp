@@ -278,7 +278,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	GameObject& goPlayer = g.GetGameObject(GameEngine::PlayerGo);
 	GameObject& goCameraRig = g.GetGameObject(GameEngine::CameraRigGo);
 
-	goPlayer.GetTransformNode().AddLocalPosition(-Vector3::UnitZ * input.GetAxis(InputAxis::YAxis) * moveSpeed * InDeltaSeconds);
+	goPlayer.GetTransform().AddLocalPosition(-Vector3::UnitZ * input.GetAxis(InputAxis::YAxis) * moveSpeed * InDeltaSeconds);
 
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
@@ -314,21 +314,21 @@ void SoftRenderer::LateUpdate3D(float InDeltaSeconds)
 
 	// 목의 회전
 	Bone& neckBone = m.GetBone(GameEngine::NeckBone);
-	neckBone.GetTransformNode().SetLocalRotation(Rotator(neckCurve, 0.f, 0.f));
+	neckBone.GetTransform().SetLocalRotation(Rotator(neckCurve, 0.f, 0.f));
 
 	// 팔의 회전
 	Bone& leftArmBone = m.GetBone(GameEngine::LeftArmBone);
-	leftArmBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
+	leftArmBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
 
 	Bone& rightArmBone = m.GetBone(GameEngine::RightArmBone);
-	rightArmBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
+	rightArmBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
 
 	// 다리의 회전
 	Bone& leftLegBone = m.GetBone(GameEngine::LeftLegBone);
-	leftLegBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
+	leftLegBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
 
 	Bone& rightLegBone = m.GetBone(GameEngine::RightLegBone);
-	rightLegBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
+	rightLegBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
 }
 
 // 렌더링 로직
@@ -350,7 +350,7 @@ void SoftRenderer::Render3D()
 	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *(*it);
-		const TransformNode& transformNode = gameObject.GetTransformNode();
+		const Transform& transform = gameObject.GetTransform();
 
 		if (!gameObject.HasMesh())
 		{
@@ -382,11 +382,11 @@ void SoftRenderer::Render3D()
 					if (m.HasBone(boneName))
 					{
 						const Bone& b = m.GetBone(boneName);
-						const Transform& t = b.GetTransformNode().GetWorldTransform();  // 월드 공간
-						const Transform& bindPose = b.GetBindPose(); // 월드 공간
+						const TransformData& t = b.GetTransform().GetWorldTransform();  // 월드 공간
+						const TransformData& bindPose = b.GetBindPose(); // 월드 공간
 						
 						// BindPose 공간을 중심으로 Bone의 로컬 공간을 계산
-						Transform boneLocal = t.WorldToLocal(bindPose);
+						TransformData boneLocal = t.WorldToLocal(bindPose);
 
 						// BindPose 공간으로 점을 변화
 						Vector3 localPosition = bindPose.Inverse().GetPosition() + vertices[vi].Position.ToVector3();
@@ -412,7 +412,7 @@ void SoftRenderer::Render3D()
 		}
 
 		// 최종 변환 행렬
-		Matrix4x4 finalMatrix = pvMat * transformNode.GetWorldMatrix();
+		Matrix4x4 finalMatrix = pvMat * transform.GetWorldMatrix();
 
 		// 최종 색상
 		LinearColor finalColor = LinearColor::White;

@@ -13,9 +13,9 @@ public:
 
 public:
 	// 트랜스폼
-	TransformNode& GetTransformNode() { return _TransformNode; }
-	const TransformNode& GetTransformNode() const { return _TransformNode; }
-	void SetParent(GameObject& InGameObject) { _TransformNode.SetParent(InGameObject.GetTransformNode()); }
+	Transform& GetTransform() { return _Transform; }
+	const Transform& GetTransform() const { return _Transform; }
+	void SetParent(GameObject& InGameObject) { _Transform.SetParent(InGameObject.GetTransform()); }
 
 	// 카메라 값을 가져오는 함수
 	float GetFOV() const { return _FOV; }
@@ -38,7 +38,7 @@ public:
 	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
 
 private:
-	TransformNode _TransformNode;
+	Transform _Transform;
 
 	float _FOV = 60.f;
 	float _NearZ = 5.5f;
@@ -48,7 +48,7 @@ private:
 
 FORCEINLINE void Camera::GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
 {
-	Quaternion worldRotation = _TransformNode.GetWorldRotation();
+	Quaternion worldRotation = _Transform.GetWorldRotation();
 	OutViewZ = worldRotation.RotateVector(-Vector3::UnitZ);
 	OutViewX = worldRotation.RotateVector(-Vector3::UnitX);
 	OutViewY = worldRotation.RotateVector(Vector3::UnitY);
@@ -58,7 +58,7 @@ FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
 {
 	Vector3 viewX, viewY, viewZ;
 	GetViewAxes(viewX, viewY, viewZ);
-	Vector3 pos = _TransformNode.GetWorldPosition();
+	Vector3 pos = _Transform.GetWorldPosition();
 
 	return Matrix4x4(
 		Vector4(Vector3(viewX.X, viewY.X, viewZ.X), false),

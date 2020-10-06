@@ -193,14 +193,14 @@ bool GameEngine::LoadResources()
 
 	// 본 생성
 	characterMesh._Bones = {
-		{ GameEngine::RootBone, Bone(GameEngine::RootBone, Transform()) },
-		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, Transform(Vector3(0.f, 1.5f, 0.f))) },
-		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, Transform(Vector3(0.f, 2.25f, 0.f))) },
-		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, Transform(Vector3(-0.75f, 3.f, 0.f))) },
-		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, Transform(Vector3(0.75f, 3.f, 0.f))) },
-		{ GameEngine::LeftLegBone, Bone(GameEngine::LeftLegBone, Transform(Vector3(0.25f, 1.5f, 0.f))) },
-		{ GameEngine::RightLegBone, Bone(GameEngine::RightLegBone, Transform(Vector3(-0.25f, 1.5f, 0.f))) },
-		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, Transform(Vector3(0.f, 3.f, 0.f))) }
+		{ GameEngine::RootBone, Bone(GameEngine::RootBone, TransformData()) },
+		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, TransformData(Vector3(0.f, 1.5f, 0.f))) },
+		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, TransformData(Vector3(0.f, 2.25f, 0.f))) },
+		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, TransformData(Vector3(-0.75f, 3.f, 0.f))) },
+		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, TransformData(Vector3(0.75f, 3.f, 0.f))) },
+		{ GameEngine::LeftLegBone, Bone(GameEngine::LeftLegBone, TransformData(Vector3(0.25f, 1.5f, 0.f))) },
+		{ GameEngine::RightLegBone, Bone(GameEngine::RightLegBone, TransformData(Vector3(-0.25f, 1.5f, 0.f))) },
+		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, TransformData(Vector3(0.f, 3.f, 0.f))) }
 	};
 
 	// 계층 구조 생성
@@ -257,18 +257,18 @@ bool GameEngine::LoadScene()
 
 	GameObject& goPlayer = CreateNewGameObject(GameEngine::PlayerGo);
 	goPlayer.SetMesh(GameEngine::CharacterMesh);
-	goPlayer.GetTransformNode().SetWorldScale(Vector3::One * playerScale);
-	goPlayer.GetTransformNode().SetWorldRotation(Rotator(180.f, 0.f, 0.f));
+	goPlayer.GetTransform().SetWorldScale(Vector3::One * playerScale);
+	goPlayer.GetTransform().SetWorldRotation(Rotator(180.f, 0.f, 0.f));
 
 	// 카메라 릭
 	GameObject& goCameraRig = CreateNewGameObject(GameEngine::CameraRigGo);
-	goCameraRig.GetTransformNode().SetWorldPosition(Vector3(0.f, 150.f, 0.f));
+	goCameraRig.GetTransform().SetWorldPosition(Vector3(0.f, 150.f, 0.f));
 
 	// 카메라 설정
-	_MainCamera.GetTransformNode().SetWorldPosition(Vector3(500.f, 800.f, -1000.f));
+	_MainCamera.GetTransform().SetWorldPosition(Vector3(500.f, 800.f, -1000.f));
 	_MainCamera.SetParent(goCameraRig);
 	_MainCamera.SetLookAtRotation(goCameraRig);
-	auto q1 = _MainCamera.GetTransformNode().GetWorldRotation();
+	auto q1 = _MainCamera.GetTransform().GetWorldRotation();
 
 	return true;
 }
