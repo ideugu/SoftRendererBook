@@ -272,19 +272,13 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 
 	// 기본 설정 변수
 	static float fovSpeed = 100.f;
-	static float yawSpeed = 100.f;
-	static float pitchSpeed = 30.f;
+	static float moveSpeed = 500.f;
 
 	// 게임 로직에서 사용할 게임 오브젝트 레퍼런스
 	GameObject& goPlayer = g.GetGameObject(GameEngine::PlayerGo);
 	GameObject& goCameraRig = g.GetGameObject(GameEngine::CameraRigGo);
 
-	// 카메라 릭의 회전 조절
-	goCameraRig.GetTransformNode().AddLocalYawRotation(-input.GetAxis(InputAxis::XAxis) * yawSpeed * InDeltaSeconds);
-	goCameraRig.GetTransformNode().AddLocalPitchRotation(-input.GetAxis(InputAxis::YAxis) * pitchSpeed * InDeltaSeconds);
-
-	// 카메라가 항상 플레이어를 바라보도록 설정
-	camera.SetLookAtRotation(goPlayer);
+	goPlayer.GetTransformNode().AddLocalPosition(-Vector3::UnitZ * input.GetAxis(InputAxis::YAxis) * moveSpeed * InDeltaSeconds);
 
 	// 카메라 화각 설정
 	float newFOV = Math::Clamp(camera.GetFOV() + input.GetAxis(InputAxis::ZAxis) * fovSpeed * InDeltaSeconds, 5.f, 179.f);
@@ -299,28 +293,43 @@ void SoftRenderer::LateUpdate3D(float InDeltaSeconds)
 
 	// 기본 설정 변수
 	static float elapsedTime = 0.f;
-	static float duration = 5.f;
+	static float neckLength = 5.f;
+	static float armLegLength = 1.5f;
+	static float neckDegree = 15.f;
+	static float armLegDegree = 30.f;
+	elapsedTime += InDeltaSeconds;
 
-	// 애니메이션을 위한 커브 생성 ( 0~1 SineWave )
-	elapsedTime = Math::Clamp(elapsedTime + InDeltaSeconds, 0.f, duration);
-	if (elapsedTime == duration)
-	{
-		elapsedTime = 0.f;
-	}
-	float sinParam = elapsedTime * Math::TwoPI / duration;
-	float sinWave = sinf(sinParam) * 90.f; //(sinf(sinParam) + 1.f) * 0.5f;
+	// 애니메이션을 위한 커브 생성 
+	float armLegCurrent = Math::FMod(elapsedTime, armLegLength) * Math::TwoPI / armLegLength;
+	float neckCurrent = Math::FMod(elapsedTime, neckLength) * Math::TwoPI / neckLength;
+
+	float armLegCurve = sinf(armLegCurrent) * armLegDegree;
+	float neckCurve = sinf(neckCurrent) * neckDegree;
 
 	// 캐릭터 레퍼런스
 	GameObject& goPlayer = g.GetGameObject(GameEngine::PlayerGo);
 
-	// 목의 회전
+	// 캐릭터 메시
 	Mesh& m = g.GetMesh(goPlayer.GetMeshKey());
-	Bone& neckBone = m.GetBone(GameEngine::NeckBone);
-	Bone& rightArmBone = m.GetBone(GameEngine::RightArmBone);
-	neckBone.GetTransformNode().SetWorldRotation(Rotator(sinWave, 0.f, 0.f));
-	rightArmBone.GetTransformNode().SetWorldRotation(Rotator(0.f, 0.f, sinWave));
-}
 
+	// 목의 회전
+	Bone& neckBone = m.GetBone(GameEngine::NeckBone);
+	neckBone.GetTransformNode().SetLocalRotation(Rotator(neckCurve, 0.f, 0.f));
+
+	// 팔의 회전
+	Bone& leftArmBone = m.GetBone(GameEngine::LeftArmBone);
+	leftArmBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
+
+	Bone& rightArmBone = m.GetBone(GameEngine::RightArmBone);
+	rightArmBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
+
+	// 다리의 회전
+	Bone& leftLegBone = m.GetBone(GameEngine::LeftLegBone);
+	leftLegBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
+
+	Bone& rightLegBone = m.GetBone(GameEngine::RightLegBone);
+	rightLegBone.GetTransformNode().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
+}
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
@@ -373,24 +382,23 @@ void SoftRenderer::Render3D()
 					if (m.HasBone(boneName))
 					{
 						const Bone& b = m.GetBone(boneName);
-						const TransformNode& t = b.GetTransformNode();
-						const Transform& bindPose = b.GetBindPose();
+						const Transform& t = b.GetTransformNode().GetWorldTransform();  // 월드 공간
+						const Transform& bindPose = b.GetBindPose(); // 월드 공간
+						
+						// BindPose 공간을 중심으로 Bone의 로컬 공간을 계산
+						Transform boneLocal = t.WorldToLocal(bindPose);
 
-						const Vector3& bindPoseScale = bindPose.GetScale();
-						const Quaternion& bindPoseRotation = bindPose.GetRotation();
-						const Vector3& bindPosePosition = bindPose.GetPosition();
-						Vector3 invScale = Vector3(1.f / bindPoseScale.X, 1.f / bindPoseScale.Y, 1.f / bindPoseScale.Z);
-						Quaternion invRotation = bindPoseRotation.Inverse();
-						Vector3 newScale = t.GetWorldScale() * invScale;
-						Quaternion newRotation = invRotation * t.GetWorldRotation();
-						Vector3 translatedVector = t.GetWorldPosition() - bindPosePosition;
-						Vector3 rotatedVector = invRotation.RotateVector(translatedVector);
-						Vector3 finalPosition = rotatedVector * invScale;
+						// BindPose 공간으로 점을 변화
+						Vector3 localPosition = bindPose.Inverse().GetPosition() + vertices[vi].Position.ToVector3();
 
-						// 바인드포즈에 대한 상대 트랜스폼들
-						Transform offset(finalPosition, newRotation, newScale);
-						Vector4 weightedPosition = offset.GetMatrix() * vertices[vi].Position;
-						totalPosition += weightedPosition * w.Values[wi];
+						// BindPose 공간에서의 점의 최종 위치
+						Vector3 skinnedLocalPosition = boneLocal.GetMatrix() * localPosition;
+
+						// 월드 공간으로 다시 변경
+						Vector3 skinnedWorldPosition = bindPose.GetMatrix() * skinnedLocalPosition;
+
+						// 가중치를 곱해서 더해줌
+						totalPosition += Vector4(skinnedWorldPosition * w.Values[wi], true);
 					}
 				}
 

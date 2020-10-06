@@ -80,19 +80,7 @@ void TransformNode::UpdateLocal()
 	if (HasParent())
 	{
 		const TransformNode& parent = *GetParentPtr();
-		const Vector3& parentWorldScale = parent.GetWorldScale();
-		const Quaternion& parentWorldRotation = parent.GetWorldRotation();
-		const Vector3& parentWorldPosition = parent.GetWorldPosition();
-
-		Vector3 invScale = Vector3(1.f / parentWorldScale.X, 1.f / parentWorldScale.Y, 1.f / parentWorldScale.Z);
-		Quaternion invRotation = parentWorldRotation.Inverse();
-
-		_LocalTransform.SetScale(GetWorldScale() * invScale);
-		_LocalTransform.SetRotation(invRotation * GetWorldRotation());
-
-		Vector3 translatedVector = GetWorldPosition() - parentWorldPosition;
-		Vector3 rotatedVector = invRotation.RotateVector(translatedVector);
-		_LocalTransform.SetPosition(rotatedVector * invScale);
+		_LocalTransform = _WorldTransform.WorldToLocal(parent.GetWorldTransform());
 	}
 	else
 	{
@@ -110,7 +98,7 @@ void TransformNode::UpdateWorld()
 	if (HasParent())
 	{
 		const TransformNode& parent = *GetParentPtr();
-		_WorldTransform = _LocalTransform * parent.GetWorldTransform();
+		_WorldTransform = _LocalTransform.LocalToWorld(parent.GetWorldTransform());
 	}
 	else
 	{

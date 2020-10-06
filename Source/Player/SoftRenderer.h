@@ -16,7 +16,7 @@ public:
 	// 프로그램 기본 정보
 	const ScreenPoint& GetScreenSize() { return _ScreenSize; }
 	float GetFrameFPS() const { return _FrameFPS; }
-	float GetElapsedTime() const { return _ElapsedTime; }
+	FORCEINLINE float GetElapsedTime() const { return _ElapsedTime; }
 
 public:
 	// 성능 측정을 위한 함수  ( 외부 연동용 ) 

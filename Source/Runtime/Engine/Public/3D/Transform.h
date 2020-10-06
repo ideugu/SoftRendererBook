@@ -75,8 +75,12 @@ public: // 트랜스폼 설정함수
 	FORCEINLINE Quaternion GetRotation() const { return Rotation; }
 	FORCEINLINE Vector3 GetScale() const { return Scale; }
 
-	// 연산자
-	FORCEINLINE Transform operator*(const Transform& InTransform) const;
+	// 트랜스폼 변환
+	FORCEINLINE Transform Inverse() const;
+	FORCEINLINE Transform LocalToWorld(const Transform& InParentWorldTransform) const;
+	FORCEINLINE Transform WorldToLocal(const Transform& InParentWorldTransform) const;
+	//// 연산자
+	//FORCEINLINE Transform operator*(const Transform& InTransform) const;
 
 private: // 트랜스폼에 관련된 변수
 	Vector3 Position;
@@ -95,12 +99,41 @@ FORCEINLINE Matrix4x4 Transform::GetMatrix() const
 	);
 }
 
-FORCEINLINE Transform Transform::operator*(const Transform& InTransform) const
+FORCEINLINE Transform Transform::Inverse() const
 {
+	// 로컬 정보만 남기기 위한 트랜스폼 ( 역행렬 )
+	Vector3 reciprocalScale = Vector3::Zero;
+	if (!Math::EqualsInTolerance(Scale.X, 0.f)) reciprocalScale.X = 1.f / Scale.X;
+	if (!Math::EqualsInTolerance(Scale.Y, 0.f)) reciprocalScale.Y = 1.f / Scale.Y;
+	if (!Math::EqualsInTolerance(Scale.Z, 0.f)) reciprocalScale.Z = 1.f / Scale.Z;
+
 	Transform result;
-	result.Rotation = InTransform.Rotation * Rotation;
-	result.Scale = Scale * InTransform.Scale;
-	result.Position = InTransform.Rotation.RotateVector(InTransform.Scale * Position) + InTransform.Position;
+	result.Rotation = Rotation.Inverse();
+	result.Scale = reciprocalScale;
+	result.Position = result.Rotation * (result.Scale * -Position);
+	return result;
+}
+
+
+FORCEINLINE Transform Transform::LocalToWorld(const Transform& InParentWorldTransform) const
+{
+	// 현재 트랜스폼 정보가 로컬인 경우
+	Transform result;
+	result.Rotation = InParentWorldTransform.Rotation * Rotation;
+	result.Scale = InParentWorldTransform.Scale * Scale;
+	result.Position = InParentWorldTransform.Rotation.RotateVector(InParentWorldTransform.Scale * Position) + InParentWorldTransform.Position;
+	return result;
+}
+
+FORCEINLINE Transform Transform::WorldToLocal(const Transform& InParentWorldTransform) const
+{
+	Transform invParent = InParentWorldTransform.Inverse();
+
+	// 현재 트랜스폼 정보가 월드인 경우
+	Transform result;
+	result.Scale = invParent.GetScale() * Scale;
+	result.Rotation = invParent.GetRotation() * Rotation;
+	result.Position = invParent.GetPosition() + Position;
 	return result;
 }
 

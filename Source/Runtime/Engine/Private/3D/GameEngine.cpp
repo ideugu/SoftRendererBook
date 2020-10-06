@@ -72,13 +72,14 @@ bool GameEngine::LoadResources()
 	static const Vector3 bodySize(0.5f, 0.75f, 0.25f);
 	static const Vector3 armLegSize(0.25f, 0.75f, 0.25f);
 
+	constexpr size_t totalParts = 6;
 	Mesh& characterMesh = CreateMesh(GameEngine::CharacterMesh);
 	auto& v = characterMesh._Vertices;
 	auto& i = characterMesh._Indices;
 	auto& uv = characterMesh._UVs;
 
 	// 6개의 파트로 구성되어 있음.
-	static std::array<Vector3, 24> cubeMeshPositions = {
+	static std::array<Vector3, totalParts * 4> cubeMeshPositions = {
 		Vector3(-1.f, -1.f, -1.f), Vector3(-1.f, -1.f, 1.f), Vector3(-1.f, 1.f, 1.f), Vector3(-1.f, 1.f, -1.f),
 		Vector3(-1.f, -1.f, 1.f), Vector3(-1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, -1.f, 1.f),
 		Vector3(-1.f, -1.f, -1.f), Vector3(-1.f, 1.f, -1.f), Vector3(1.f, 1.f, -1.f), Vector3(1.f, -1.f, -1.f),
@@ -87,7 +88,7 @@ bool GameEngine::LoadResources()
 		Vector3(-1.f, -1.f, -1.f), Vector3(1.f, -1.f, -1.f), Vector3(1.f, -1.f, 1.f), Vector3(-1.f, -1.f, 1.f)
 	};
 
-	static std::array<size_t, 36> cubeMeshIndice = {
+	static std::array<size_t, totalParts * 6> cubeMeshIndice = {
 		0, 1, 2, 0, 2, 3, // Right
 		4, 6, 5, 4, 7, 6, // Front
 		8, 9, 10, 8, 10, 11, // Back
@@ -96,15 +97,15 @@ bool GameEngine::LoadResources()
 		20, 21, 22, 20, 22, 23  // Bottom
 	};
 
-	static std::array<Vector3, 6> cubeMeshSize = {
+	static std::array<Vector3, totalParts> cubeMeshSize = {
 		headSize, bodySize, armLegSize, armLegSize, armLegSize, armLegSize
 	};
 
-	static std::array<Vector3, 6> cubeMeshOffset = {
+	static std::array<Vector3, totalParts> cubeMeshOffset = {
 		Vector3(0.f, 3.5f, 0.f), Vector3(0.f, 2.25f, 0.f), Vector3(-0.75f, 2.25f, 0.f), Vector3(0.75f, 2.25f, 0.f), Vector3(-0.25f, 0.75f, 0.f), Vector3(0.25f, 0.75f, 0.f)
 	};
 
-	for (size_t part = 0; part < 6; part++)
+	for (size_t part = 0; part < totalParts; part++)
 	{
 		std::transform(cubeMeshPositions.begin(), cubeMeshPositions.end(), std::back_inserter(v), [&](auto& p) { return p * cubeMeshSize[part] + cubeMeshOffset[part]; });
 		std::transform(cubeMeshIndice.begin(), cubeMeshIndice.end(), std::back_inserter(i), [&](auto& p) { return p + 24 * part; });
@@ -195,11 +196,11 @@ bool GameEngine::LoadResources()
 		{ GameEngine::RootBone, Bone(GameEngine::RootBone, Transform()) },
 		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, Transform(Vector3(0.f, 1.5f, 0.f))) },
 		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, Transform(Vector3(0.f, 2.25f, 0.f))) },
-		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, Transform(Vector3(-0.75f, 2.25f, 0.f))) },
-		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, Transform(Vector3(0.75f, 2.25f, 0.f))) },
+		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, Transform(Vector3(-0.75f, 3.f, 0.f))) },
+		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, Transform(Vector3(0.75f, 3.f, 0.f))) },
 		{ GameEngine::LeftLegBone, Bone(GameEngine::LeftLegBone, Transform(Vector3(0.25f, 1.5f, 0.f))) },
 		{ GameEngine::RightLegBone, Bone(GameEngine::RightLegBone, Transform(Vector3(-0.25f, 1.5f, 0.f))) },
-		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, Transform(Vector3(0.f, 3.0f, 0.f))) }
+		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, Transform(Vector3(0.f, 3.f, 0.f))) }
 	};
 
 	// 계층 구조 생성
@@ -254,17 +255,20 @@ bool GameEngine::LoadScene()
 	// 플레이어
 	static const float playerScale = 100.f;
 
-	GameObject& player = CreateNewGameObject(GameEngine::PlayerGo);
-	player.SetMesh(GameEngine::CharacterMesh);
-	player.GetTransformNode().SetWorldScale(Vector3::One * playerScale);
-	player.GetTransformNode().SetWorldRotation(Rotator(180.f, 0.f, 0.f));
+	GameObject& goPlayer = CreateNewGameObject(GameEngine::PlayerGo);
+	goPlayer.SetMesh(GameEngine::CharacterMesh);
+	goPlayer.GetTransformNode().SetWorldScale(Vector3::One * playerScale);
+	goPlayer.GetTransformNode().SetWorldRotation(Rotator(180.f, 0.f, 0.f));
 
 	// 카메라 릭
-	GameObject& cameraRig = CreateNewGameObject(GameEngine::CameraRigGo);
+	GameObject& goCameraRig = CreateNewGameObject(GameEngine::CameraRigGo);
+	goCameraRig.GetTransformNode().SetWorldPosition(Vector3(0.f, 150.f, 0.f));
 
 	// 카메라 설정
-	_MainCamera.GetTransformNode().SetWorldPosition(Vector3(700.f, 700.f, -700.f));
-	_MainCamera.SetParent(cameraRig);
+	_MainCamera.GetTransformNode().SetWorldPosition(Vector3(500.f, 800.f, -1000.f));
+	_MainCamera.SetParent(goCameraRig);
+	_MainCamera.SetLookAtRotation(goCameraRig);
+	auto q1 = _MainCamera.GetTransformNode().GetWorldRotation();
 
 	return true;
 }
