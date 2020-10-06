@@ -15,6 +15,7 @@ const std::string GameEngine::RightLegBone("RightLegBone");
 
 // 메시
 const std::size_t GameEngine::CharacterMesh = std::hash<std::string>()("SK_Steve");;
+const std::size_t GameEngine::ArrowMesh = std::hash<std::string>()("SM_Arrow");;
 
 // 게임 오브젝트
 const std::string GameEngine::PlayerGo("Player");
@@ -68,44 +69,27 @@ bool GameEngine::Init()
 
 bool GameEngine::LoadResources()
 {
+	// 캐릭터 메시 생성
 	static const Vector3 headSize(0.5f, 0.5f, 0.5f);
 	static const Vector3 bodySize(0.5f, 0.75f, 0.25f);
 	static const Vector3 armLegSize(0.25f, 0.75f, 0.25f);
 
-	constexpr size_t totalParts = 6;
+	constexpr size_t totalCharacterParts = 6;
 	Mesh& characterMesh = CreateMesh(GameEngine::CharacterMesh);
 	auto& v = characterMesh._Vertices;
 	auto& i = characterMesh._Indices;
 	auto& uv = characterMesh._UVs;
 
 	// 6개의 파트로 구성되어 있음.
-	static std::array<Vector3, totalParts * 4> cubeMeshPositions = {
-		Vector3(-1.f, -1.f, -1.f), Vector3(-1.f, -1.f, 1.f), Vector3(-1.f, 1.f, 1.f), Vector3(-1.f, 1.f, -1.f),
-		Vector3(-1.f, -1.f, 1.f), Vector3(-1.f, 1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, -1.f, 1.f),
-		Vector3(-1.f, -1.f, -1.f), Vector3(-1.f, 1.f, -1.f), Vector3(1.f, 1.f, -1.f), Vector3(1.f, -1.f, -1.f),
-		Vector3(1.f, -1.f, -1.f), Vector3(1.f, -1.f, 1.f), Vector3(1.f, 1.f, 1.f), Vector3(1.f, 1.f, -1.f),
-		Vector3(-1.f, 1.f, -1.f), Vector3(1.f, 1.f, -1.f), Vector3(1.f, 1.f, 1.f), Vector3(-1.f, 1.f, 1.f),
-		Vector3(-1.f, -1.f, -1.f), Vector3(1.f, -1.f, -1.f), Vector3(1.f, -1.f, 1.f), Vector3(-1.f, -1.f, 1.f)
-	};
-
-	static std::array<size_t, totalParts * 6> cubeMeshIndice = {
-		0, 1, 2, 0, 2, 3, // Right
-		4, 6, 5, 4, 7, 6, // Front
-		8, 9, 10, 8, 10, 11, // Back
-		12, 14, 13, 12, 15, 14, // Left
-		16, 18, 17, 16, 19, 18, // Top
-		20, 21, 22, 20, 22, 23  // Bottom
-	};
-
-	static std::array<Vector3, totalParts> cubeMeshSize = {
+	static std::array<Vector3, totalCharacterParts> cubeMeshSize = {
 		headSize, bodySize, armLegSize, armLegSize, armLegSize, armLegSize
 	};
 
-	static std::array<Vector3, totalParts> cubeMeshOffset = {
+	static std::array<Vector3, totalCharacterParts> cubeMeshOffset = {
 		Vector3(0.f, 3.5f, 0.f), Vector3(0.f, 2.25f, 0.f), Vector3(-0.75f, 2.25f, 0.f), Vector3(0.75f, 2.25f, 0.f), Vector3(-0.25f, 0.75f, 0.f), Vector3(0.25f, 0.75f, 0.f)
 	};
 
-	for (size_t part = 0; part < totalParts; part++)
+	for (size_t part = 0; part < totalCharacterParts; part++)
 	{
 		std::transform(cubeMeshPositions.begin(), cubeMeshPositions.end(), std::back_inserter(v), [&](auto& p) { return p * cubeMeshSize[part] + cubeMeshOffset[part]; });
 		std::transform(cubeMeshIndice.begin(), cubeMeshIndice.end(), std::back_inserter(i), [&](auto& p) { return p + 24 * part; });
@@ -186,7 +170,7 @@ bool GameEngine::LoadResources()
 		Vector2(8.f, 48.f) / 64.f, Vector2(12.f, 48.f) / 64.f, Vector2(12.f, 44.f) / 64.f, Vector2(8.f, 44.f) / 64.f
 	};
 
-	// 캐릭터 Rig 설정
+	// 캐릭터 스켈레탈 메시 설정
 	characterMesh.SetMeshType(MeshType::Skinned);
 	auto& b = characterMesh._ConnectedBones;
 	auto& w = characterMesh._Weights;
@@ -203,7 +187,7 @@ bool GameEngine::LoadResources()
 		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, TransformData(Vector3(0.f, 3.f, 0.f))) }
 	};
 
-	// 계층 구조 생성
+	// 본의 계층 구조 생성
 	Bone& root = characterMesh.GetBone(GameEngine::RootBone);
 	Bone& pelvis = characterMesh.GetBone(GameEngine::PelvisBone);
 	pelvis.SetParent(root);
@@ -240,6 +224,15 @@ bool GameEngine::LoadResources()
 
 	characterMesh.CalculateBounds();
 
+	// 화살표 메시
+	Mesh& arrow = CreateMesh(GameEngine::ArrowMesh);
+	arrow._Vertices.resize(arrowPositions.size());
+	arrow._Indices.resize(arrowIndice.size());
+	arrow._Colors.resize(arrowPositions.size());
+	std::copy(arrowPositions.begin(), arrowPositions.end(), arrow._Vertices.begin());
+	std::copy(arrowIndice.begin(), arrowIndice.end(), arrow._Indices.begin());
+	std::fill(arrow._Colors.begin(), arrow._Colors.end(), LinearColor::Gray);
+
 	// 텍스쳐 로딩
 	Texture& diffuseTexture = CreateTexture(GameEngine::DiffuseTexture, GameEngine::SteveTexturePath);
 	if(!diffuseTexture.IsIntialized())
@@ -259,6 +252,16 @@ bool GameEngine::LoadScene()
 	goPlayer.SetMesh(GameEngine::CharacterMesh);
 	goPlayer.GetTransform().SetWorldScale(Vector3::One * playerScale);
 	goPlayer.GetTransform().SetWorldRotation(Rotator(180.f, 0.f, 0.f));
+
+	// 캐릭터 본을 표시할 화살표
+	Mesh& cm = GetMesh(goPlayer.GetMeshKey());
+	for (const auto& b : cm.GetBones())
+	{
+		GameObject& goBoneArrow = CreateNewGameObject(b.second.GetName());
+		goBoneArrow.SetMesh(GameEngine::ArrowMesh);
+		goBoneArrow.SetColor(LinearColor::Red);
+		_BoneGameObjectPtrs.insert({ goBoneArrow.GetName(),&goBoneArrow });
+	}
 
 	// 카메라 릭
 	GameObject& goCameraRig = CreateNewGameObject(GameEngine::CameraRigGo);

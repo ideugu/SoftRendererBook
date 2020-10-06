@@ -38,12 +38,17 @@ public:
 	bool IsValid() const { return _Hash != Math::InvalidHash; }
 	static GameObject Invalid;
 
+	// ·»´õ¸µ ¼³Á¤
+	bool IsVisible() const { return _IsVisible; }
+	void SetVisible(bool InVisible) { _IsVisible = InVisible; }
+
 private:
+	bool _IsVisible = true;
 	std::size_t _Hash = Math::InvalidHash;
 	std::string _Name;
 	std::size_t _MeshKey = Math::InvalidHash;
 	Transform _Transform;
-	LinearColor _Color = LinearColor::Error;
+	LinearColor _Color = LinearColor::White;
 };
 
 

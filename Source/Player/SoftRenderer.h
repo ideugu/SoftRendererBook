@@ -54,7 +54,14 @@ private:
 	void LateUpdate3D(float InDeltaSeconds);
 	void Render3D();
 
-	void DrawTriangle(std::vector<struct Vertex3D>& vertices, const LinearColor& InColorParam);
+	enum class DrawMode : UINT32
+	{
+		ColorOnly = 0,
+		TextureOnly,
+		ColorAndTexture
+	};
+
+	void DrawTriangle(std::vector<struct Vertex3D>& InVertices, const LinearColor& InColorParam, DrawMode InDrawMode);
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);

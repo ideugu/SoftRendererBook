@@ -43,6 +43,9 @@ public: // 공용 로직
 	// 메인 텍스쳐
 	FORCEINLINE const Texture& GetTexture(const std::size_t& InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
 
+	// 본을 그리기 위한 목록
+	std::unordered_map<std::string, GameObject*> GetBoneObjectPtrs() { return _BoneGameObjectPtrs; }
+
 public: // 주요 키 값
 	// 본
 	static const std::string RootBone;
@@ -56,6 +59,7 @@ public: // 주요 키 값
 
 	// 메시
 	static const std::size_t CharacterMesh;
+	static const std::size_t ArrowMesh;
 
 	// 게임 오브젝트
 	static const std::string PlayerGo;
@@ -73,6 +77,7 @@ private:
 	std::vector<std::unique_ptr<GameObject>> _Scene;
 	std::unordered_map<std::size_t, std::unique_ptr<Mesh>> _Meshes;
 	std::unordered_map<std::size_t, std::unique_ptr<Texture>> _Textures;
+	std::unordered_map<std::string, GameObject*> _BoneGameObjectPtrs;
 };
 
 }

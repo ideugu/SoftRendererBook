@@ -23,6 +23,7 @@ public:
 	Mesh() = default;
 
 	void SetMeshType(const MeshType& _InMeshType) { _MeshType = _InMeshType; }
+	FORCEINLINE bool HasColor() const { return _Colors.size() > 0; }
 	FORCEINLINE bool HasUV() const { return _UVs.size() > 0; }
 
 	void CalculateBounds();
@@ -35,11 +36,13 @@ public:
 
 	Bone& GetBone(const std::string& InBoneName) { return _Bones.at(InBoneName); }
 	const Bone& GetBone(const std::string& InBoneName) const { return _Bones.at(InBoneName); }
+	const std::unordered_map<std::string, Bone>& GetBones() const { return _Bones; }
 	const TransformData& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
 
 public:
 	std::vector<Vector3> _Vertices;
 	std::vector<size_t> _Indices;
+	std::vector<LinearColor> _Colors;
 	std::vector<Vector2> _UVs;
 
 	std::vector<BYTE> _ConnectedBones;

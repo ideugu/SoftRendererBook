@@ -11,6 +11,7 @@
 #include "2D/Camera.h"
 #include "2D/GameEngine.h"
 
+#include "3D/Resources.h"
 #include "3D/Transform.h"
 #include "3D/Bone.h"
 #include "3D/Mesh.h"
