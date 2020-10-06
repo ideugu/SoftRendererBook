@@ -5,6 +5,12 @@ namespace CK
 namespace DDD
 {
 
+enum class GameObjectType : UINT32
+{
+	Normal = 0,
+	Gizmo
+};
+
 class GameObject
 {
 public:
@@ -16,6 +22,10 @@ public:
 	~GameObject() {}
 
 public:
+	// 종류
+	void SetGameObjectType(const GameObjectType& _InGameObjectType) { _GameObjectType = _InGameObjectType; }
+	FORCEINLINE bool IsGizmoObject() const { return _GameObjectType == GameObjectType::Gizmo; }
+
 	// 트랜스폼
 	Transform& GetTransform() { return _Transform; }
 	const Transform& GetTransform() const { return _Transform; }
@@ -43,6 +53,7 @@ public:
 	void SetVisible(bool InVisible) { _IsVisible = InVisible; }
 
 private:
+	GameObjectType _GameObjectType = GameObjectType::Normal;
 	bool _IsVisible = true;
 	std::size_t _Hash = Math::InvalidHash;
 	std::string _Name;

@@ -60,6 +60,7 @@ public: // 주요 키 값
 	// 메시
 	static const std::size_t CharacterMesh;
 	static const std::size_t ArrowMesh;
+	static const std::size_t PlaneMesh;
 
 	// 게임 오브젝트
 	static const std::string PlayerGo;

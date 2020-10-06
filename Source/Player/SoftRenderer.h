@@ -61,7 +61,8 @@ private:
 		ColorAndTexture
 	};
 
-	void DrawTriangle(std::vector<struct Vertex3D>& InVertices, const LinearColor& InColorParam, DrawMode InDrawMode);
+	void DrawMesh(const class DDD::Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor);
+	void DrawTriangle(std::vector<struct Vertex3D>& InVertices, const LinearColor& InColor, DrawMode InDrawMode);
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);

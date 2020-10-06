@@ -16,6 +16,7 @@ const std::string GameEngine::RightLegBone("RightLegBone");
 // 메시
 const std::size_t GameEngine::CharacterMesh = std::hash<std::string>()("SK_Steve");;
 const std::size_t GameEngine::ArrowMesh = std::hash<std::string>()("SM_Arrow");;
+const std::size_t GameEngine::PlaneMesh = std::hash<std::string>()("SM_Plane");;
 
 // 게임 오브젝트
 const std::string GameEngine::PlayerGo("Player");
@@ -224,7 +225,7 @@ bool GameEngine::LoadResources()
 
 	characterMesh.CalculateBounds();
 
-	// 화살표 메시
+	// 화살표 메시 (기즈모 용)
 	Mesh& arrow = CreateMesh(GameEngine::ArrowMesh);
 	arrow._Vertices.resize(arrowPositions.size());
 	arrow._Indices.resize(arrowIndice.size());
@@ -232,6 +233,31 @@ bool GameEngine::LoadResources()
 	std::copy(arrowPositions.begin(), arrowPositions.end(), arrow._Vertices.begin());
 	std::copy(arrowIndice.begin(), arrowIndice.end(), arrow._Indices.begin());
 	std::fill(arrow._Colors.begin(), arrow._Colors.end(), LinearColor::Gray);
+
+	// 바닥 메시 (기즈모 용)
+	int planeHalfSize = 3;
+	Mesh& plane = CreateMesh(GameEngine::PlaneMesh);
+	for (int z = -planeHalfSize; z <= planeHalfSize; z++)
+	{
+		for (int x = -planeHalfSize; x <= planeHalfSize; x++)
+		{
+			plane._Vertices.push_back(Vector3((float)x, 0.f, (float)z));
+		}
+	}
+
+	int xIndex = 0;
+	for (int tx = 0; tx < planeHalfSize * 2; tx++)
+	{
+		for (int ty = 0; ty < planeHalfSize * 2; ty++)
+		{
+			int v0 = xIndex + tx + (planeHalfSize * 2 + 1) * (ty + 1);
+			int v1 = xIndex + tx + (planeHalfSize * 2 + 1) * ty;
+			int v2 = v1 + 1;
+			int v3 = v0 + 1;
+			std::vector<size_t> quad = { (size_t)v0, (size_t)v2, (size_t)v1, (size_t)v0, (size_t)v3, (size_t)v2 };
+			plane._Indices.insert(plane._Indices.end(), quad.begin(), quad.end());
+		}
+	}
 
 	// 텍스쳐 로딩
 	Texture& diffuseTexture = CreateTexture(GameEngine::DiffuseTexture, GameEngine::SteveTexturePath);
@@ -257,7 +283,12 @@ bool GameEngine::LoadScene()
 	Mesh& cm = GetMesh(goPlayer.GetMeshKey());
 	for (const auto& b : cm.GetBones())
 	{
+		if (!b.second.HasParent())
+		{
+			continue;
+		}
 		GameObject& goBoneArrow = CreateNewGameObject(b.second.GetName());
+		goBoneArrow.SetGameObjectType(GameObjectType::Gizmo);
 		goBoneArrow.SetMesh(GameEngine::ArrowMesh);
 		goBoneArrow.SetColor(LinearColor::Red);
 		_BoneGameObjectPtrs.insert({ goBoneArrow.GetName(),&goBoneArrow });
