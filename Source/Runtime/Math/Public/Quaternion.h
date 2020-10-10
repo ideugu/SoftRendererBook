@@ -234,7 +234,7 @@ FORCEINLINE void Quaternion::Normalize()
 {
 	const float squareSum = X * X + Y * Y + Z * Z + W * W;
 
-	if (squareSum >= KINDA_SMALL_NUMBER)
+	if (squareSum >= SMALL_NUMBER)
 	{
 		const float scale = 1.f / sqrtf(squareSum);
 

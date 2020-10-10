@@ -30,7 +30,7 @@ public:
 	FORCEINLINE bool operator==(const LinearColor& InColor) const;
 	FORCEINLINE bool operator!=(const LinearColor& InColor) const;
 
-	FORCEINLINE bool EqualsInRange(const LinearColor& InColor, float InTolerance = KINDA_SMALL_NUMBER) const;
+	FORCEINLINE bool EqualsInRange(const LinearColor& InColor, float InTolerance = SMALL_NUMBER) const;
 
 	static const float OneOver255;
 	static const LinearColor Error;

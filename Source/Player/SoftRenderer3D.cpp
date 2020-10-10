@@ -4,210 +4,6 @@
 #include <random>
 using namespace CK::DDD;
 
-namespace CK::DDD
-{
-
-struct PerspectiveTest
-{
-	std::function<bool(const Vertex3D& v)> testFn1;
-	std::function<Vertex3D(const Vertex3D& vStart, const Vertex3D& vEnd)> testFn2;
-	std::array<bool, 3> test1Result;
-
-	void clipTriangles(std::vector<Vertex3D>& tvs)
-	{
-		size_t nTriangles = tvs.size() / 3;
-		for (size_t ti = 0; ti < nTriangles; ++ti)
-		{
-			size_t si = ti * 3;
-			size_t testNotPassedCount = 0;
-
-			std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);
-			// 테스트에 실패한 점 정보 얻기
-			for (size_t ix = 0; ix < 3; ++ix)
-			{
-				bool testResult = testFn1(sub[ix]);
-				test1Result[ix] = testResult;
-				if (testResult) testNotPassedCount++;
-			}
-
-			getNewVertices(sub, testNotPassedCount);
-
-			if (testNotPassedCount == 0)
-			{
-				continue;
-			}
-			else if (testNotPassedCount == 1)  // 삼각형 추가
-			{
-				tvs[si] = sub[0];
-				tvs[si + 1] = sub[1];
-				tvs[si + 2] = sub[2];
-				tvs.push_back(sub[3]);
-				tvs.push_back(sub[4]);
-				tvs.push_back(sub[5]);
-			}
-			else if (testNotPassedCount == 2) // 삼각형 정보 변경
-			{
-				tvs[si] = sub[0];
-				tvs[si + 1] = sub[1];
-				tvs[si + 2] = sub[2];
-			}
-			else // 삼각형을 목록에서 제거
-			{
-				tvs.erase(tvs.begin() + si, tvs.begin() + si + 3);
-				nTriangles--;
-				ti--;
-			}
-		}
-	}
-
-	// 패스하면 false, 사용할거면 true
-	bool getNewVertices(std::vector<Vertex3D>& vertices, size_t testNotPassedCount)
-	{
-		if (testNotPassedCount == 0) // 그대로 통과
-		{
-			return true;
-		}
-		else if (testNotPassedCount == 1)
-		{
-			// Edge를 만든 후 클리핑 진행. 점이 두 개가 추가되고 삼각형이 2개로 쪼개짐
-			UINT16 index = 0; // 테스트에 걸린 점의 인덱스
-			if (!test1Result[0])
-			{
-				index = test1Result[1] ? 1 : 2;
-			}
-			Vertex3D v1 = vertices[(index + 1) % 3];
-			Vertex3D v2 = vertices[(index + 2) % 3];
-			Vertex3D clipped1 = testFn2(vertices[index], v1);
-			Vertex3D clipped2 = testFn2(vertices[index], v2);
-			vertices[0] = clipped1;
-			vertices[1] = v1;
-			vertices[2] = v2;
-			vertices.push_back(clipped1);
-			vertices.push_back(v2);
-			vertices.push_back(clipped2);
-			return true;
-		}
-		else if (testNotPassedCount == 2)
-		{
-			// Edge를 만든 후 클리핑 진행. 점이 두 개가 변경되고 삼각형은 그대로.
-			UINT16 index = 0;  // 테스트에 걸리지 않은 점의 인덱스
-			if (test1Result[0])
-			{
-				index = !test1Result[1] ? 1 : 2;
-			}
-
-			Vertex3D v1 = vertices[(index + 1) % 3];
-			Vertex3D v2 = vertices[(index + 2) % 3];
-			Vertex3D clipped1 = testFn2(vertices[index], v1);
-			Vertex3D clipped2 = testFn2(vertices[index], v2);
-			vertices[0] = vertices[index];
-			vertices[1] = clipped1;
-			vertices[2] = clipped2;
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-};
-
-auto testW0 = [](const Vertex3D& v) {
-	return v.Position.W < 0.f;
-};
-
-auto edgeW0 = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W;
-	float p2 = vEnd.Position.W;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-auto testNY = [](const Vertex3D& v) {
-	return v.Position.Y < -v.Position.W;
-};
-
-auto edgeNY = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W + vStart.Position.Y;
-	float p2 = vEnd.Position.W + vEnd.Position.Y;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-auto testPY = [](const Vertex3D& v) {
-	return v.Position.Y > v.Position.W;
-};
-
-auto edgePY = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W - vStart.Position.Y;
-	float p2 = vEnd.Position.W - vEnd.Position.Y;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-auto testNX = [](const Vertex3D& v) {
-	return v.Position.X < -v.Position.W;
-};
-
-auto edgeNX = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W + vStart.Position.X;
-	float p2 = vEnd.Position.W + vEnd.Position.X;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-auto testPX = [](const Vertex3D& v) {
-	return v.Position.X > v.Position.W;
-};
-
-auto edgePX = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W - vStart.Position.X;
-	float p2 = vEnd.Position.W - vEnd.Position.X;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-auto testF = [](const Vertex3D& v) {
-	return v.Position.Z > v.Position.W;
-};
-
-auto edgeF = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W - vStart.Position.Z;
-	float p2 = vEnd.Position.W - vEnd.Position.Z;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-auto testN = [](const Vertex3D& v) {
-	return v.Position.Z < -v.Position.W;
-};
-
-auto edgeN = [](const Vertex3D& vStart, const Vertex3D& vEnd) {
-	float p1 = vStart.Position.W + vStart.Position.Z;
-	float p2 = vEnd.Position.W + vEnd.Position.Z;
-	float t = p1 / (p1 - p2);
-	return vStart * (1.f - t) + vEnd * t;
-};
-
-
-// 정점 변환 코드
-FORCEINLINE void VertexShader3D(std::vector<Vertex3D>& InVertices, const Matrix4x4& InMatrix)
-{
-	// 위치 값에 최종 행렬을 적용해 변환
-	for (Vertex3D& v : InVertices)
-	{
-		v.Position = InMatrix * v.Position;
-	}
-}
-
-// 픽셀 변환 코드
-FORCEINLINE LinearColor FragmentShader3D(LinearColor& InColor, const LinearColor& InColorParam)
-{
-	return InColor * InColorParam;
-}
-
-}
-
 // 그리드 그리기
 void SoftRenderer::DrawGizmo3D()
 {
@@ -461,24 +257,24 @@ void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const
 		std::vector<Vertex3D> tvs = { vertices[indice[bi0]] , vertices[indice[bi1]] , vertices[indice[bi2]] };
 
 		// 동차좌표계에서 클리핑을 위한 설정
-		std::vector<PerspectiveTest> testVectors = {
-			{ testW0, edgeW0 },
-			{ testNY, edgeNY },
-			{ testPY, edgePY },
-			{ testNX, edgeNX },
-			{ testPX, edgePX },
-			{ testF, edgeF },
-			{ testN, edgeN }
+		std::vector<PerspectiveTest> testPlanes = {
+			{ TestFuncW0, EdgeFuncW0 },
+			{ TestFuncNY, EdgeFuncNY },
+			{ TestFuncPY, EdgeFuncPY },
+			{ TestFuncNX, EdgeFuncNX },
+			{ TestFuncPX, EdgeFuncPX },
+			{ TestFuncFar, EdgeFuncFar },
+			{ TestFuncNear, EdgeFuncNear }
 		};
 
 		// 동차좌표계에서 클리핑 진행
-		for (auto& p : testVectors)
+		for (auto& p : testPlanes)
 		{
-			p.clipTriangles(tvs);
+			p.ClipTriangles(tvs);
 		}
 
-		size_t nTriangles = tvs.size() / 3;
-		for (size_t ti = 0; ti < nTriangles; ++ti)
+		size_t triangles = tvs.size() / 3;
+		for (size_t ti = 0; ti < triangles; ++ti)
 		{
 			size_t si = ti * 3;
 			std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);

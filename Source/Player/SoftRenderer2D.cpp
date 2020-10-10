@@ -38,27 +38,6 @@ void SoftRenderer::DrawGrid2D()
 	GetRSI().DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
 }
 
-namespace CK::DD
-{
-	// 정점 변환 코드
-	FORCEINLINE void VertexShader2D(std::vector<Vertex2D>& InVertices, Matrix3x3 InMatrix)
-	{
-		// 위치 값에 최종 행렬을 적용해 변환
-		for (Vertex2D& v : InVertices)
-		{
-			v.Position = InMatrix * v.Position;
-		}
-	}
-
-	LinearColor colorParam;
-
-	// 픽셀 변환 코드
-	FORCEINLINE LinearColor FragmentShader2D(LinearColor InColor)
-	{
-		return InColor * colorParam;
-	}
-}
-
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
@@ -100,7 +79,6 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 	elapsedTime += InDeltaSeconds;
 	elapsedTime = Math::FMod(elapsedTime, 1.f);
-	colorParam = HSVColor(elapsedTime, 0.3f, 1.f).ToLinearColor();
 }
 
 // 렌더링 로직
@@ -204,7 +182,7 @@ void SoftRenderer::Render2D()
 						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 						{
 							Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
-							GetRSI().DrawPoint(fragment, FragmentShader2D(_GameEngine2.GetMainTexture().GetSample(targetUV)));
+							GetRSI().DrawPoint(fragment, FragmentShader2D(_GameEngine2.GetMainTexture().GetSample(targetUV), LinearColor::White));
 						}
 					}
 				}

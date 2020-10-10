@@ -29,7 +29,7 @@ public:
 	FORCEINLINE float Size() const;
 	FORCEINLINE float SizeSquared() const;
 	FORCEINLINE Vector2 Normalize() const;
-	FORCEINLINE bool EqualsInTolerance(const Vector2& InVector, float InTolerance = KINDA_SMALL_NUMBER) const;
+	FORCEINLINE bool EqualsInTolerance(const Vector2& InVector, float InTolerance = SMALL_NUMBER) const;
 	FORCEINLINE float Max() const;
 	FORCEINLINE float Dot(const Vector2& InVector) const;
 	FORCEINLINE float Angle() const;
