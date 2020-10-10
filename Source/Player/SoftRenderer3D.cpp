@@ -4,37 +4,6 @@
 #include <random>
 using namespace CK::DDD;
 
-struct Vertex3D
-{
-public:
-	Vertex3D() = default;
-	Vertex3D(const Vector4& InPosition) : Position(InPosition) { }
-	Vertex3D(const Vector4& InPosition, const LinearColor& InColor) : Position(InPosition), Color(InColor) { }
-	Vertex3D(const Vector4& InPosition, const LinearColor& InColor, const Vector2& InUV) : Position(InPosition), Color(InColor), UV(InUV) { }
-
-	Vertex3D operator*(float InScalar) const
-	{
-		return Vertex3D(
-			Position * InScalar,
-			Color * InScalar,
-			UV * InScalar
-		);
-	}
-
-	Vertex3D operator+(const Vertex3D& InVector) const
-	{
-		return Vertex3D(
-			Position + InVector.Position,
-			Color + InVector.Color,
-			UV + InVector.UV
-		);
-	}
-
-	Vector4 Position;
-	LinearColor Color;
-	Vector2 UV;
-};
-
 namespace CK::DDD
 {
 
@@ -258,9 +227,9 @@ void SoftRenderer::DrawGizmo3D()
 	Vector2 v1 = viewGizmo[1].Position.ToVector2() + _GizmoPositionOffset;
 	Vector2 v2 = viewGizmo[2].Position.ToVector2() + _GizmoPositionOffset;
 	Vector2 v3 = viewGizmo[3].Position.ToVector2() + _GizmoPositionOffset;
-	_RSI->DrawLine(v0, v1, LinearColor::Red);
-	_RSI->DrawLine(v0, v2, LinearColor::Green);
-	_RSI->DrawLine(v0, v3, LinearColor::Blue);
+	GetRSI().DrawLine(v0, v1, LinearColor::Red);
+	GetRSI().DrawLine(v0, v2, LinearColor::Green);
+	GetRSI().DrawLine(v0, v3, LinearColor::Blue);
 
 }
 
@@ -556,9 +525,9 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 			finalColor = InColor;
 		}
 
-		_RSI->DrawLine(InVertices[0].Position, InVertices[1].Position, finalColor);
-		_RSI->DrawLine(InVertices[0].Position, InVertices[2].Position, finalColor);
-		_RSI->DrawLine(InVertices[1].Position, InVertices[2].Position, finalColor);
+		GetRSI().DrawLine(InVertices[0].Position, InVertices[1].Position, finalColor);
+		GetRSI().DrawLine(InVertices[0].Position, InVertices[2].Position, finalColor);
+		GetRSI().DrawLine(InVertices[1].Position, InVertices[2].Position, finalColor);
 		return;
 	}
 
@@ -631,10 +600,10 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 				float f = g.GetMainCamera().GetFarZ();
 				//float newDepth = (invZ - n) / (f - n);
 				float newDepth = (InVertices[0].Position.Z * oneMinusST * invZ0 + InVertices[1].Position.Z * s * invZ1 + InVertices[2].Position.Z * t * invZ2) * invZ;
-				float prevDepth = _RSI->GetDepthBufferValue(fragment);
+				float prevDepth = GetRSI().GetDepthBufferValue(fragment);
 				if (newDepth < prevDepth)
 				{
-					_RSI->SetDepthBufferValue(fragment, newDepth);
+					GetRSI().SetDepthBufferValue(fragment, newDepth);
 				}
 				else
 				{
@@ -648,7 +617,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 					float grayScale = (invZ - n) / (f - n);
 
 					// 뎁스 버퍼 그리기
-					_RSI->DrawPoint(fragment, LinearColor::White * grayScale);
+					GetRSI().DrawPoint(fragment, LinearColor::White * grayScale);
 				}
 				else
 				{
@@ -668,7 +637,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 						finalColor = finalColor * textureColor;
 					}
 
-					_RSI->DrawPoint(fragment, FragmentShader3D(finalColor, InColor));
+					GetRSI().DrawPoint(fragment, FragmentShader3D(finalColor, InColor));
 				}
 			}
 		}

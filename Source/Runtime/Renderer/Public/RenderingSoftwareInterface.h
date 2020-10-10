@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "ScreenPoint.h"
-#include "LinearColor.h"
+namespace CK
+{
 
 class RenderingSoftwareInterface
 {
@@ -29,3 +29,5 @@ public:
 	virtual void PushStatisticText(std::string && InText) = 0;
 	virtual void PushStatisticTexts(std::vector<std::string> && InTexts) = 0;
 };
+
+}

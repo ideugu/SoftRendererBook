@@ -1,6 +1,9 @@
 
 #pragma once
 
+namespace CK
+{
+
 class WindowsRSI : public WindowsGDI, public RenderingSoftwareInterface
 {
 public:
@@ -40,4 +43,6 @@ private:
 FORCEINLINE void WindowsRSI::SetPixel(const ScreenPoint& InPos, const LinearColor& InColor)
 {
 	SetPixelOpaque(InPos, InColor);
+}
+
 }

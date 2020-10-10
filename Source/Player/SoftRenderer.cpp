@@ -2,7 +2,7 @@
 #include "Precompiled.h"
 #include "SoftRenderer.h"
 
-SoftRenderer::SoftRenderer(RenderingSoftwareInterface* InRSI) : _RSI(InRSI)
+SoftRenderer::SoftRenderer(RenderingSoftwareInterface* InRSI) : _RSIPtr(InRSI)
 {
 }
 
@@ -28,7 +28,7 @@ void SoftRenderer::OnTick()
 		}
 
 		// 소프트 렌더러 초기화.
-		if (!_RSI->Init(_ScreenSize))
+		if (!GetRSI().Init(_ScreenSize))
 		{
 			return;
 		}
@@ -52,7 +52,7 @@ void SoftRenderer::OnTick()
 	}
 	else
 	{
-		assert(_RSI != nullptr && _RSI->IsInitialized() && !_ScreenSize.HasZero());
+		assert(_RSIPtr != nullptr && GetRSI().IsInitialized() && !_ScreenSize.HasZero());
 
 		if (_TickEnabled)
 		{
@@ -79,7 +79,7 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 	// 크기가 변경되면 렌더러와 엔진 초기화
 	if (_RendererInitialized)
 	{
-		_RSI->Init(InNewScreenSize);
+		GetRSI().Init(InNewScreenSize);
 	}
 
 	if (_GameEngineInitialized)
@@ -90,7 +90,7 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 
 void SoftRenderer::OnShutdown()
 {
-	_RSI->Shutdown();
+	GetRSI().Shutdown();
 }
 
 void SoftRenderer::PreUpdate()
@@ -103,7 +103,7 @@ void SoftRenderer::PreUpdate()
 	}
 
 	// 배경 지우기.
-	_RSI->Clear(_BackgroundColor);
+	GetRSI().Clear(_BackgroundColor);
 
 	// 버퍼 시각화
 	const InputManager& input = _GameEngine3.GetInputManager();
@@ -116,7 +116,7 @@ void SoftRenderer::PreUpdate()
 void SoftRenderer::PostUpdate()
 {
 	// 렌더링 마무리.
-	_RSI->EndFrame();
+	GetRSI().EndFrame();
 
 	// 입력 상태 업데이트
 	GetGameEngine().GetInputManager().UpdateInput();

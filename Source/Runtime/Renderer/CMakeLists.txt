@@ -11,6 +11,10 @@ file(GLOB COMMON_FILES
 	   
 file(GLOB_RECURSE MODULE_FILES
        ${PROJECT_SOURCE_DIR}/Public/*.h
+       ${PROJECT_SOURCE_DIR}/Public/2D/*.h
+       ${PROJECT_SOURCE_DIR}/Public/3D/*.h
+       ${PROJECT_SOURCE_DIR}/Private/2D/*.cpp
+       ${PROJECT_SOURCE_DIR}/Private/3D/*.cpp
 	   )
 
 file(GLOB_RECURSE THIRDPARTY_FILES

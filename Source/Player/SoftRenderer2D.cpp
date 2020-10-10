@@ -3,17 +3,6 @@
 #include "SoftRenderer.h"
 using namespace CK::DD;
 
-// 정점의 선언
-struct Vertex2D
-{
-public:
-	Vertex2D() = default;
-	Vertex2D(const Vector2& InPosition, const Vector2& InUV) : Position(InPosition), UV(InUV) { }
-
-	Vector2 Position;
-	Vector2 UV;
-};
-
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
 {
@@ -35,18 +24,18 @@ void SoftRenderer::DrawGrid2D()
 
 	for (int ix = 0; ix < xGridCount; ++ix)
 	{
-		_RSI->DrawFullVerticalLine(gridBottomLeft.X + ix * _Grid2DUnit, gridColor);
+		GetRSI().DrawFullVerticalLine(gridBottomLeft.X + ix * _Grid2DUnit, gridColor);
 	}
 
 	for (int iy = 0; iy < yGridCount; ++iy)
 	{
-		_RSI->DrawFullHorizontalLine(gridBottomLeft.Y - iy * _Grid2DUnit, gridColor);
+		GetRSI().DrawFullHorizontalLine(gridBottomLeft.Y - iy * _Grid2DUnit, gridColor);
 	}
 
 	// 월드의 원점
 	ScreenPoint worldOrigin = ScreenPoint::ToScreenCoordinate(_ScreenSize, -viewPos);
-	_RSI->DrawFullHorizontalLine(worldOrigin.Y, LinearColor::Red);
-	_RSI->DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
+	GetRSI().DrawFullHorizontalLine(worldOrigin.Y, LinearColor::Red);
+	GetRSI().DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
 }
 
 namespace CK::DD
@@ -166,9 +155,9 @@ void SoftRenderer::Render2D()
 			if (gameObject != GameEngine::PlayerKey)
 			{
 				// 플레이어가 아니면 와이어프레임으로 렌더링
-				_RSI->DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
-				_RSI->DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
-				_RSI->DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
+				GetRSI().DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
+				GetRSI().DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
+				GetRSI().DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
 			}
 			else
 			{
@@ -215,7 +204,7 @@ void SoftRenderer::Render2D()
 						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 						{
 							Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
-							_RSI->DrawPoint(fragment, FragmentShader2D(_GameEngine2.GetMainTexture().GetSample(targetUV)));
+							GetRSI().DrawPoint(fragment, FragmentShader2D(_GameEngine2.GetMainTexture().GetSample(targetUV)));
 						}
 					}
 				}
@@ -223,15 +212,15 @@ void SoftRenderer::Render2D()
 		}
 	}
 
-	_RSI->PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
+	GetRSI().PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
 
 	const GameObject& player = _GameEngine2.FindGameObject(GameEngine::PlayerKey);
 	if (!player.Found())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
-		_RSI->PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
-		_RSI->PushStatisticText("Player Rotation : " + std::to_string(playerTransform.GetRotation()) + " (deg)");
-		_RSI->PushStatisticText("Player Scale : " + std::to_string(playerTransform.GetScale().X));
+		GetRSI().PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
+		GetRSI().PushStatisticText("Player Rotation : " + std::to_string(playerTransform.GetRotation()) + " (deg)");
+		GetRSI().PushStatisticText("Player Scale : " + std::to_string(playerTransform.GetScale().X));
 	}
 	
 }

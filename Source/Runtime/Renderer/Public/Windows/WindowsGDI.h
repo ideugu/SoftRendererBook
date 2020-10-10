@@ -1,6 +1,9 @@
 
 #pragma once
 
+namespace CK
+{
+
 class WindowsGDI
 {
 public:
@@ -96,4 +99,6 @@ FORCEINLINE LinearColor WindowsGDI::GetPixel(const ScreenPoint& InPos)
 	Color32* dest = _ScreenBuffer;
 	Color32 bufferColor = *(dest + GetScreenBufferIndex(InPos));
 	return LinearColor(bufferColor);
+}
+
 }

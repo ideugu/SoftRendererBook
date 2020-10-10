@@ -26,6 +26,7 @@ public:
 	// 게임 엔진 레퍼런스 ( 외부 연동 및 공용 로직 ) 
 	FORCEINLINE DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
 	FORCEINLINE const DDD::GameEngine& GetGameEngineC() { return _GameEngine3; }
+	FORCEINLINE RenderingSoftwareInterface& GetRSI() { return *_RSIPtr.get(); }
 
 private:
 	// 기본 루프 함수
@@ -62,7 +63,7 @@ private:
 	};
 
 	void DrawMesh(const class DDD::Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor);
-	void DrawTriangle(std::vector<struct Vertex3D>& InVertices, const LinearColor& InColor, DrawMode InDrawMode);
+	void DrawTriangle(std::vector<DDD::Vertex3D>& InVertices, const LinearColor& InColor, DrawMode InDrawMode);
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);
@@ -94,7 +95,7 @@ private:
 	float _FrameFPS = 0.f;
 
 	// 렌더러 인터페이스
-	std::unique_ptr<RenderingSoftwareInterface> _RSI;
+	std::unique_ptr<RenderingSoftwareInterface> _RSIPtr;
 
 	// 게임 엔진
 	DD::GameEngine _GameEngine2;

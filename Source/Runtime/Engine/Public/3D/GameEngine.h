@@ -15,8 +15,6 @@ public: // 공용 로직
 	// 엔진 초기화 
 	bool Init();
 	void OnScreenResize(const ScreenPoint& InScreenSize);
-	bool LoadResources();
-	bool LoadScene();
 
 	// 입력 관리자
 	InputManager& GetInputManager() { return _InputManager; }  // 입력 설정에 사용
@@ -45,6 +43,10 @@ public: // 공용 로직
 
 	// 본을 그리기 위한 목록
 	std::unordered_map<std::string, GameObject*> GetBoneObjectPtrs() { return _BoneGameObjectPtrs; }
+
+private:
+	bool LoadResources();
+	bool LoadScene();
 
 public: // 주요 키 값
 	// 본
