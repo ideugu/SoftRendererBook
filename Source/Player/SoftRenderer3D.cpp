@@ -7,6 +7,9 @@ using namespace CK::DDD;
 // 그리드 그리기
 void SoftRenderer::DrawGizmo3D()
 {
+	auto& r = GetRenderer();
+	const GameEngine& g = Get3DGameEngine();
+
 	// 뷰 기즈모 그리기
 	std::vector<Vertex3D> viewGizmo = { 
 		Vertex3D(Vector4(Vector3::Zero)),
@@ -15,7 +18,8 @@ void SoftRenderer::DrawGizmo3D()
 		Vertex3D(Vector4(Vector3::UnitZ * _GizmoUnitLength)),
 	};
 
-	Matrix4x4 viewMatRotationOnly = _GameEngine3.GetMainCamera().GetViewMatrixRotationOnly();
+	Matrix4x4 viewMatRotationOnly = g.GetMainCamera().GetViewMatrixRotationOnly();
+	Matrix4x4 pvMatrix = g.GetMainCamera().GetPerspectiveViewMatrix();
 	VertexShader3D(viewGizmo, viewMatRotationOnly);
 
 	// 축 그리기
@@ -23,17 +27,27 @@ void SoftRenderer::DrawGizmo3D()
 	Vector2 v1 = viewGizmo[1].Position.ToVector2() + _GizmoPositionOffset;
 	Vector2 v2 = viewGizmo[2].Position.ToVector2() + _GizmoPositionOffset;
 	Vector2 v3 = viewGizmo[3].Position.ToVector2() + _GizmoPositionOffset;
-	GetRSI().DrawLine(v0, v1, LinearColor::Red);
-	GetRSI().DrawLine(v0, v2, LinearColor::Green);
-	GetRSI().DrawLine(v0, v3, LinearColor::Blue);
+	r.DrawLine(v0, v1, LinearColor::Red);
+	r.DrawLine(v0, v2, LinearColor::Green);
+	r.DrawLine(v0, v3, LinearColor::Blue);
 
+	// 바닥 기즈모
+	DrawMode prevShowMode = GetDrawMode();
+	SetDrawMode(DrawMode::Wireframe);
+	{
+		static float planeScale = 100.f;
+		const Mesh& planeMesh = g.GetMesh(GameEngine::PlaneMesh);
+		TransformData pt(Vector3::Zero, Quaternion::Identity, Vector3::One * planeScale);
+		DrawMesh(planeMesh, pvMatrix * pt.GetMatrix(), _WireframeColor);
+	}
+	SetDrawMode(prevShowMode);
 }
 
 // 게임 로직
 void SoftRenderer::Update3D(float InDeltaSeconds)
 {
 	// 기본 레퍼런스
-	GameEngine& g = GetGameEngine();
+	GameEngine& g = Get3DGameEngine();
 	const InputManager& input = g.GetInputManager();
 	Camera& camera = g.GetMainCamera();
 
@@ -58,7 +72,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 void SoftRenderer::LateUpdate3D(float InDeltaSeconds)
 {
 	// 기본 레퍼런스
-	GameEngine& g = GetGameEngine();
+	GameEngine& g = Get3DGameEngine();
 
 	// 기본 설정 변수
 	static float elapsedTime = 0.f;
@@ -94,36 +108,25 @@ void SoftRenderer::LateUpdate3D(float InDeltaSeconds)
 
 	// 다리의 회전
 	Bone& leftLegBone = m.GetBone(GameEngine::LeftLegBone);
-	leftLegBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
+	leftLegBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
 
 	Bone& rightLegBone = m.GetBone(GameEngine::RightLegBone);
-	rightLegBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, -armLegCurve));
+	rightLegBone.GetTransform().SetLocalRotation(Rotator(0.f, 0.f, armLegCurve));
 }
 
 // 렌더링 로직
 void SoftRenderer::Render3D()
 {
-	const GameEngine& g = GetGameEngineC();
+	const GameEngine& g = Get3DGameEngine();
 
 	const Camera& mainCamera = g.GetMainCamera();
-	const Matrix4x4 viewMat = mainCamera.GetViewMatrix();
-	const Matrix4x4 perspMat = mainCamera.GetPerspectiveMatrix();
-	const Matrix4x4 pvMat = perspMat * viewMat;
+	const Matrix4x4 pvMatrix = mainCamera.GetPerspectiveViewMatrix();
 	const ScreenPoint viewportSize = mainCamera.GetViewportSize();
 	float nearZ = mainCamera.GetNearZ();
 	float farZ = mainCamera.GetFarZ();
 
 	// 기즈모 그리기
 	DrawGizmo3D();
-
-	// 바닥 기즈모
-	ShowMode prevShowMode = _CurrentShowMode;
-	_CurrentShowMode = ShowMode::Wireframe;
-	static float planeScale = 100.f;
-	const Mesh& planeMesh = g.GetMesh(GameEngine::PlaneMesh);
-	TransformData pt(Vector3::Zero, Quaternion::Identity, Vector3::One * planeScale);
-	DrawMesh(planeMesh, pvMat * pt.GetMatrix(), LinearColor::DimGray);
-	_CurrentShowMode = prevShowMode;
 
 	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
@@ -134,13 +137,11 @@ void SoftRenderer::Render3D()
 			continue;
 		}
 
+		// 렌더링 시작
 		const Mesh& m = g.GetMesh(gameObject.GetMeshKey());
 		// 스키닝이고 WireFrame인 경우 본을 그리기
-		if (m.IsSkinnedMesh() && _CurrentShowMode == ShowMode::Wireframe)
+		if (m.IsSkinnedMesh() && IsWireframeDrawing())
 		{
-			ShowMode prevShowMode = _CurrentShowMode;
-			_CurrentShowMode = ShowMode::Wireframe;
-
 			const Mesh& boneMesh = g.GetMesh(GameEngine::ArrowMesh);
 			for (const auto& b : m.GetBones())
 			{
@@ -162,38 +163,36 @@ void SoftRenderer::Render3D()
 
 				Vector3 boneVector = wt2.GetPosition() - wt1.GetPosition();
 				TransformData tboneObject(wt1.GetPosition(), Quaternion(boneVector), Vector3(10.f, 10.f, boneVector.Size()));
-				Matrix4x4 boneMatrix = pvMat * tboneObject.GetMatrix();
+				Matrix4x4 boneMatrix = pvMatrix * tboneObject.GetMatrix();
 				DrawMesh(boneMesh, boneMatrix, LinearColor::Red);
 			}
-
-			_CurrentShowMode = prevShowMode;
 		}
 
 		// 최종 변환 행렬
-		Matrix4x4 finalMatrix = pvMat * transform.GetWorldMatrix();
+		Matrix4x4 finalMatrix = pvMatrix * transform.GetWorldMatrix();
 		DrawMesh(m, finalMatrix, gameObject.GetColor());
 	}
 }
 
 void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor)
 {
-	size_t vertexCount = InMesh._Vertices.size();
-	size_t indexCount = InMesh._Indices.size();
+	size_t vertexCount = InMesh.GetVertices().size();
+	size_t indexCount = InMesh.GetIndices().size();
 	size_t triangleCount = indexCount / 3;
 
 	// 렌더러가 사용할 정점 버퍼와 인덱스 버퍼로 변환
 	std::vector<Vertex3D> vertices(vertexCount);
-	std::vector<size_t> indice(InMesh._Indices);
+	std::vector<size_t> indice(InMesh.GetIndices());
 	for (size_t vi = 0; vi < vertexCount; ++vi)
 	{
-		vertices[vi].Position = Vector4(InMesh._Vertices[vi]);
+		vertices[vi].Position = Vector4(InMesh.GetVertices()[vi]);
 
 		//스켈레탈 메시면 스키닝 작업 수행
 		if (InMesh.IsSkinnedMesh())
 		{
 			Vector4 totalPosition = Vector4::Zero;
-			Weight w = InMesh._Weights[vi];
-			for (size_t wi = 0; wi < InMesh._ConnectedBones[vi]; ++wi)
+			Weight w = InMesh.GetWeights()[vi];
+			for (size_t wi = 0; wi < InMesh.GetConnectedBones()[vi]; ++wi)
 			{
 				std::string boneName = w.Bones[wi];
 				if (InMesh.HasBone(boneName))
@@ -224,12 +223,12 @@ void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const
 
 		if (InMesh.HasUV())
 		{
-			vertices[vi].UV = InMesh._UVs[vi];
+			vertices[vi].UV = InMesh.GetUVs()[vi];
 		}
 
 		if (InMesh.HasColor())
 		{
-			vertices[vi].Color = InMesh._Colors[vi];
+			vertices[vi].Color = InMesh.GetColors()[vi];
 		}
 	}
 
@@ -237,17 +236,14 @@ void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const
 	VertexShader3D(vertices, InMatrix);
 
 	// 그리기모드 설정
-	DrawMode dm = DrawMode::ColorOnly;
+	FillMode fm = FillMode::None;
+	if (InMesh.HasColor())
+	{
+		fm |= FillMode::Color;
+	}
 	if (InMesh.HasUV())
 	{
-		if (InMesh.HasColor())
-		{
-			dm = DrawMode::ColorAndTexture;
-		}
-		else
-		{
-			dm = DrawMode::TextureOnly;
-		}
+		fm |= FillMode::Texture;
 	}
 
 	// 삼각형 별로 그리기
@@ -278,14 +274,15 @@ void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const
 		{
 			size_t si = ti * 3;
 			std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);
-			DrawTriangle(sub, InColor, dm);
+			DrawTriangle(sub, InColor, fm);
 		}
 	}
 }
 
-void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearColor& InColor, DrawMode InDrawMode)
+void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
 {
-	const GameEngine& g = GetGameEngineC();
+	auto& r = GetRenderer();
+	const GameEngine& g = Get3DGameEngine();
 
 	for (auto& v : InVertices)
 	{
@@ -307,7 +304,7 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 		return;
 	}
 
-	if (_CurrentShowMode == ShowMode::Wireframe)
+	if (IsWireframeDrawing())
 	{
 		for (auto& v : InVertices)
 		{
@@ -315,15 +312,15 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 			v.Position.Y *= _ScreenSize.Y * 0.5f;
 		}
 
-		LinearColor finalColor = LinearColor::DimGray;
-		if (InColor != LinearColor::White)
+		LinearColor finalColor = _WireframeColor;
+		if (InColor != LinearColor::Error)
 		{
 			finalColor = InColor;
 		}
 
-		GetRSI().DrawLine(InVertices[0].Position, InVertices[1].Position, finalColor);
-		GetRSI().DrawLine(InVertices[0].Position, InVertices[2].Position, finalColor);
-		GetRSI().DrawLine(InVertices[1].Position, InVertices[2].Position, finalColor);
+		r.DrawLine(InVertices[0].Position, InVertices[1].Position, finalColor);
+		r.DrawLine(InVertices[0].Position, InVertices[2].Position, finalColor);
+		r.DrawLine(InVertices[1].Position, InVertices[2].Position, finalColor);
 		return;
 	}
 
@@ -394,12 +391,11 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 
 				float n = g.GetMainCamera().GetNearZ();
 				float f = g.GetMainCamera().GetFarZ();
-				//float newDepth = (invZ - n) / (f - n);
 				float newDepth = (InVertices[0].Position.Z * oneMinusST * invZ0 + InVertices[1].Position.Z * s * invZ1 + InVertices[2].Position.Z * t * invZ2) * invZ;
-				float prevDepth = GetRSI().GetDepthBufferValue(fragment);
+				float prevDepth = r.GetDepthBufferValue(fragment);
 				if (newDepth < prevDepth)
 				{
-					GetRSI().SetDepthBufferValue(fragment, newDepth);
+					r.SetDepthBufferValue(fragment, newDepth);
 				}
 				else
 				{
@@ -407,33 +403,41 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 					continue;
 				}
 
-				if (_CurrentShowMode == ShowMode::DepthBuffer)
+				if (IsDepthBufferDrawing())
 				{
 					// 시각화를 위해 선형화된 흑백 값
 					float grayScale = (invZ - n) / (f - n);
 
 					// 뎁스 버퍼 그리기
-					GetRSI().DrawPoint(fragment, LinearColor::White * grayScale);
+					r.DrawPoint(fragment, LinearColor::White * grayScale);
 				}
 				else
 				{
-					LinearColor finalColor = LinearColor::White;
-					if (InDrawMode == DrawMode::ColorOnly || InDrawMode == DrawMode::ColorAndTexture)
+					// 색상 파라미터가 설정 안된 경우에는 흰색을 사용
+					LinearColor paramColor = LinearColor::White;
+					if (InColor != LinearColor::Error)
 					{
-						finalColor = (InVertices[0].Color * oneMinusST * invZ0 + InVertices[1].Color * s * invZ1 + InVertices[2].Color * t * invZ2) * invZ;
+						paramColor = InColor;
 					}
 
-					if (InDrawMode == DrawMode::TextureOnly || InDrawMode == DrawMode::ColorAndTexture)
+					// 버텍스 컬러 또는 텍스쳐 매핑으로 최종 보간된 색상
+					LinearColor fragmentColor = LinearColor::White;
+					if (InFillMode & FillMode::Color)
+					{
+						fragmentColor = (InVertices[0].Color * oneMinusST * invZ0 + InVertices[1].Color * s * invZ1 + InVertices[2].Color * t * invZ2) * invZ;
+					}
+
+					if (InFillMode & FillMode::Texture)
 					{
 						// 투영보정보간으로 보간한 해당 픽셀의 UV 값
 						Vector2 targetUV = (InVertices[0].UV * oneMinusST * invZ0 + InVertices[1].UV * s * invZ1 + InVertices[2].UV * t * invZ2) * invZ;
 
 						// 텍스쳐 매핑 진행
 						LinearColor textureColor = g.GetTexture(GameEngine::DiffuseTexture).GetSample(targetUV);
-						finalColor = finalColor * textureColor;
+						fragmentColor = fragmentColor * textureColor;
 					}
 
-					GetRSI().DrawPoint(fragment, FragmentShader3D(finalColor, InColor));
+					r.DrawPoint(fragment, FragmentShader3D(fragmentColor, paramColor));
 				}
 			}
 		}

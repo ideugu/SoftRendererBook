@@ -6,11 +6,14 @@ using namespace CK::DD;
 // 그리드 그리기
 void SoftRenderer::DrawGrid2D()
 {
+	auto& r = GetRenderer();
+	const auto& g = Get2DGameEngine();
+
 	// 그리드 색상
 	LinearColor gridColor(LinearColor(0.8f, 0.8f, 0.8f, 0.3f));
 
 	// 뷰의 영역 계산
-	Vector2 viewPos = _GameEngine2.GetMainCamera().GetTransform().GetPosition();
+	Vector2 viewPos = g.GetMainCamera().GetTransform().GetPosition();
 	Vector2 extent = Vector2(_ScreenSize.X * 0.5f, _ScreenSize.Y * 0.5f);
 
 	// 좌측 하단에서부터 격자 그리기
@@ -24,32 +27,34 @@ void SoftRenderer::DrawGrid2D()
 
 	for (int ix = 0; ix < xGridCount; ++ix)
 	{
-		GetRSI().DrawFullVerticalLine(gridBottomLeft.X + ix * _Grid2DUnit, gridColor);
+		r.DrawFullVerticalLine(gridBottomLeft.X + ix * _Grid2DUnit, gridColor);
 	}
 
 	for (int iy = 0; iy < yGridCount; ++iy)
 	{
-		GetRSI().DrawFullHorizontalLine(gridBottomLeft.Y - iy * _Grid2DUnit, gridColor);
+		r.DrawFullHorizontalLine(gridBottomLeft.Y - iy * _Grid2DUnit, gridColor);
 	}
 
 	// 월드의 원점
 	ScreenPoint worldOrigin = ScreenPoint::ToScreenCoordinate(_ScreenSize, -viewPos);
-	GetRSI().DrawFullHorizontalLine(worldOrigin.Y, LinearColor::Red);
-	GetRSI().DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
+	r.DrawFullHorizontalLine(worldOrigin.Y, LinearColor::Red);
+	r.DrawFullVerticalLine(worldOrigin.X, LinearColor::Green);
 }
 
 // 게임 로직
 void SoftRenderer::Update2D(float InDeltaSeconds)
 {
+	auto& g = Get2DGameEngine();
+
 	static float elapsedTime = 0.f;
 	static float moveSpeed = 200.f;
 	static float rotateSpeed = 180.f;
 	static float scaleSpeed = 180.f;
 
-	InputManager& input = _GameEngine2.GetInputManager();
+	const InputManager& input = g.GetInputManager();
 
 	// 플레이어 게임 오브젝트 트랜스폼의 변경
-	GameObject& player = _GameEngine2.FindGameObject(GameEngine::PlayerKey);
+	GameObject& player = g.FindGameObject(GameEngine::PlayerKey);
 	if (!player.Found())
 	{
 		Transform& playerTransform = player.GetTransform();
@@ -60,7 +65,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 
 		// 플레이어를 따라다니는 카메라의 트랜스폼
 		static float thresholdDistance = 1.f;
-		Transform& cameraTransform = _GameEngine2.GetMainCamera().GetTransform();
+		Transform& cameraTransform = g.GetMainCamera().GetTransform();
 		Vector2 playerPosition = playerTransform.GetPosition();
 		Vector2 prevCameraPosition = cameraTransform.GetPosition();
 		if ((playerPosition - prevCameraPosition).SizeSquared() < thresholdDistance * thresholdDistance)
@@ -84,17 +89,20 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 // 렌더링 로직
 void SoftRenderer::Render2D()
 {
+	auto& r = GetRenderer();
+	auto& g = Get2DGameEngine();
+
 	// 격자 그리기
 	DrawGrid2D();
 
 	// 전체 그릴 물체의 수
-	size_t totalObjectCount = _GameEngine2.GetScene().size();
+	size_t totalObjectCount = g.GetScene().size();
 
 	// 카메라의 뷰 행렬
-	Matrix3x3 viewMat = _GameEngine2.GetMainCamera().GetViewMatrix();
+	Matrix3x3 viewMat = g.GetMainCamera().GetViewMatrix();
 
 	// 랜덤하게 생성된 모든 게임 오브젝트들
-	for (auto it = _GameEngine2.SceneBegin(); it != _GameEngine2.SceneEnd(); ++it)
+	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
 		// 게임 오브젝트에 필요한 내부 정보를 가져오기
 		const GameObject& gameObject = *it;
@@ -103,7 +111,7 @@ void SoftRenderer::Render2D()
 			continue;
 		}
 
-		const Mesh& mesh = _GameEngine2.GetMesh(gameObject.GetMeshKey());
+		const Mesh& mesh = g.GetMesh(gameObject.GetMeshKey());
 		const Transform& transform = gameObject.GetTransformConst();
 		Matrix3x3 finalMat = viewMat * transform.GetModelingMatrix();
 
@@ -133,9 +141,9 @@ void SoftRenderer::Render2D()
 			if (gameObject != GameEngine::PlayerKey)
 			{
 				// 플레이어가 아니면 와이어프레임으로 렌더링
-				GetRSI().DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
-				GetRSI().DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
-				GetRSI().DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
+				r.DrawLine(tv0.Position, tv1.Position, gameObject.GetColor());
+				r.DrawLine(tv0.Position, tv2.Position, gameObject.GetColor());
+				r.DrawLine(tv1.Position, tv2.Position, gameObject.GetColor());
 			}
 			else
 			{
@@ -182,7 +190,7 @@ void SoftRenderer::Render2D()
 						if (((s >= 0.f) && (s <= 1.f)) && ((t >= 0.f) && (t <= 1.f)) && ((oneMinusST >= 0.f) && (oneMinusST <= 1.f)))
 						{
 							Vector2 targetUV = tv0.UV * oneMinusST + tv1.UV * s + tv2.UV * t;
-							GetRSI().DrawPoint(fragment, FragmentShader2D(_GameEngine2.GetMainTexture().GetSample(targetUV), LinearColor::White));
+							r.DrawPoint(fragment, FragmentShader2D(g.GetMainTexture().GetSample(targetUV), LinearColor::White));
 						}
 					}
 				}
@@ -190,15 +198,15 @@ void SoftRenderer::Render2D()
 		}
 	}
 
-	GetRSI().PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
+	r.PushStatisticText("Total Game Objects : " + std::to_string(totalObjectCount));
 
-	const GameObject& player = _GameEngine2.FindGameObject(GameEngine::PlayerKey);
+	const GameObject& player = g.FindGameObject(GameEngine::PlayerKey);
 	if (!player.Found())
 	{
 		const Transform& playerTransform = player.GetTransformConst();
-		GetRSI().PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
-		GetRSI().PushStatisticText("Player Rotation : " + std::to_string(playerTransform.GetRotation()) + " (deg)");
-		GetRSI().PushStatisticText("Player Scale : " + std::to_string(playerTransform.GetScale().X));
+		r.PushStatisticText("Player Position : " + playerTransform.GetPosition().ToString());
+		r.PushStatisticText("Player Rotation : " + std::to_string(playerTransform.GetRotation()) + " (deg)");
+		r.PushStatisticText("Player Scale : " + std::to_string(playerTransform.GetScale().X));
 	}
 	
 }

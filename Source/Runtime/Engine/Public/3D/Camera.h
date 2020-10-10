@@ -36,6 +36,7 @@ public:
 	FORCEINLINE Matrix4x4 GetViewMatrix() const;
 	FORCEINLINE Matrix4x4 GetViewMatrixRotationOnly() const;
 	FORCEINLINE Matrix4x4 GetPerspectiveMatrix() const;
+	FORCEINLINE Matrix4x4 GetPerspectiveViewMatrix() const;
 
 private:
 	Transform _Transform;
@@ -96,6 +97,30 @@ FORCEINLINE Matrix4x4 Camera::GetPerspectiveMatrix() const
 		Vector4::UnitY * d,
 		Vector4(0.f, 0.f, k, -1.f),
 		Vector4(0.f, 0.f, l, 0.f));
+}
+
+FORCEINLINE Matrix4x4 Camera::GetPerspectiveViewMatrix() const
+{
+	// 뷰 행렬 관련 요소
+	Vector3 viewX, viewY, viewZ;
+	GetViewAxes(viewX, viewY, viewZ);
+	Vector3 pos = _Transform.GetWorldPosition();
+	float zPos = viewZ.Dot(pos);
+
+	// 투영 행렬 관련 요소
+	float invA = 1.f / _ViewportSize.AspectRatio();
+	float d = 1.f / tanf(Math::Deg2Rad(_FOV) * 0.5f);
+	float dx = invA * d;
+	float invNF = 1.f / (_NearZ - _FarZ);
+	float k = (_FarZ + _NearZ) * invNF;
+	float l = 2.f * _FarZ * _NearZ * invNF;
+
+	return Matrix4x4(
+		Vector4(dx * viewX.X, d * viewY.X, k * viewZ.X, -viewZ.X),
+		Vector4(dx * viewX.Y, d * viewY.Y, k * viewZ.Y, -viewZ.Y),
+		Vector4(dx * viewX.Z, d * viewY.Z, k * viewZ.Z, -viewZ.Z),
+		Vector4(-dx * viewX.Dot(pos), -d * viewY.Dot(pos), -k * zPos + l, zPos)
+	);
 }
 
 }

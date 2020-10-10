@@ -59,7 +59,7 @@ private:
 	std::string _Name;
 	std::size_t _MeshKey = Math::InvalidHash;
 	Transform _Transform;
-	LinearColor _Color = LinearColor::White;
+	LinearColor _Color = LinearColor::Error;
 };
 
 

@@ -16,7 +16,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	};
 	instance._PerformanceInitFunc = WindowsUtil::GetCyclesPerMilliSeconds;
 	instance._PerformanceMeasureFunc = WindowsUtil::GetCurrentTimeStamp;
-	WindowsUtil::BindInput(instance.GetGameEngine().GetInputManager());
+	WindowsUtil::BindInput(instance.Get3DGameEngine().GetInputManager());
 
 	if (!WindowsPlayer::Create(hInstance, defScreenSize))
 	{

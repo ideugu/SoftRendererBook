@@ -28,7 +28,7 @@ void SoftRenderer::OnTick()
 		}
 
 		// 소프트 렌더러 초기화.
-		if (!GetRSI().Init(_ScreenSize))
+		if (!GetRenderer().Init(_ScreenSize))
 		{
 			return;
 		}
@@ -36,8 +36,8 @@ void SoftRenderer::OnTick()
 		_RendererInitialized = true;
 
 		// 게임 엔진 초기화
-		GetGameEngine().OnScreenResize(_ScreenSize);
-		if (!GetGameEngine().Init())
+		Get3DGameEngine().OnScreenResize(_ScreenSize);
+		if (!Get3DGameEngine().Init())
 		{
 			return;
 		}
@@ -52,7 +52,7 @@ void SoftRenderer::OnTick()
 	}
 	else
 	{
-		assert(_RSIPtr != nullptr && GetRSI().IsInitialized() && !_ScreenSize.HasZero());
+		assert(_RSIPtr != nullptr && GetRenderer().IsInitialized() && !_ScreenSize.HasZero());
 
 		if (_TickEnabled)
 		{
@@ -79,18 +79,18 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 	// 크기가 변경되면 렌더러와 엔진 초기화
 	if (_RendererInitialized)
 	{
-		GetRSI().Init(InNewScreenSize);
+		GetRenderer().Init(InNewScreenSize);
 	}
 
 	if (_GameEngineInitialized)
 	{
-		GetGameEngine().OnScreenResize(_ScreenSize);
+		Get3DGameEngine().OnScreenResize(_ScreenSize);
 	}	
 }
 
 void SoftRenderer::OnShutdown()
 {
-	GetRSI().Shutdown();
+	GetRenderer().Shutdown();
 }
 
 void SoftRenderer::PreUpdate()
@@ -103,23 +103,23 @@ void SoftRenderer::PreUpdate()
 	}
 
 	// 배경 지우기.
-	GetRSI().Clear(_BackgroundColor);
+	GetRenderer().Clear(_BackgroundColor);
 
 	// 버퍼 시각화
-	const InputManager& input = _GameEngine3.GetInputManager();
+	const InputManager& input = Get3DGameEngine().GetInputManager();
 
-	if (input.IsReleased(InputButton::F1)) { _CurrentShowMode = ShowMode::Normal; }
-	if (input.IsReleased(InputButton::F2)) { _CurrentShowMode = ShowMode::Wireframe; }
-	if (input.IsReleased(InputButton::F3)) { _CurrentShowMode = ShowMode::DepthBuffer; }
+	if (input.IsReleased(InputButton::F1)) { _CurrentDrawMode = DrawMode::Normal; }
+	if (input.IsReleased(InputButton::F2)) { _CurrentDrawMode = DrawMode::Wireframe; }
+	if (input.IsReleased(InputButton::F3)) { _CurrentDrawMode = DrawMode::DepthBuffer; }
 }
 
 void SoftRenderer::PostUpdate()
 {
 	// 렌더링 마무리.
-	GetRSI().EndFrame();
+	GetRenderer().EndFrame();
 
 	// 입력 상태 업데이트
-	GetGameEngine().GetInputManager().UpdateInput();
+	Get3DGameEngine().GetInputManager().UpdateInput();
 
 	// 성능 측정 마무리.
 	_FrameCount++;

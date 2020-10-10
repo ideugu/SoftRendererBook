@@ -1,74 +1,96 @@
 #pragma once
 
+enum class DrawMode : UINT32
+{
+	Normal = 0,
+	Wireframe,
+	DepthBuffer
+};
+
+enum class FillMode : UINT32
+{
+	None = 0x00,
+	Color = 0x01,
+	Texture = 0x02
+};
+
+FORCEINLINE FillMode operator|(FillMode InLhs, FillMode InRhs)
+{
+	return static_cast<FillMode> (
+		static_cast<std::underlying_type<FillMode>::type>(InLhs) |
+		static_cast<std::underlying_type<FillMode>::type>(InRhs)
+	);
+}
+
+FORCEINLINE FillMode& operator|=(FillMode& InLhs, FillMode InRhs)
+{
+	InLhs = InLhs | InRhs;
+	return InLhs;
+}
+
+FORCEINLINE bool operator&(FillMode InLhs, FillMode InRhs)
+{
+	BYTE rhsValue = static_cast<std::underlying_type<FillMode>::type>(InRhs);
+	return ((static_cast<std::underlying_type<FillMode>::type>(InLhs) & rhsValue) == rhsValue);
+}
+
 class SoftRenderer
 {
 public:
 	// 생성자
 	SoftRenderer(RenderingSoftwareInterface* InRSI);
 
-public:
-	// 윈도우 이벤트 처리 함수
+	// 윈도우 이벤트 처리
 	void OnTick();
 	void OnResize(const ScreenPoint& InNewScreenSize);
 	void OnShutdown();
 
-public:
 	// 프로그램 기본 정보
 	const ScreenPoint& GetScreenSize() { return _ScreenSize; }
 	float GetFrameFPS() const { return _FrameFPS; }
 	FORCEINLINE float GetElapsedTime() const { return _ElapsedTime; }
 
-public:
-	// 성능 측정을 위한 함수  ( 외부 연동용 ) 
+	// 성능 측정
 	std::function<float()> _PerformanceInitFunc;
 	std::function<INT64()> _PerformanceMeasureFunc;
 
-	// 게임 엔진 레퍼런스 ( 외부 연동 및 공용 로직 ) 
-	FORCEINLINE DDD::GameEngine& GetGameEngine() { return _GameEngine3; }
-	FORCEINLINE const DDD::GameEngine& GetGameEngineC() { return _GameEngine3; }
-	FORCEINLINE RenderingSoftwareInterface& GetRSI() { return *_RSIPtr.get(); }
+	// 게임 엔진 레퍼런스 
+	FORCEINLINE DD::GameEngine& Get2DGameEngine() { return _GameEngine2; }
+	FORCEINLINE DDD::GameEngine& Get3DGameEngine() { return _GameEngine3; }
 
 private:
 	// 기본 루프 함수
 	void PreUpdate();
 	void PostUpdate();
 
-private:
+	// 렌더러 레퍼런스
+	FORCEINLINE RenderingSoftwareInterface& GetRenderer() { return *_RSIPtr.get(); }
+	FORCEINLINE void SetBackgroundColor(const LinearColor& InLinearColor) { _BackgroundColor = InLinearColor; }
+	FORCEINLINE void SetWireframeColor(const LinearColor& InLinearColor) { _WireframeColor = InLinearColor; }
 
-	enum class ShowMode : UINT32
-	{
-		Normal = 0,
-		Wireframe,
-		DepthBuffer
-	};
-
-	// 2D 구현 함수
+	// 2D 그래픽스 구현
 	void Update2D(float InDeltaSeconds);
 	void Render2D();
 	void DrawGrid2D();
 
 	int _Grid2DUnit = 10;
 
-	// 3D 구현함수
+	// 3D 그래픽스 구현
 	void DrawGizmo3D();
 	void Update3D(float InDeltaSeconds);
 	void LateUpdate3D(float InDeltaSeconds);
 	void Render3D();
 
-	enum class DrawMode : UINT32
-	{
-		ColorOnly = 0,
-		TextureOnly,
-		ColorAndTexture
-	};
-
 	void DrawMesh(const class DDD::Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor);
-	void DrawTriangle(std::vector<DDD::Vertex3D>& InVertices, const LinearColor& InColor, DrawMode InDrawMode);
+	void DrawTriangle(std::vector<DDD::Vertex3D>& InVertices, const LinearColor& InColor, FillMode InFillMode);
+	bool IsDepthBufferDrawing() const { return _CurrentDrawMode == DrawMode::DepthBuffer; }
+	bool IsWireframeDrawing() const { return _CurrentDrawMode == DrawMode::Wireframe; }
+	DrawMode GetDrawMode() const { return _CurrentDrawMode; }
+	void SetDrawMode(DrawMode InDrawMode) { _CurrentDrawMode = InDrawMode; }
 
 	float _GizmoUnitLength = 50.f;
 	Vector2 _GizmoPositionOffset = Vector2(-320.f, -250.f);
-
-	ShowMode _CurrentShowMode = ShowMode::Normal;
+	DrawMode _CurrentDrawMode = DrawMode::Normal;
 
 private:
 	// 초기화 점검 변수
@@ -82,9 +104,12 @@ private:
 	ScreenPoint _ScreenSize;
 
 	// 배경 색상
-	LinearColor _BackgroundColor = LinearColor::White;
+	LinearColor _BackgroundColor = LinearColor::WhiteSmoke;
 
-	// 성능 측정 관련 변수들
+	// 와이어프레임 색상
+	LinearColor _WireframeColor = LinearColor::DimGray;
+
+	// 성능 측정
 	long long _StartTimeStamp = 0;
 	long long _FrameTimeStamp = 0;
 	long _FrameCount = 0;

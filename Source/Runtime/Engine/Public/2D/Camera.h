@@ -12,6 +12,7 @@ public:
 
 public:
 	Transform& GetTransform() { return _Transform; }
+	const Transform& GetTransform() const { return _Transform; }
 	FORCEINLINE Matrix3x3 GetViewMatrix() const;
 
 protected:

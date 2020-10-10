@@ -36,6 +36,7 @@ public:
 
 	// 카메라 
 	Camera& GetMainCamera() { return _MainCamera; }
+	const Camera& GetMainCamera() const { return _MainCamera; }
 
 	// 주요 키 값
 	const static std::string QuadMeshKey;

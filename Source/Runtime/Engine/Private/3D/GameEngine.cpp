@@ -77,9 +77,9 @@ bool GameEngine::LoadResources()
 
 	constexpr size_t totalCharacterParts = 6;
 	Mesh& characterMesh = CreateMesh(GameEngine::CharacterMesh);
-	auto& v = characterMesh._Vertices;
-	auto& i = characterMesh._Indices;
-	auto& uv = characterMesh._UVs;
+	auto& v = characterMesh.GetVertices();
+	auto& i = characterMesh.GetIndices();
+	auto& uv = characterMesh.GetUVs();
 
 	// 6개의 파트로 구성되어 있음.
 	static std::array<Vector3, totalCharacterParts> cubeMeshSize = {
@@ -173,11 +173,12 @@ bool GameEngine::LoadResources()
 
 	// 캐릭터 스켈레탈 메시 설정
 	characterMesh.SetMeshType(MeshType::Skinned);
-	auto& b = characterMesh._ConnectedBones;
-	auto& w = characterMesh._Weights;
+	auto& cb = characterMesh.GetConnectedBones();
+	auto& w = characterMesh.GetWeights();
+	auto& bones = characterMesh.GetBones();
 
 	// 본 생성
-	characterMesh._Bones = {
+	bones = {
 		{ GameEngine::RootBone, Bone(GameEngine::RootBone, TransformData()) },
 		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, TransformData(Vector3(0.f, 1.5f, 0.f))) },
 		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, TransformData(Vector3(0.f, 2.25f, 0.f))) },
@@ -210,9 +211,9 @@ bool GameEngine::LoadResources()
 		GameEngine::NeckBone, GameEngine::SpineBone, GameEngine::LeftArmBone, GameEngine::RightArmBone, GameEngine::LeftLegBone, GameEngine::RightLegBone
 	};
 
-	b.resize(v.size());
+	cb.resize(v.size());
 	w.resize(v.size());
-	std::fill(b.begin(), b.end(), 1);
+	std::fill(cb.begin(), cb.end(), 1);
 
 	for (size_t part = 0; part < 6; part++)
 	{
@@ -227,12 +228,12 @@ bool GameEngine::LoadResources()
 
 	// 화살표 메시 (기즈모 용)
 	Mesh& arrow = CreateMesh(GameEngine::ArrowMesh);
-	arrow._Vertices.resize(arrowPositions.size());
-	arrow._Indices.resize(arrowIndice.size());
-	arrow._Colors.resize(arrowPositions.size());
-	std::copy(arrowPositions.begin(), arrowPositions.end(), arrow._Vertices.begin());
-	std::copy(arrowIndice.begin(), arrowIndice.end(), arrow._Indices.begin());
-	std::fill(arrow._Colors.begin(), arrow._Colors.end(), LinearColor::Gray);
+	arrow.GetVertices().resize(arrowPositions.size());
+	arrow.GetIndices().resize(arrowIndice.size());
+	arrow.GetColors().resize(arrowPositions.size());
+	std::copy(arrowPositions.begin(), arrowPositions.end(), arrow.GetVertices().begin());
+	std::copy(arrowIndice.begin(), arrowIndice.end(), arrow.GetIndices().begin());
+	std::fill(arrow.GetColors().begin(), arrow.GetColors().end(), LinearColor::Gray);
 
 	// 바닥 메시 (기즈모 용)
 	int planeHalfSize = 3;
@@ -241,7 +242,7 @@ bool GameEngine::LoadResources()
 	{
 		for (int x = -planeHalfSize; x <= planeHalfSize; x++)
 		{
-			plane._Vertices.push_back(Vector3((float)x, 0.f, (float)z));
+			plane.GetVertices().push_back(Vector3((float)x, 0.f, (float)z));
 		}
 	}
 
@@ -255,7 +256,7 @@ bool GameEngine::LoadResources()
 			int v2 = v1 + 1;
 			int v3 = v0 + 1;
 			std::vector<size_t> quad = { (size_t)v0, (size_t)v2, (size_t)v1, (size_t)v0, (size_t)v3, (size_t)v2 };
-			plane._Indices.insert(plane._Indices.end(), quad.begin(), quad.end());
+			plane.GetIndices().insert(plane.GetIndices().end(), quad.begin(), quad.end());
 		}
 	}
 
