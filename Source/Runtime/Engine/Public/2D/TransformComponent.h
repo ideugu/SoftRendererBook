@@ -5,10 +5,10 @@ namespace CK
 namespace DD
 { 
 
-class Transform
+class TransformComponent
 {
 public:
-	Transform() = default;
+	TransformComponent() = default;
 
 public:
 	// 게임 로직에서 사용할 멤버 함수
@@ -38,7 +38,7 @@ private:
 	Vector2 Up = Vector2::UnitY;
 };
 
-FORCEINLINE Matrix3x3 Transform::GetModelingMatrix() const
+FORCEINLINE Matrix3x3 TransformComponent::GetModelingMatrix() const
 {
 	return Matrix3x3(
 		Vector3(Scale.X * Right.X, Scale.X * Right.Y, 0.f),
@@ -47,7 +47,7 @@ FORCEINLINE Matrix3x3 Transform::GetModelingMatrix() const
 	);
 }
 
-FORCEINLINE void Transform::Update()
+FORCEINLINE void TransformComponent::Update()
 {
 	float sin, cos;
 	Math::GetSinCos(sin, cos, Rotation);

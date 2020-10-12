@@ -178,14 +178,14 @@ bool GameEngine::LoadResources()
 
 	// 본 생성
 	bones = {
-		{ GameEngine::RootBone, Bone(GameEngine::RootBone, TransformData()) },
-		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, TransformData(Vector3(0.f, 1.5f, 0.f))) },
-		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, TransformData(Vector3(0.f, 2.25f, 0.f))) },
-		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, TransformData(Vector3(-0.75f, 3.f, 0.f))) },
-		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, TransformData(Vector3(0.75f, 3.f, 0.f))) },
-		{ GameEngine::LeftLegBone, Bone(GameEngine::LeftLegBone, TransformData(Vector3(0.25f, 1.5f, 0.f))) },
-		{ GameEngine::RightLegBone, Bone(GameEngine::RightLegBone, TransformData(Vector3(-0.25f, 1.5f, 0.f))) },
-		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, TransformData(Vector3(0.f, 3.f, 0.f))) }
+		{ GameEngine::RootBone, Bone(GameEngine::RootBone, Transform()) },
+		{ GameEngine::PelvisBone, Bone(GameEngine::PelvisBone, Transform(Vector3(0.f, 1.5f, 0.f))) },
+		{ GameEngine::SpineBone, Bone(GameEngine::SpineBone, Transform(Vector3(0.f, 2.25f, 0.f))) },
+		{ GameEngine::LeftArmBone, Bone(GameEngine::LeftArmBone, Transform(Vector3(-0.75f, 3.f, 0.f))) },
+		{ GameEngine::RightArmBone, Bone(GameEngine::RightArmBone, Transform(Vector3(0.75f, 3.f, 0.f))) },
+		{ GameEngine::LeftLegBone, Bone(GameEngine::LeftLegBone, Transform(Vector3(0.25f, 1.5f, 0.f))) },
+		{ GameEngine::RightLegBone, Bone(GameEngine::RightLegBone, Transform(Vector3(-0.25f, 1.5f, 0.f))) },
+		{ GameEngine::NeckBone, Bone(GameEngine::NeckBone, Transform(Vector3(0.f, 3.f, 0.f))) }
 	};
 
 	// 본의 계층 구조 생성

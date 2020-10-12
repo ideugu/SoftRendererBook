@@ -48,7 +48,7 @@ public:
 	const Bone& GetBone(const std::string& InBoneName) const { return _Bones.at(InBoneName); }
 	std::unordered_map<std::string, Bone>& GetBones() { return _Bones; }
 	const std::unordered_map<std::string, Bone>& GetBones() const { return _Bones; }
-	const TransformData& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
+	const Transform& GetBindPose(const std::string& InBoneName) const { return _Bones.at(InBoneName).GetBindPose(); }
 
 private:
 	std::vector<Vector3> _Vertices;

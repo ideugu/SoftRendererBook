@@ -5,19 +5,19 @@ namespace CK
 namespace DDD
 {
 
-class Transform
+class TransformComponent
 {
 public:
-	Transform() = default;
-	Transform(const TransformData& InLocalTransform) : _LocalTransform(InLocalTransform) 
+	TransformComponent() = default;
+	TransformComponent(const Transform& InLocalTransform) : _LocalTransform(InLocalTransform) 
 	{ 
 		UpdateWorld(); 
 	}
 
 public: // 로컬 트랜스폼 관련 함수
-	FORCEINLINE TransformData& GetLocalTransform() { return _LocalTransform; }
-	FORCEINLINE void SetLocalTransform(const TransformData& InTransform) { _LocalTransform = InTransform; UpdateWorld(); }
-	FORCEINLINE const TransformData& GetLocalTransform() const { return _LocalTransform; }
+	FORCEINLINE Transform& GetLocalTransform() { return _LocalTransform; }
+	FORCEINLINE void SetLocalTransform(const Transform& InTransform) { _LocalTransform = InTransform; UpdateWorld(); }
+	FORCEINLINE const Transform& GetLocalTransform() const { return _LocalTransform; }
 
 	FORCEINLINE void SetLocalPosition(const Vector3& InPosition);
 	FORCEINLINE void AddLocalPosition(const Vector3& InDeltaPosition);
@@ -40,9 +40,9 @@ public: // 로컬 트랜스폼 관련 함수
 	FORCEINLINE Matrix4x4 GetLocalMatrix() const { return _LocalTransform.GetMatrix(); }
 
 public: // 월드 트랜스폼 관련 함수
-	FORCEINLINE TransformData& GetWorldTransform() { return _WorldTransform; }
-	FORCEINLINE void SetWorldTransform(const TransformData& InTransform) { _WorldTransform = InTransform; UpdateLocal(); }
-	FORCEINLINE const TransformData& GetWorldTransform() const { return _WorldTransform; }
+	FORCEINLINE Transform& GetWorldTransform() { return _WorldTransform; }
+	FORCEINLINE void SetWorldTransform(const Transform& InTransform) { _WorldTransform = InTransform; UpdateLocal(); }
+	FORCEINLINE const Transform& GetWorldTransform() const { return _WorldTransform; }
 
 	FORCEINLINE void SetWorldPosition(const Vector3& InPosition);
 	FORCEINLINE void AddWorldPosition(const Vector3& InDeltaPosition);
@@ -64,132 +64,132 @@ public: // 월드 트랜스폼 관련 함수
 public: // 계층 구조 관련 함수
 	bool SetRoot();
 	bool RemoveFromParent();
-	Transform& GetRoot();
-	bool SetParent(Transform& InTransform);
+	TransformComponent& GetRoot();
+	bool SetParent(TransformComponent& InTransform);
 
 	FORCEINLINE bool HasParent() const { return _ParentPtr != nullptr; }
-	std::vector<Transform*>& GetChildren() { return _ChildrenPtr; }
-	std::vector<Transform*>::const_iterator ChildBegin() const { return _ChildrenPtr.begin(); }
-	std::vector<Transform*>::const_iterator ChildEnd() const { return _ChildrenPtr.end(); }
+	std::vector<TransformComponent*>& GetChildren() { return _ChildrenPtr; }
+	std::vector<TransformComponent*>::const_iterator ChildBegin() const { return _ChildrenPtr.begin(); }
+	std::vector<TransformComponent*>::const_iterator ChildEnd() const { return _ChildrenPtr.end(); }
 
 private: // 내부에서만 호출하는 함수
-	FORCEINLINE Transform* GetParentPtr() const { return _ParentPtr; }
+	FORCEINLINE TransformComponent* GetParentPtr() const { return _ParentPtr; }
 	void UpdateLocal();
 	void UpdateWorld();
 	void UpdateChildrenWorld();
 
 private: // 계층 구조를 위한 변수
-	TransformData _LocalTransform;
-	TransformData _WorldTransform;
+	Transform _LocalTransform;
+	Transform _WorldTransform;
 
-	Transform* _ParentPtr = nullptr;
-	std::vector<Transform*> _ChildrenPtr;
+	TransformComponent* _ParentPtr = nullptr;
+	std::vector<TransformComponent*> _ChildrenPtr;
 };
 
 
-FORCEINLINE void Transform::SetLocalPosition(const Vector3& InPosition)
+FORCEINLINE void TransformComponent::SetLocalPosition(const Vector3& InPosition)
 {
 	_LocalTransform.SetPosition(InPosition);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::AddLocalPosition(const Vector3& InDeltaPosition)
+FORCEINLINE void TransformComponent::AddLocalPosition(const Vector3& InDeltaPosition)
 {
 	_LocalTransform.AddPosition(InDeltaPosition);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::AddLocalYawRotation(float InDegree)
+FORCEINLINE void TransformComponent::AddLocalYawRotation(float InDegree)
 {
 	_LocalTransform.AddYawRotation(InDegree);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::AddLocalRollRotation(float InDegree)
+FORCEINLINE void TransformComponent::AddLocalRollRotation(float InDegree)
 {
 	_LocalTransform.AddRollRotation(InDegree);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::AddLocalPitchRotation(float InDegree)
+FORCEINLINE void TransformComponent::AddLocalPitchRotation(float InDegree)
 {
 	_LocalTransform.AddPitchRotation(InDegree);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::SetLocalRotation(const Rotator& InRotator)
+FORCEINLINE void TransformComponent::SetLocalRotation(const Rotator& InRotator)
 {
 	_LocalTransform.SetRotation(InRotator);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::SetLocalRotation(const Matrix3x3& InMatrix)
+FORCEINLINE void TransformComponent::SetLocalRotation(const Matrix3x3& InMatrix)
 {
 	_LocalTransform.SetRotation(InMatrix);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::SetLocalRotation(const Quaternion& InQuaternion)
+FORCEINLINE void TransformComponent::SetLocalRotation(const Quaternion& InQuaternion)
 {
 	_LocalTransform.SetRotation(InQuaternion);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::SetLocalScale(const Vector3& InScale)
+FORCEINLINE void TransformComponent::SetLocalScale(const Vector3& InScale)
 {
 	_LocalTransform.SetScale(InScale);
 	UpdateWorld();
 }
 
-FORCEINLINE void Transform::SetWorldPosition(const Vector3& InPosition)
+FORCEINLINE void TransformComponent::SetWorldPosition(const Vector3& InPosition)
 {
 	_WorldTransform.SetPosition(InPosition);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::AddWorldPosition(const Vector3& InDeltaPosition)
+FORCEINLINE void TransformComponent::AddWorldPosition(const Vector3& InDeltaPosition)
 {
 	_WorldTransform.AddPosition(InDeltaPosition);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::AddWorldYawRotation(float InDegree)
+FORCEINLINE void TransformComponent::AddWorldYawRotation(float InDegree)
 {
 	_WorldTransform.AddYawRotation(InDegree);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::AddWorldRollRotation(float InDegree)
+FORCEINLINE void TransformComponent::AddWorldRollRotation(float InDegree)
 {
 	_WorldTransform.AddRollRotation(InDegree);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::AddWorldPitchRotation(float InDegree)
+FORCEINLINE void TransformComponent::AddWorldPitchRotation(float InDegree)
 {
 	_WorldTransform.AddPitchRotation(InDegree);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::SetWorldRotation(const Rotator& InRotator)
+FORCEINLINE void TransformComponent::SetWorldRotation(const Rotator& InRotator)
 {
 	_WorldTransform.SetRotation(InRotator);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::SetWorldRotation(const Matrix3x3& InMatrix)
+FORCEINLINE void TransformComponent::SetWorldRotation(const Matrix3x3& InMatrix)
 {
 	_WorldTransform.SetRotation(InMatrix);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::SetWorldRotation(const Quaternion& InQuaternion)
+FORCEINLINE void TransformComponent::SetWorldRotation(const Quaternion& InQuaternion)
 {
 	_WorldTransform.SetRotation(InQuaternion);
 	UpdateLocal();
 }
 
-FORCEINLINE void Transform::SetWorldScale(const Vector3& InScale)
+FORCEINLINE void TransformComponent::SetWorldScale(const Vector3& InScale)
 {
 	_WorldTransform.SetScale(InScale);
 	UpdateLocal();

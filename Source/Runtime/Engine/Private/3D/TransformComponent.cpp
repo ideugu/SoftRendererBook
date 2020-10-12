@@ -1,14 +1,14 @@
 #include "Precompiled.h"
 using namespace CK::DDD;
 
-bool Transform::RemoveFromParent()
+bool TransformComponent::RemoveFromParent()
 {
 	if (!HasParent())
 	{
 		return true;
 	}
 
-	Transform& parent = *GetParentPtr();
+	TransformComponent& parent = *GetParentPtr();
 	auto it = std::find(parent.ChildBegin(), parent.ChildEnd(), this);
 	if (it != parent.ChildEnd())
 	{
@@ -24,7 +24,7 @@ bool Transform::RemoveFromParent()
 	return true;
 }
 
-bool Transform::SetRoot()
+bool TransformComponent::SetRoot()
 {
 	if (!RemoveFromParent())
 	{
@@ -36,10 +36,10 @@ bool Transform::SetRoot()
 	return true;
 }
 
-FORCEINLINE Transform& Transform::GetRoot()
+FORCEINLINE TransformComponent& TransformComponent::GetRoot()
 {
-	Transform* parent = nullptr;
-	Transform* current = this;
+	TransformComponent* parent = nullptr;
+	TransformComponent* current = this;
 	while ((parent = current->GetParentPtr()) != nullptr)
 	{
 		current = parent;
@@ -48,7 +48,7 @@ FORCEINLINE Transform& Transform::GetRoot()
 	return *current;
 }
 
-bool Transform::SetParent(Transform& InTransform)
+bool TransformComponent::SetParent(TransformComponent& InTransform)
 {
 	// 현재 노드를 부모로부터 분리 ( 월드 = 로컬 )
 	if (!SetRoot())
@@ -66,7 +66,7 @@ bool Transform::SetParent(Transform& InTransform)
 	// 새로운 트랜스폼 노드로 부모 재설정
 	InTransform.GetChildren().emplace_back(this);
 	_ParentPtr = &InTransform;
-	Transform& newParent = *_ParentPtr;
+	TransformComponent& newParent = *_ParentPtr;
 
 	// 자신의 로컬과 모든 자식의 월드를 업데이트한다.
 	UpdateLocal();
@@ -75,11 +75,11 @@ bool Transform::SetParent(Transform& InTransform)
 }
 
 // 월드 정보, 혹은 부모가 변경되면 이를 기반으로 로컬 정보를 변경
-void Transform::UpdateLocal()
+void TransformComponent::UpdateLocal()
 {
 	if (HasParent())
 	{
-		const Transform& parent = *GetParentPtr();
+		const TransformComponent& parent = *GetParentPtr();
 		_LocalTransform = _WorldTransform.WorldToLocal(parent.GetWorldTransform());
 	}
 	else
@@ -92,12 +92,12 @@ void Transform::UpdateLocal()
 }
 
 // 로컬 정보가 업데이트 되어서 월드 정보만 다시 계산
-void Transform::UpdateWorld()
+void TransformComponent::UpdateWorld()
 {
 	// 자신의 월드 정보 업데이트
 	if (HasParent())
 	{
-		const Transform& parent = *GetParentPtr();
+		const TransformComponent& parent = *GetParentPtr();
 		_WorldTransform = _LocalTransform.LocalToWorld(parent.GetWorldTransform());
 	}
 	else
@@ -109,7 +109,7 @@ void Transform::UpdateWorld()
 	UpdateChildrenWorld();
 }
 
-void Transform::UpdateChildrenWorld()
+void TransformComponent::UpdateChildrenWorld()
 {
 	for (auto it = ChildBegin(); it != ChildEnd(); ++it)
 	{

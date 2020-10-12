@@ -21,8 +21,8 @@ public:
 	FORCEINLINE bool IsGizmoObject() const { return _GameObjectType == GameObjectType::Gizmo; }
 
 	// 트랜스폼
-	Transform& GetTransform() { return _Transform; }
-	const Transform& GetTransform() const { return _Transform; }
+	TransformComponent& GetTransform() { return _Transform; }
+	const TransformComponent& GetTransform() const { return _Transform; }
 	void SetParent(GameObject& InGameObject) { _Transform.SetParent(InGameObject.GetTransform()); }
 
 	// 메시
@@ -54,7 +54,7 @@ private:
 	std::size_t _Hash = Math::InvalidHash;
 	std::string _Name;
 	std::size_t _MeshKey = Math::InvalidHash;
-	Transform _Transform;
+	TransformComponent _Transform;
 	LinearColor _Color = LinearColor::Error;
 };
 

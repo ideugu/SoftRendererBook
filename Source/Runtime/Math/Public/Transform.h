@@ -2,17 +2,15 @@
 
 namespace CK
 {
-namespace DDD
-{
 
-struct TransformData
+struct Transform
 {
 public:
-	TransformData() = default;
-	TransformData(const Vector3& InPosition) : Position(InPosition) { }
-	TransformData(const Vector3& InPosition, const Quaternion& InRotation) : Position(InPosition), Rotation(InRotation) { }
-	TransformData(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : Position(InPosition), Rotation(InRotation), Scale(InScale) { }
-	TransformData(const Matrix4x4& InMatrix)
+	Transform() = default;
+	Transform(const Vector3& InPosition) : Position(InPosition) { }
+	Transform(const Vector3& InPosition, const Quaternion& InRotation) : Position(InPosition), Rotation(InRotation) { }
+	Transform(const Vector3& InPosition, const Quaternion& InRotation, const Vector3& InScale) : Position(InPosition), Rotation(InRotation), Scale(InScale) { }
+	Transform(const Matrix4x4& InMatrix)
 	{ 
 		// 스케일 회전 행렬만 분리
 		Matrix3x3 rotScaleMatrix = InMatrix.ToMatrix3x3();
@@ -76,9 +74,9 @@ public: // 트랜스폼 설정함수
 	FORCEINLINE Vector3 GetScale() const { return Scale; }
 
 	// 트랜스폼 변환
-	FORCEINLINE TransformData Inverse() const;
-	FORCEINLINE TransformData LocalToWorld(const TransformData& InParentWorldTransform) const;
-	FORCEINLINE TransformData WorldToLocal(const TransformData& InParentWorldTransform) const;
+	FORCEINLINE Transform Inverse() const;
+	FORCEINLINE Transform LocalToWorld(const Transform& InParentWorldTransform) const;
+	FORCEINLINE Transform WorldToLocal(const Transform& InParentWorldTransform) const;
 	//// 연산자
 	//FORCEINLINE Transform operator*(const Transform& InTransform) const;
 
@@ -89,7 +87,7 @@ private: // 트랜스폼에 관련된 변수
 
 };
 
-FORCEINLINE Matrix4x4 TransformData::GetMatrix() const
+FORCEINLINE Matrix4x4 Transform::GetMatrix() const
 {
 	return Matrix4x4(
 		Vector4(GetXAxis() * Scale.X, false),
@@ -99,7 +97,7 @@ FORCEINLINE Matrix4x4 TransformData::GetMatrix() const
 	);
 }
 
-FORCEINLINE TransformData TransformData::Inverse() const
+FORCEINLINE Transform Transform::Inverse() const
 {
 	// 로컬 정보만 남기기 위한 트랜스폼 ( 역행렬 )
 	Vector3 reciprocalScale = Vector3::Zero;
@@ -107,7 +105,7 @@ FORCEINLINE TransformData TransformData::Inverse() const
 	if (!Math::EqualsInTolerance(Scale.Y, 0.f)) reciprocalScale.Y = 1.f / Scale.Y;
 	if (!Math::EqualsInTolerance(Scale.Z, 0.f)) reciprocalScale.Z = 1.f / Scale.Z;
 
-	TransformData result;
+	Transform result;
 	result.Rotation = Rotation.Inverse();
 	result.Scale = reciprocalScale;
 	result.Position = result.Rotation * (result.Scale * -Position);
@@ -115,27 +113,26 @@ FORCEINLINE TransformData TransformData::Inverse() const
 }
 
 
-FORCEINLINE TransformData TransformData::LocalToWorld(const TransformData& InParentWorldTransform) const
+FORCEINLINE Transform Transform::LocalToWorld(const Transform& InParentWorldTransform) const
 {
 	// 현재 트랜스폼 정보가 로컬인 경우
-	TransformData result;
+	Transform result;
 	result.Rotation = InParentWorldTransform.Rotation * Rotation;
 	result.Scale = InParentWorldTransform.Scale * Scale;
 	result.Position = InParentWorldTransform.Rotation.RotateVector(InParentWorldTransform.Scale * Position) + InParentWorldTransform.Position;
 	return result;
 }
 
-FORCEINLINE TransformData TransformData::WorldToLocal(const TransformData& InParentWorldTransform) const
+FORCEINLINE Transform Transform::WorldToLocal(const Transform& InParentWorldTransform) const
 {
-	TransformData invParent = InParentWorldTransform.Inverse();
+	Transform invParent = InParentWorldTransform.Inverse();
 
 	// 현재 트랜스폼 정보가 월드인 경우
-	TransformData result;
+	Transform result;
 	result.Scale = invParent.GetScale() * Scale;
 	result.Rotation = invParent.GetRotation() * Rotation;
 	result.Position = invParent.GetPosition() + Position;
 	return result;
 }
 
-}
 }

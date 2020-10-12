@@ -9,7 +9,7 @@ class Bone
 {
 public:
 	Bone() = default;
-	Bone(const std::string& InName, const TransformData& InTransform) : _Name(InName), _ParentName(InName)
+	Bone(const std::string& InName, const Transform& InTransform) : _Name(InName), _ParentName(InName)
 	{
 		_Hash = std::hash<std::string>()(_Name);
 		_BindPose = InTransform;
@@ -18,9 +18,9 @@ public:
 
 public:
 	// 트랜스폼
-	Transform& GetTransform() { return _Transform; }
-	const Transform& GetTransform() const { return _Transform; }
-	const TransformData& GetBindPose() const { return _BindPose; }
+	TransformComponent& GetTransform() { return _Transform; }
+	const TransformComponent& GetTransform() const { return _Transform; }
+	const Transform& GetBindPose() const { return _BindPose; }
 	void SetParent(Bone& InBone) 
 	{
 		_ParentName = InBone.GetName();
@@ -36,10 +36,10 @@ public:
 private:
 	std::size_t _Hash = 0;
 	std::string _Name;
-	Transform _Transform;
+	TransformComponent _Transform;
 
 	// 로컬 공간의 좌표로 기록
-	TransformData _BindPose;
+	Transform _BindPose;
 
 	// 부모 정보
 	std::string _ParentName;

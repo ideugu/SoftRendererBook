@@ -35,8 +35,8 @@ public:
 	const Mesh& GetMesh(const std::size_t & InMeshKey) const { return *_Meshes.at(InMeshKey).get(); }
 
 	// 카메라 
-	FORCEINLINE Camera& GetMainCamera() { return _MainCamera; }
-	FORCEINLINE const Camera& GetMainCamera() const { return _MainCamera; }
+	FORCEINLINE CameraObject& GetMainCamera() { return _MainCamera; }
+	FORCEINLINE const CameraObject& GetMainCamera() const { return _MainCamera; }
 
 	// 메인 텍스쳐
 	FORCEINLINE const Texture& GetTexture(const std::size_t & InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
@@ -62,7 +62,7 @@ public: // 주요 키 값
 private:
 	ScreenPoint _ScreenSize;
 	InputManager _InputManager;
-	Camera _MainCamera;
+	CameraObject _MainCamera;
 
 	std::vector<std::unique_ptr<GameObject>> _Scene;
 	std::unordered_map<std::size_t, std::unique_ptr<Mesh>> _Meshes;

@@ -5,16 +5,16 @@ namespace CK
 namespace DDD
 {
 
-class Camera
+class CameraObject
 {
 public:
-	Camera() = default;
-	~Camera() { }
+	CameraObject() = default;
+	~CameraObject() { }
 
 public:
 	// 트랜스폼
-	Transform& GetTransform() { return _Transform; }
-	const Transform& GetTransform() const { return _Transform; }
+	TransformComponent& GetTransform() { return _Transform; }
+	const TransformComponent& GetTransform() const { return _Transform; }
 	void SetParent(GameObject& InGameObject) { _Transform.SetParent(InGameObject.GetTransform()); }
 
 	// 카메라 값을 가져오는 함수
@@ -39,7 +39,7 @@ public:
 	FORCEINLINE Matrix4x4 GetPerspectiveViewMatrix() const;
 
 private:
-	Transform _Transform;
+	TransformComponent _Transform;
 
 	float _FOV = 60.f;
 	float _NearZ = 5.5f;
@@ -47,7 +47,7 @@ private:
 	ScreenPoint _ViewportSize;
 };
 
-FORCEINLINE void Camera::GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
+FORCEINLINE void CameraObject::GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vector3& OutViewZ) const
 {
 	Quaternion worldRotation = _Transform.GetWorldRotation();
 	OutViewZ = worldRotation.RotateVector(-Vector3::UnitZ);
@@ -55,7 +55,7 @@ FORCEINLINE void Camera::GetViewAxes(Vector3& OutViewX, Vector3& OutViewY, Vecto
 	OutViewY = worldRotation.RotateVector(Vector3::UnitY);
 }
 
-FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
+FORCEINLINE Matrix4x4 CameraObject::GetViewMatrix() const
 {
 	Vector3 viewX, viewY, viewZ;
 	GetViewAxes(viewX, viewY, viewZ);
@@ -69,7 +69,7 @@ FORCEINLINE Matrix4x4 Camera::GetViewMatrix() const
 	);
 }
 
-FORCEINLINE Matrix4x4 Camera::GetViewMatrixRotationOnly() const
+FORCEINLINE Matrix4x4 CameraObject::GetViewMatrixRotationOnly() const
 {
 	Vector3 viewX, viewY, viewZ;
 	GetViewAxes(viewX, viewY, viewZ);
@@ -82,7 +82,7 @@ FORCEINLINE Matrix4x4 Camera::GetViewMatrixRotationOnly() const
 	);
 }
 
-FORCEINLINE Matrix4x4 Camera::GetPerspectiveMatrix() const
+FORCEINLINE Matrix4x4 CameraObject::GetPerspectiveMatrix() const
 {
 	// 투영 행렬. 깊이 값의 범위는 -1~1
 	float invA = 1.f / _ViewportSize.AspectRatio();
@@ -99,7 +99,7 @@ FORCEINLINE Matrix4x4 Camera::GetPerspectiveMatrix() const
 		Vector4(0.f, 0.f, l, 0.f));
 }
 
-FORCEINLINE Matrix4x4 Camera::GetPerspectiveViewMatrix() const
+FORCEINLINE Matrix4x4 CameraObject::GetPerspectiveViewMatrix() const
 {
 	// 뷰 행렬 관련 요소
 	Vector3 viewX, viewY, viewZ;

@@ -1,4 +1,4 @@
 
 #include "Precompiled.h"
-using namespace CK::DDD;
+using namespace CK;
 

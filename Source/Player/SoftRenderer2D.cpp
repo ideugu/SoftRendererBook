@@ -57,19 +57,19 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 	if (!goPlayer.IsValid()) { return; }
 
 	// 입력에 따른 플레이어 위치와 크기의 변경
-	Transform& t = goPlayer.GetTransform();
-	t.AddPosition(Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)) * moveSpeed * InDeltaSeconds);
-	t.AddRotation(input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds);
-	float newScale = Math::Clamp(t.GetScale().X + scaleSpeed * input.GetAxis(InputAxis::ZAxis) * InDeltaSeconds, 15.f, 30.f);
-	t.SetScale(Vector2::One * newScale);
+	TransformComponent& transform = goPlayer.GetTransform();
+	transform.AddPosition(Vector2(input.GetAxis(InputAxis::XAxis), input.GetAxis(InputAxis::YAxis)) * moveSpeed * InDeltaSeconds);
+	transform.AddRotation(input.GetAxis(InputAxis::WAxis) * rotateSpeed * InDeltaSeconds);
+	float newScale = Math::Clamp(transform.GetScale().X + scaleSpeed * input.GetAxis(InputAxis::ZAxis) * InDeltaSeconds, 15.f, 30.f);
+	transform.SetScale(Vector2::One * newScale);
 
 	// 플레이어를 따라다니는 카메라의 트랜스폼
-	Transform& ct = g.GetMainCamera().GetTransform();
-	Vector2 playerPos = t.GetPosition();
-	Vector2 cameraPos = ct.GetPosition();
+	TransformComponent& cameraTransform = g.GetMainCamera().GetTransform();
+	Vector2 playerPos = transform.GetPosition();
+	Vector2 cameraPos = cameraTransform.GetPosition();
 	if ((playerPos - cameraPos).SizeSquared() < minDistance * minDistance)
 	{
-		ct.SetPosition(playerPos);
+		cameraTransform.SetPosition(playerPos);
 	}
 	else
 	{
@@ -77,7 +77,7 @@ void SoftRenderer::Update2D(float InDeltaSeconds)
 		float ratio = lerpSpeed * InDeltaSeconds;
 		ratio = Math::Clamp(ratio, 0.f, 1.f);
 		Vector2 newCameraPos = cameraPos + (playerPos - cameraPos) * ratio;
-		ct.SetPosition(newCameraPos);
+		cameraTransform.SetPosition(newCameraPos);
 	}
 }
 
@@ -107,7 +107,7 @@ void SoftRenderer::Render2D()
 		}
 
 		const Mesh& mesh = g.GetMesh(gameObject.GetMeshKey());
-		const Transform& transform = gameObject.GetTransform();
+		const TransformComponent& transform = gameObject.GetTransform();
 		Matrix3x3 finalMatrix = viewMatrix * transform.GetModelingMatrix();
 
 		if (gameObject != GameEngine::PlayerGo)

@@ -37,7 +37,7 @@ void SoftRenderer::DrawGizmo3D()
 	{
 		static float planeScale = 100.f;
 		const Mesh& planeMesh = g.GetMesh(GameEngine::PlaneMesh);
-		TransformData pt(Vector3::Zero, Quaternion::Identity, Vector3::One * planeScale);
+		Transform pt(Vector3::Zero, Quaternion::Identity, Vector3::One * planeScale);
 		DrawMesh3D(planeMesh, pvMatrix * pt.GetMatrix(), _WireframeColor);
 	}
 	SetDrawMode(prevShowMode);
@@ -49,7 +49,7 @@ void SoftRenderer::Update3D(float InDeltaSeconds)
 	// 기본 레퍼런스
 	GameEngine& g = Get3DGameEngine();
 	const InputManager& input = g.GetInputManager();
-	Camera& camera = g.GetMainCamera();
+	CameraObject& camera = g.GetMainCamera();
 
 	// 기본 설정 변수
 	static float fovSpeed = 100.f;
@@ -119,7 +119,7 @@ void SoftRenderer::Render3D()
 {
 	const GameEngine& g = Get3DGameEngine();
 
-	const Camera& mainCamera = g.GetMainCamera();
+	const CameraObject& mainCamera = g.GetMainCamera();
 	const Matrix4x4 pvMatrix = mainCamera.GetPerspectiveViewMatrix();
 	const ScreenPoint viewportSize = mainCamera.GetViewportSize();
 	float nearZ = mainCamera.GetNearZ();
@@ -131,7 +131,7 @@ void SoftRenderer::Render3D()
 	for (auto it = g.SceneBegin(); it != g.SceneEnd(); ++it)
 	{
 		const GameObject& gameObject = *(*it);
-		const Transform& transform = gameObject.GetTransform();
+		const TransformComponent& transform = gameObject.GetTransform();
 		if (!gameObject.HasMesh() || !gameObject.IsVisible())
 		{
 			continue;
@@ -151,18 +151,18 @@ void SoftRenderer::Render3D()
 				}
 				const Bone& bone = b.second;
 				const Bone& parentBone = mesh.GetBone(bone.GetParentName());
-				const TransformData& tGameObject = transform.GetWorldTransform();
+				const Transform& tGameObject = transform.GetWorldTransform();
 
 				// 모델링 공간에서의 본의 위치
-				const TransformData& t1 = parentBone.GetTransform().GetWorldTransform();
-				const TransformData& t2 = bone.GetTransform().GetWorldTransform();
+				const Transform& t1 = parentBone.GetTransform().GetWorldTransform();
+				const Transform& t2 = bone.GetTransform().GetWorldTransform();
 
 				// 게임 월드 공간에서의 본의 위치
-				const TransformData& wt1 = t1.LocalToWorld(tGameObject);
-				const TransformData& wt2 = t2.LocalToWorld(tGameObject);
+				const Transform& wt1 = t1.LocalToWorld(tGameObject);
+				const Transform& wt2 = t2.LocalToWorld(tGameObject);
 
 				Vector3 boneVector = wt2.GetPosition() - wt1.GetPosition();
-				TransformData tboneObject(wt1.GetPosition(), Quaternion(boneVector), Vector3(10.f, 10.f, boneVector.Size()));
+				Transform tboneObject(wt1.GetPosition(), Quaternion(boneVector), Vector3(10.f, 10.f, boneVector.Size()));
 				Matrix4x4 boneMatrix = pvMatrix * tboneObject.GetMatrix();
 				DrawMesh3D(boneMesh, boneMatrix, LinearColor::Red);
 			}
@@ -198,11 +198,11 @@ void SoftRenderer::DrawMesh3D(const Mesh& InMesh, const Matrix4x4& InMatrix, con
 				if (InMesh.HasBone(boneName))
 				{
 					const Bone& b = InMesh.GetBone(boneName);
-					const TransformData& t = b.GetTransform().GetWorldTransform();  // 월드 공간
-					const TransformData& bindPose = b.GetBindPose(); // 월드 공간
+					const Transform& t = b.GetTransform().GetWorldTransform();  // 월드 공간
+					const Transform& bindPose = b.GetBindPose(); // 월드 공간
 
 					// BindPose 공간을 중심으로 Bone의 로컬 공간을 계산
-					TransformData boneLocal = t.WorldToLocal(bindPose);
+					Transform boneLocal = t.WorldToLocal(bindPose);
 
 					// BindPose 공간으로 점을 변화
 					Vector3 localPosition = bindPose.Inverse().GetPosition() + vertices[vi].Position.ToVector3();
