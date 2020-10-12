@@ -108,6 +108,8 @@ namespace WindowsUtil
 		InInputManager.SetInputAxis(InputAxis::ZAxis, GetZAxisInput);
 		InInputManager.SetInputAxis(InputAxis::WAxis, GetWAxisInput);
 		InInputManager.SetInputButton(InputButton::Space, []() { ISPRESSED(VK_SPACE); });
+		InInputManager.SetInputButton(InputButton::Z, []() { ISPRESSED(0x5A); });
+		InInputManager.SetInputButton(InputButton::X, []() { ISPRESSED(0x58); });
 		InInputManager.SetInputButton(InputButton::F1, []() { ISPRESSED(VK_F1); });
 		InInputManager.SetInputButton(InputButton::F2, []() { ISPRESSED(VK_F2); });
 		InInputManager.SetInputButton(InputButton::F3, []() { ISPRESSED(VK_F3); });

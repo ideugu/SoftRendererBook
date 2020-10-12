@@ -15,6 +15,8 @@ enum class InputAxis : UINT32
 enum class InputButton : UINT32
 {
 	Space = 0,
+	Z,
+	X,
 	F1,
 	F2,
 	F3,
