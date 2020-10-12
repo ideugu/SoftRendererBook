@@ -97,6 +97,7 @@ struct Math
 		return X < Min ? Min : X < Max ? X : Max;
 	}
 
+	// 언리얼 엔진 코드에서 가져옴. 지정된 각도에 대한 두 삼각함수를 함께 가져오는 함수. 
 	static FORCEINLINE void GetSinCos(float& OutSin, float& OutCos, float InDegree)
 	{
 		if (InDegree == 0.f)
@@ -123,7 +124,6 @@ struct Math
 		{
 			float rad = Math::Deg2Rad(InDegree);
 
-			// Copied from UE4 Source Code
 			// Map Value to y in [-pi,pi], x = 2*pi*quotient + remainder.
 			float quotient = (InvPI * 0.5f) * rad;
 			if (rad >= 0.0f)
