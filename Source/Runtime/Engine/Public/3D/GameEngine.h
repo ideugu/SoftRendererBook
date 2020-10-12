@@ -5,19 +5,19 @@ namespace CK
 namespace DDD
 {
 
-class GameEngine
+class GameEngine : public EngineInterface
 {
 public:
 	GameEngine() = default;
 
-public: // 공용 로직
+public:
+	// 공용 인터페이스
+	virtual bool Init() override;
+	virtual void OnScreenResize(const ScreenPoint& InScreenSize) override;
+	virtual InputManager& GetInputManager() override { return _InputManager; }
 
-	// 엔진 초기화 
-	bool Init();
-	void OnScreenResize(const ScreenPoint& InScreenSize);
-
-	// 입력 관리자
-	InputManager& GetInputManager() { return _InputManager; }  // 입력 설정에 사용
+	// 게임 로직 용도 
+	const InputManager& GetInputManager() const { return _InputManager; }
 
 	// 리소스 관리
 	Mesh& CreateMesh(const std::size_t& InKey);
@@ -69,8 +69,8 @@ public: // 주요 키 값
 	static const std::string CameraRigGo;
 
 	// 텍스쳐
-	const static std::size_t DiffuseTexture;
-	const static std::string SteveTexturePath;
+	static const std::size_t DiffuseTexture;
+	static const std::string SteveTexturePath;
 
 private:
 	ScreenPoint _ScreenSize;

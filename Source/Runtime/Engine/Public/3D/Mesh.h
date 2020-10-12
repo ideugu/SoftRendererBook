@@ -11,12 +11,6 @@ struct Weight
 	std::vector<float> Values;
 };
 
-enum class MeshType : UINT32
-{
-	Normal = 0,
-	Skinned
-};
-
 class Mesh
 {
 public:

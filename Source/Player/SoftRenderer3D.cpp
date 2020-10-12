@@ -38,7 +38,7 @@ void SoftRenderer::DrawGizmo3D()
 		static float planeScale = 100.f;
 		const Mesh& planeMesh = g.GetMesh(GameEngine::PlaneMesh);
 		TransformData pt(Vector3::Zero, Quaternion::Identity, Vector3::One * planeScale);
-		DrawMesh(planeMesh, pvMatrix * pt.GetMatrix(), _WireframeColor);
+		DrawMesh3D(planeMesh, pvMatrix * pt.GetMatrix(), _WireframeColor);
 	}
 	SetDrawMode(prevShowMode);
 }
@@ -138,19 +138,19 @@ void SoftRenderer::Render3D()
 		}
 
 		// 렌더링 시작
-		const Mesh& m = g.GetMesh(gameObject.GetMeshKey());
+		const Mesh& mesh = g.GetMesh(gameObject.GetMeshKey());
 		// 스키닝이고 WireFrame인 경우 본을 그리기
-		if (m.IsSkinnedMesh() && IsWireframeDrawing())
+		if (mesh.IsSkinnedMesh() && IsWireframeDrawing())
 		{
 			const Mesh& boneMesh = g.GetMesh(GameEngine::ArrowMesh);
-			for (const auto& b : m.GetBones())
+			for (const auto& b : mesh.GetBones())
 			{
 				if (!b.second.HasParent())
 				{
 					continue;
 				}
 				const Bone& bone = b.second;
-				const Bone& parentBone = m.GetBone(bone.GetParentName());
+				const Bone& parentBone = mesh.GetBone(bone.GetParentName());
 				const TransformData& tGameObject = transform.GetWorldTransform();
 
 				// 모델링 공간에서의 본의 위치
@@ -164,17 +164,17 @@ void SoftRenderer::Render3D()
 				Vector3 boneVector = wt2.GetPosition() - wt1.GetPosition();
 				TransformData tboneObject(wt1.GetPosition(), Quaternion(boneVector), Vector3(10.f, 10.f, boneVector.Size()));
 				Matrix4x4 boneMatrix = pvMatrix * tboneObject.GetMatrix();
-				DrawMesh(boneMesh, boneMatrix, LinearColor::Red);
+				DrawMesh3D(boneMesh, boneMatrix, LinearColor::Red);
 			}
 		}
 
 		// 최종 변환 행렬
 		Matrix4x4 finalMatrix = pvMatrix * transform.GetWorldMatrix();
-		DrawMesh(m, finalMatrix, gameObject.GetColor());
+		DrawMesh3D(mesh, finalMatrix, gameObject.GetColor());
 	}
 }
 
-void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor)
+void SoftRenderer::DrawMesh3D(const Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor)
 {
 	size_t vertexCount = InMesh.GetVertices().size();
 	size_t indexCount = InMesh.GetIndices().size();
@@ -221,14 +221,14 @@ void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const
 			vertices[vi].Position = totalPosition;
 		}
 
-		if (InMesh.HasUV())
-		{
-			vertices[vi].UV = InMesh.GetUVs()[vi];
-		}
-
 		if (InMesh.HasColor())
 		{
 			vertices[vi].Color = InMesh.GetColors()[vi];
+		}
+
+		if (InMesh.HasUV())
+		{
+			vertices[vi].UV = InMesh.GetUVs()[vi];
 		}
 	}
 
@@ -274,12 +274,12 @@ void SoftRenderer::DrawMesh(const Mesh& InMesh, const Matrix4x4& InMatrix, const
 		{
 			size_t si = ti * 3;
 			std::vector<Vertex3D> sub(tvs.begin() + si, tvs.begin() + si + 3);
-			DrawTriangle(sub, InColor, fm);
+			DrawTriangle3D(sub, InColor, fm);
 		}
 	}
 }
 
-void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
+void SoftRenderer::DrawTriangle3D(std::vector<Vertex3D>& InVertices, const LinearColor& InColor, FillMode InFillMode)
 {
 	auto& r = GetRenderer();
 	const GameEngine& g = Get3DGameEngine();
@@ -339,9 +339,9 @@ void SoftRenderer::DrawTriangle(std::vector<Vertex3D>& InVertices, const LinearC
 	float udotu = u.Dot(u);
 	float denominator = udotv * udotv - vdotv * udotu;
 
-	if (denominator == 0.f)
+	// 퇴화 삼각형 판정.
+	if (Math::EqualsInTolerance(denominator,0.f))
 	{
-		// 퇴화 삼각형이면 건너뜀.
 		return;
 	}
 

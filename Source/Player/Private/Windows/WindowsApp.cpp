@@ -4,10 +4,10 @@
 #include "WindowsUtil.h"
 #include "WindowsPlayer.h"
 
-int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
 	ScreenPoint defScreenSize(800, 600);
-	SoftRenderer instance(new WindowsRSI());
+	SoftRenderer instance(GameEngineMode::DDD, new WindowsRSI());
 	WindowsPlayer::gOnResizeFunc = [&instance](const ScreenPoint& InNewScreenSize) { 
 		if (InNewScreenSize.HasZero()) {
 			return;
@@ -16,7 +16,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	};
 	instance._PerformanceInitFunc = WindowsUtil::GetCyclesPerMilliSeconds;
 	instance._PerformanceMeasureFunc = WindowsUtil::GetCurrentTimeStamp;
-	WindowsUtil::BindInput(instance.Get3DGameEngine().GetInputManager());
+	WindowsUtil::BindInput(instance.GetGameEngine().GetInputManager());
 
 	if (!WindowsPlayer::Create(hInstance, defScreenSize))
 	{

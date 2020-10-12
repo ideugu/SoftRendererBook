@@ -15,8 +15,8 @@ public:
 	void SetPosition(const Vector2& InPosition) { Position = InPosition; }
 	void AddPosition(const Vector2& InDeltaPosition) { Position += InDeltaPosition; }
 	void SetScale(const Vector2& InScale) { Scale = InScale; }
-	void SetRotation(float InDegree) { Rotation = InDegree; CalculateLocalAxis(); }
-	void AddRotation(float InDegree) { Rotation += InDegree; CalculateLocalAxis(); }
+	void SetRotation(float InDegree) { Rotation = InDegree; Update(); }
+	void AddRotation(float InDegree) { Rotation += InDegree; Update(); }
 	Vector2 GetPosition() const { return Position; }
 	Vector2 GetScale() const { return Scale; }
 	float GetRotation() const { return Rotation; }
@@ -27,7 +27,7 @@ public:
 	FORCEINLINE Matrix3x3 GetModelingMatrix() const;
 
 private:
-	FORCEINLINE void CalculateLocalAxis();
+	FORCEINLINE void Update();
 
 private:
 	Vector2 Position = Vector2::Zero;
@@ -47,7 +47,7 @@ FORCEINLINE Matrix3x3 Transform::GetModelingMatrix() const
 	);
 }
 
-FORCEINLINE void Transform::CalculateLocalAxis()
+FORCEINLINE void Transform::Update()
 {
 	float sin, cos;
 	Math::GetSinCos(sin, cos, Rotation);

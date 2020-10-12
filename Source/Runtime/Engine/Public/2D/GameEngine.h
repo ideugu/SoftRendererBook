@@ -5,58 +5,70 @@ namespace CK
 namespace DD
 {
 
-class GameEngine
+class GameEngine : public EngineInterface
 {
 public:
 	GameEngine() = default;
 
 public:
-	// 엔진 초기화 
-	bool Init();
-	void OnScreenResize(const ScreenPoint& InScreenSize);
+	// 공용 인터페이스
+	virtual bool Init() override;
+	virtual void OnScreenResize(const ScreenPoint & InScreenSize) override;
+	virtual InputManager& GetInputManager() override { return _InputManager; }
+
+	// 게임 로직 용도 
+	const InputManager& GetInputManager() const { return _InputManager; }
+
+	// 리소스 관리
+	Mesh& CreateMesh(const std::size_t & InKey);
+	Texture& CreateTexture(const std::size_t & InKey, const std::string & InTexturePath);
+
+	// 게임 오브젝트
+	const std::vector<std::unique_ptr<GameObject>>& GetScene() const { return _Scene; }
+	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneBegin() const { return _Scene.begin(); }
+	std::vector< std::unique_ptr<GameObject>>::const_iterator SceneEnd() const { return _Scene.end(); }
+	GameObject& CreateNewGameObject(const std::string & InName);
+	GameObject& GetGameObject(const std::string & InName);
+
+	// 메시
+	Mesh& GetMesh(const std::size_t & InMeshKey) { return *_Meshes.at(InMeshKey).get(); }
+	const Mesh& GetMesh(const std::size_t & InMeshKey) const { return *_Meshes.at(InMeshKey).get(); }
+
+	// 카메라 
+	FORCEINLINE Camera& GetMainCamera() { return _MainCamera; }
+	FORCEINLINE const Camera& GetMainCamera() const { return _MainCamera; }
+
+	// 메인 텍스쳐
+	FORCEINLINE const Texture& GetTexture(const std::size_t & InTextureKey) const { return *_Textures.at(InTextureKey).get(); }
+
+	// 본을 그리기 위한 목록
+	std::unordered_map<std::string, GameObject*> GetBoneObjectPtrs() { return _BoneGameObjectPtrs; }
+
+private:
 	bool LoadResources();
 	bool LoadScene();
 
-	// 입력 관리자
-	InputManager& GetInputManager() { return _InputManager; }
-	FORCEINLINE bool CheckInputSystem();
-
-	// 메인 텍스쳐
-	Texture& GetMainTexture() { return _MainTexture; }
+public: // 주요 키 값
+	// 메시
+	static const std::size_t QuadMesh;
 
 	// 게임 오브젝트
-	const std::vector<GameObject>& GetScene() { return _Scene; }
-	const std::vector<GameObject>::const_iterator SceneBegin() const { return _Scene.begin(); }
-	const std::vector<GameObject>::const_iterator SceneEnd() const { return _Scene.end(); }
-	bool InsertGameObject(GameObject& InGameObject);
-	GameObject& FindGameObject(const std::string& InName);
+	static const std::string PlayerGo;
 
-	// 메시
-	const Mesh& GetMesh(const std::string& InMeshKey) { return _Meshes[InMeshKey]; }
-
-	// 카메라 
-	Camera& GetMainCamera() { return _MainCamera; }
-	const Camera& GetMainCamera() const { return _MainCamera; }
-
-	// 주요 키 값
-	const static std::string QuadMeshKey;
-	const static std::string PlayerKey;
-	const static std::string SteveTextureKey;
+	// 텍스쳐
+	static const std::size_t DiffuseTexture;
+	static const std::string SteveTexturePath;
 
 private:
 	ScreenPoint _ScreenSize;
 	InputManager _InputManager;
-	Texture _MainTexture;
 	Camera _MainCamera;
 
-	std::vector<GameObject> _Scene;
-	std::unordered_map<std::string, Mesh> _Meshes;
+	std::vector<std::unique_ptr<GameObject>> _Scene;
+	std::unordered_map<std::size_t, std::unique_ptr<Mesh>> _Meshes;
+	std::unordered_map<std::size_t, std::unique_ptr<Texture>> _Textures;
+	std::unordered_map<std::string, GameObject*> _BoneGameObjectPtrs;
 };
-
-FORCEINLINE bool GameEngine::CheckInputSystem()
-{
-	return _InputManager.IsInputSystemReady();
-}
 
 }
 }

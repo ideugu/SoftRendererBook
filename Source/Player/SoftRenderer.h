@@ -1,5 +1,11 @@
 #pragma once
 
+enum class GameEngineMode : UINT32
+{
+	DD = 0,
+	DDD
+};
+
 enum class DrawMode : UINT32
 {
 	Normal = 0,
@@ -38,7 +44,7 @@ class SoftRenderer
 {
 public:
 	// 생성자
-	SoftRenderer(RenderingSoftwareInterface* InRSI);
+	SoftRenderer(GameEngineMode InGameEngineMode, RendererInterface* InRSI);
 
 	// 윈도우 이벤트 처리
 	void OnTick();
@@ -55,16 +61,20 @@ public:
 	std::function<INT64()> _PerformanceMeasureFunc;
 
 	// 게임 엔진 레퍼런스 
+	FORCEINLINE EngineInterface& GetGameEngine() { return (_GameEngineMode == GameEngineMode::DD) ? static_cast<EngineInterface&>(_GameEngine2) : static_cast<EngineInterface&>(_GameEngine3); }
 	FORCEINLINE DD::GameEngine& Get2DGameEngine() { return _GameEngine2; }
 	FORCEINLINE DDD::GameEngine& Get3DGameEngine() { return _GameEngine3; }
 
 private:
+	// 게임 엔진 설정
+	void SetDefaultGameEngine(GameEngineMode InEngineMode);
+
 	// 기본 루프 함수
 	void PreUpdate();
 	void PostUpdate();
 
 	// 렌더러 레퍼런스
-	FORCEINLINE RenderingSoftwareInterface& GetRenderer() { return *_RSIPtr.get(); }
+	FORCEINLINE RendererInterface& GetRenderer() { return *_RSIPtr.get(); }
 	FORCEINLINE void SetBackgroundColor(const LinearColor& InLinearColor) { _BackgroundColor = InLinearColor; }
 	FORCEINLINE void SetWireframeColor(const LinearColor& InLinearColor) { _WireframeColor = InLinearColor; }
 
@@ -72,6 +82,8 @@ private:
 	void Update2D(float InDeltaSeconds);
 	void Render2D();
 	void DrawGrid2D();
+	void DrawMesh2D(const class DD::Mesh& InMesh, const Matrix3x3& InMatrix, const LinearColor& InColor);
+	void DrawTriangle2D(std::vector<DD::Vertex2D>& InVertices, const LinearColor& InColor, FillMode InFillMode);
 
 	int _Grid2DUnit = 10;
 
@@ -81,8 +93,8 @@ private:
 	void LateUpdate3D(float InDeltaSeconds);
 	void Render3D();
 
-	void DrawMesh(const class DDD::Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor);
-	void DrawTriangle(std::vector<DDD::Vertex3D>& InVertices, const LinearColor& InColor, FillMode InFillMode);
+	void DrawMesh3D(const class DDD::Mesh& InMesh, const Matrix4x4& InMatrix, const LinearColor& InColor);
+	void DrawTriangle3D(std::vector<DDD::Vertex3D>& InVertices, const LinearColor& InColor, FillMode InFillMode);
 	bool IsDepthBufferDrawing() const { return _CurrentDrawMode == DrawMode::DepthBuffer; }
 	bool IsWireframeDrawing() const { return _CurrentDrawMode == DrawMode::Wireframe; }
 	DrawMode GetDrawMode() const { return _CurrentDrawMode; }
@@ -120,7 +132,8 @@ private:
 	float _FrameFPS = 0.f;
 
 	// 렌더러 인터페이스
-	std::unique_ptr<RenderingSoftwareInterface> _RSIPtr;
+	std::unique_ptr<RendererInterface> _RSIPtr;
+	GameEngineMode _GameEngineMode = GameEngineMode::DD;
 
 	// 게임 엔진
 	DD::GameEngine _GameEngine2;

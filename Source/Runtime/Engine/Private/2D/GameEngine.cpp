@@ -1,17 +1,31 @@
 
 #include "Precompiled.h"
 #include <random>
-
 using namespace CK::DD;
 
-const std::string GameEngine::QuadMeshKey("SK_Quad");
-const std::string GameEngine::PlayerKey("Player");
-const std::string GameEngine::SteveTextureKey("Steve.png");
+// 메시
+const std::size_t GameEngine::QuadMesh = std::hash<std::string>()("SM_Quad");
+
+// 게임 오브젝트
+const std::string GameEngine::PlayerGo("Player");
+
+// 텍스쳐
+const std::size_t GameEngine::DiffuseTexture = std::hash<std::string>()("Diffuse");
+const std::string GameEngine::SteveTexturePath("Steve.png");
+
+struct GameObjectCompare
+{
+	bool operator()(const std::unique_ptr<GameObject>& lhs, std::size_t rhs)
+	{
+		return lhs->GetHash() < rhs;
+	}
+};
 
 void GameEngine::OnScreenResize(const ScreenPoint& InScreenSize)
 {
 	// 화면 크기의 설정
 	_ScreenSize = InScreenSize;
+	_MainCamera.SetViewportSize(_ScreenSize);
 }
 
 bool GameEngine::Init()
@@ -22,19 +36,16 @@ bool GameEngine::Init()
 		return false;
 	}
 
-	// 입력 시스템 체크
-	if (!CheckInputSystem())
+	if (!_InputManager.IsInputSystemReady())
 	{
 		return false;
 	}
 
-	// 게임에 사용할 리소스 로딩
 	if (!LoadResources())
 	{
 		return false;
 	}
 
-	// 게임 씬 로딩
 	if (!LoadScene())
 	{
 		return false;
@@ -46,36 +57,40 @@ bool GameEngine::Init()
 bool GameEngine::LoadResources()
 {
 	// 메시 데이터 로딩
-	Mesh quadMesh;
+	Mesh& quadMesh = CreateMesh(GameEngine::QuadMesh);
 
 	float squareHalfSize = 0.5f;
 	int vertexCount = 4;
 	int triangleCount = 2;
 	int indexCount = triangleCount * 3;
 
-	quadMesh._Vertices = {
+	auto& v = quadMesh.GetVertices();
+	auto& i = quadMesh.GetIndices();
+	auto& uv = quadMesh.GetUVs();
+
+	v = {
 		Vector2(-squareHalfSize, -squareHalfSize),
 		Vector2(-squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, squareHalfSize),
 		Vector2(squareHalfSize, -squareHalfSize)
 	};
 
-	quadMesh._UVs = {
+	uv = {
 		Vector2(0.125f, 0.75f),
 		Vector2(0.125f, 0.875f),
 		Vector2(0.25f, 0.875f),
 		Vector2(0.25f, 0.75f)
 	};
 
-	quadMesh._Indices = {
+	i = {
 		0, 2, 1, 0, 3, 2
 	};
 
-	_Meshes.insert({ GameEngine::QuadMeshKey , quadMesh });
+	quadMesh.CalculateBounds();
 
 	// 텍스쳐 로딩
-	_MainTexture = Texture(SteveTextureKey);
-	if (!GetMainTexture().IsIntialized())
+	Texture& diffuseTexture = CreateTexture(GameEngine::DiffuseTexture, GameEngine::SteveTexturePath);
+	if (!diffuseTexture.IsIntialized())
 	{
 		return false;
 	}
@@ -85,15 +100,14 @@ bool GameEngine::LoadResources()
 
 bool GameEngine::LoadScene()
 {
-	static float playerScale = 20.f;
+	// 플레이어
+	static const float playerScale = 20.f;
 	static float squareScale = 10.f;
 
-	// 플레이어 게임 오브젝트 생성
-	GameObject player(GameEngine::PlayerKey);
-	player.SetMesh(GameEngine::QuadMeshKey);
-	player.GetTransform().SetScale(Vector2::One * playerScale);
-	player.SetColor(LinearColor::Red);
-	InsertGameObject(player);
+	GameObject& goPlayer = CreateNewGameObject(GameEngine::PlayerGo);
+	goPlayer.SetMesh(GameEngine::QuadMesh);
+	goPlayer.GetTransform().SetScale(Vector2::One * playerScale);
+	goPlayer.SetColor(LinearColor::Red);
 
 	// 고정 시드로 랜덤하게 생성
 	std::mt19937 generator(0);
@@ -104,59 +118,71 @@ bool GameEngine::LoadScene()
 	{
 		char name[64];
 		std::snprintf(name, sizeof(name), "GameObject%d", i);
-		GameObject newGo(name);
+		GameObject& newGo = CreateNewGameObject(name);
 		newGo.GetTransform().SetPosition(Vector2(dist(generator), dist(generator)));
 		newGo.GetTransform().SetScale(Vector2::One * squareScale);
-		newGo.SetMesh(GameEngine::QuadMeshKey);
+		newGo.SetMesh(GameEngine::QuadMesh);
 		newGo.SetColor(LinearColor::Blue);
-		if (!InsertGameObject(std::move(newGo)))
-		{
-			// 같은 이름 중복이 발생하면 로딩 취소.
-			return false;
-		}
 	}
 
 	return true;
 }
 
 
-// 정렬하면서 삽입하기
-bool GameEngine::InsertGameObject(GameObject& InGameObject)
+Mesh& GameEngine::CreateMesh(const std::size_t& InKey)
 {
-	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InGameObject);
-	if (it == _Scene.end())
-	{
-		_Scene.push_back(std::move(InGameObject));
-		return true;
-	}
+	auto meshPtr = std::make_unique<Mesh>();
+	_Meshes.insert({ InKey, std::move(meshPtr) });
+	return *_Meshes.at(InKey).get();
+}
 
-	std::size_t inHash = InGameObject.GetHash();
-	std::size_t targetHash = (*it).GetHash();
+Texture& GameEngine::CreateTexture(const std::size_t& InKey, const std::string& InTexturePath)
+{
+	auto texturePtr = std::make_unique<Texture>(InTexturePath);
+	_Textures.insert({ InKey, std::move(texturePtr) });
+	return *_Textures.at(InKey).get();
+}
 
-	if (targetHash == inHash)
+GameObject& GameEngine::CreateNewGameObject(const std::string& InName)
+{
+	std::size_t inHash = std::hash<std::string>()(InName);
+	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), inHash, GameObjectCompare());
+
+	auto newGameObject = std::make_unique<GameObject>(InName);
+	if (it != _Scene.end())
 	{
-		// 중복된 키 발생. 무시.
-		return false;
-	}
-	else if (targetHash < inHash)
-	{
-		_Scene.insert(it + 1, std::move(InGameObject));
+		std::size_t targetHash = (*it)->GetHash();
+		if (targetHash == inHash)
+		{
+			// 중복된 키 발생. 무시.
+			return GameObject::Invalid;
+		}
+		else if (targetHash < inHash)
+		{
+			_Scene.insert(it + 1, std::move(newGameObject));
+		}
+		else
+		{
+			_Scene.insert(it, std::move(newGameObject));
+		}
 	}
 	else
 	{
-		_Scene.insert(it, std::move(InGameObject));
+		_Scene.push_back(std::move(newGameObject));
 	}
 
-	return true;
+	return GetGameObject(InName);
 }
 
-GameObject& GameEngine::FindGameObject(const std::string& InName)
+GameObject& GameEngine::GetGameObject(const std::string& InName)
 {
-	auto it = std::lower_bound(_Scene.begin(), _Scene.end(), InName);
+	std::size_t targetHash = std::hash<std::string>()(InName);
+	const auto it = std::lower_bound(SceneBegin(), SceneEnd(), targetHash, GameObjectCompare());
+
 	if (it != _Scene.end())
 	{
-		return (*it);
+		return *(*it).get();
 	}
 
-	return const_cast<GameObject&>(GameObject::Invalid);
+	return GameObject::Invalid;
 }

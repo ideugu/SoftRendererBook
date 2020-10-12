@@ -34,7 +34,6 @@ struct GameObjectCompare
 	}
 };
 
-
 void GameEngine::OnScreenResize(const ScreenPoint& InScreenSize)
 {
 	// 화면 크기의 설정

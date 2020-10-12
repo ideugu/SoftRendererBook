@@ -4,7 +4,7 @@
 namespace CK
 {
 
-class WindowsRSI : public WindowsGDI, public RenderingSoftwareInterface
+class WindowsRSI : public WindowsGDI, public RendererInterface
 {
 public:
 	WindowsRSI() = default;

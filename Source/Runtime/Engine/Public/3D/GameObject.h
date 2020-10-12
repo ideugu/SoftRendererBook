@@ -5,12 +5,6 @@ namespace CK
 namespace DDD
 {
 
-enum class GameObjectType : UINT32
-{
-	Normal = 0,
-	Gizmo
-};
-
 class GameObject
 {
 public:
@@ -46,6 +40,8 @@ public:
 
 	// 검색 관련
 	bool IsValid() const { return _Hash != Math::InvalidHash; }
+	FORCEINLINE bool operator==(const GameObject& InGameObject) const;
+	FORCEINLINE bool operator!=(const GameObject& InGameObject) const;
 	static GameObject Invalid;
 
 	// 렌더링 설정
@@ -62,6 +58,15 @@ private:
 	LinearColor _Color = LinearColor::Error;
 };
 
+FORCEINLINE bool GameObject::operator==(const GameObject& InGameObject) const
+{
+	return _Hash == InGameObject.GetHash();
+}
+
+FORCEINLINE bool GameObject::operator!=(const GameObject& InGameObject) const
+{
+	return _Hash == InGameObject.GetHash();
+}
 
 
 }

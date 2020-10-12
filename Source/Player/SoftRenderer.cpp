@@ -2,7 +2,7 @@
 #include "Precompiled.h"
 #include "SoftRenderer.h"
 
-SoftRenderer::SoftRenderer(RenderingSoftwareInterface* InRSI) : _RSIPtr(InRSI)
+SoftRenderer::SoftRenderer(GameEngineMode InGameEngineMode, RendererInterface* InRSI) : _GameEngineMode(InGameEngineMode), _RSIPtr(InRSI)
 {
 }
 
@@ -36,8 +36,8 @@ void SoftRenderer::OnTick()
 		_RendererInitialized = true;
 
 		// 게임 엔진 초기화
-		Get3DGameEngine().OnScreenResize(_ScreenSize);
-		if (!Get3DGameEngine().Init())
+		GetGameEngine().OnScreenResize(_ScreenSize);
+		if (!GetGameEngine().Init())
 		{
 			return;
 		}
@@ -58,14 +58,17 @@ void SoftRenderer::OnTick()
 		{
 			PreUpdate();
 
-			// 게임 로직 수행.
-			Update3D(_FrameTime / 1000.f);
-
-			// 애니메이션 로직 수행.
-			LateUpdate3D(_FrameTime / 1000.f);
-
-			// 렌더링 로직 수행.
-			Render3D();
+			if (_GameEngineMode == GameEngineMode::DD)
+			{
+				Update2D(_FrameTime / 1000.f);
+				Render2D();
+			}
+			else
+			{
+				Update3D(_FrameTime / 1000.f);
+				LateUpdate3D(_FrameTime / 1000.f);
+				Render3D();
+			}
 
 			PostUpdate();
 		}
@@ -84,13 +87,17 @@ void SoftRenderer::OnResize(const ScreenPoint& InNewScreenSize)
 
 	if (_GameEngineInitialized)
 	{
-		Get3DGameEngine().OnScreenResize(_ScreenSize);
+		GetGameEngine().OnScreenResize(_ScreenSize);
 	}	
 }
 
 void SoftRenderer::OnShutdown()
 {
 	GetRenderer().Shutdown();
+}
+
+void SoftRenderer::SetDefaultGameEngine(GameEngineMode InEngineMode)
+{
 }
 
 void SoftRenderer::PreUpdate()
@@ -106,7 +113,7 @@ void SoftRenderer::PreUpdate()
 	GetRenderer().Clear(_BackgroundColor);
 
 	// 버퍼 시각화
-	const InputManager& input = Get3DGameEngine().GetInputManager();
+	const InputManager& input = GetGameEngine().GetInputManager();
 
 	if (input.IsReleased(InputButton::F1)) { _CurrentDrawMode = DrawMode::Normal; }
 	if (input.IsReleased(InputButton::F2)) { _CurrentDrawMode = DrawMode::Wireframe; }
@@ -119,7 +126,7 @@ void SoftRenderer::PostUpdate()
 	GetRenderer().EndFrame();
 
 	// 입력 상태 업데이트
-	Get3DGameEngine().GetInputManager().UpdateInput();
+	GetGameEngine().GetInputManager().UpdateInput();
 
 	// 성능 측정 마무리.
 	_FrameCount++;
